@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "internal.hpp"
+#include "ris/utilities/align_utilities.hpp"
 #include "rendering/buffers/buffers_internal.hpp"
 
 using namespace ris::detail;
@@ -13,7 +14,7 @@ namespace ris {
 
 namespace {
 
-size_t align_up_16(size_t bytes) { return (bytes + 15) & ~size_t{15}; }
+size_t align_up_16(size_t bytes) { return align_utilities::align(bytes, 16); }
 
 } // namespace
 

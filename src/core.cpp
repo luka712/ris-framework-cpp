@@ -1,4 +1,5 @@
 #include "internal.hpp"
+#include "ris/gles/utilities/error_utilities.hpp"
 
 #include <SDL3/SDL.h>
 
@@ -97,16 +98,7 @@ void require_context() {
 bool has_context() noexcept { return g_context_alive.load(std::memory_order_acquire); }
 void set_context_alive(bool alive) noexcept { g_context_alive.store(alive, std::memory_order_release); }
 
-void check_gl(const char* what) {
-    GLenum err = glGetError();
-    if (err == GL_NO_ERROR) {
-        return;
-    }
-    const GLenum first = err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-    }
-    throw_error(Result::Graphics, "OpenGL ES error 0x%04X in %s", static_cast<unsigned>(first), what);
-}
+void check_gl(const char* what) { gles::error_utilities::check_error(what); }
 
 } // namespace ris::detail
 

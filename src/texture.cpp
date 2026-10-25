@@ -14,6 +14,7 @@
 #endif
 
 #include "internal.hpp"
+#include "ris/gles/gles.hpp"
 
 using namespace ris::detail;
 
@@ -23,49 +24,6 @@ namespace {
 
 constexpr GLenum kAstc4x4Unorm = 0x93B0;     // GL_COMPRESSED_RGBA_ASTC_4x4_KHR
 constexpr GLenum kAstc4x4Srgb = 0x93D0;      // GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR
-
-GLenum min_filter_gl(Filter f) {
-    switch (f) {
-        case Filter::Nearest: return GL_NEAREST;
-        case Filter::Linear: return GL_LINEAR;
-        case Filter::NearestMipmapNearest: return GL_NEAREST_MIPMAP_NEAREST;
-        case Filter::LinearMipmapNearest: return GL_LINEAR_MIPMAP_NEAREST;
-        case Filter::NearestMipmapLinear: return GL_NEAREST_MIPMAP_LINEAR;
-        case Filter::LinearMipmapLinear: return GL_LINEAR_MIPMAP_LINEAR;
-    }
-    return GL_LINEAR;
-}
-
-GLenum wrap_gl(Wrap w) {
-    switch (w) {
-        case Wrap::Repeat: return GL_REPEAT;
-        case Wrap::Clamp: return GL_CLAMP_TO_EDGE;
-        case Wrap::Mirror: return GL_MIRRORED_REPEAT;
-    }
-    return GL_CLAMP_TO_EDGE;
-}
-
-uint32_t full_mip_count(int32_t w, int32_t h) {
-    uint32_t levels = 1;
-    int32_t size = std::max(w, h);
-    while (size > 1) {
-        size >>= 1;
-        ++levels;
-    }
-    return levels;
-}
-
-bool has_extension(const char* name) {
-    const char* all = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
-    if (!all) return false;
-    const size_t len = std::strlen(name);
-    for (const char* p = all; (p = std::strstr(p, name)) != nullptr; p += len) {
-        const bool start_ok = p == all || p[-1] == ' ';
-        const bool end_ok = p[len] == '\0' || p[len] == ' ';
-        if (start_ok && end_ok) return true;
-    }
-    return false;
-}
 
 void apply_default_sampler(GLuint tex, uint32_t levels) {
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -136,7 +94,7 @@ Uploaded upload_ktx2(ktxTexture2* tex, const char* origin) {
     if (ris_ktxTexture2_NeedsTranscoding(tex)) {
         // Prefer ASTC, then ETC2 (core in OpenGL ES 3, emulated by ANGLE where the GPU lacks it).
         // BC7 is deliberately not used: ANGLE does not expose it on every backend.
-        const bool astc = has_extension("GL_KHR_texture_compression_astc_ldr");
+        const bool astc = gles::extension_utilities::has_extension("GL_KHR_texture_compression_astc_ldr");
         const ktx_transcode_fmt_e target = astc ? KTX_TTF_ASTC_4x4_RGBA : KTX_TTF_ETC2_RGBA;
         KTX_error_code rc = ris_ktxTexture2_TranscodeBasis(tex, target, 0);
         if (rc != KTX_SUCCESS) {
@@ -154,7 +112,7 @@ Uploaded upload_ktx2(ktxTexture2* tex, const char* origin) {
     if (fmt.internal_format == 0) {
         throw_error(Result::Unsupported, "KTX2 '%s': VkFormat %d has no OpenGL ES 3 mapping", origin, static_cast<int>(vk));
     }
-    if (fmt.needs_astc && !has_extension("GL_KHR_texture_compression_astc_ldr")) {
+    if (fmt.needs_astc && !gles::extension_utilities::has_extension("GL_KHR_texture_compression_astc_ldr")) {
         throw_error(Result::Unsupported, "KTX2 '%s' is ASTC compressed but GL_KHR_texture_compression_astc_ldr is unavailable",
                     origin);
     }
@@ -222,26 +180,11 @@ Texture Texture::from_rgba8(int32_t width, int32_t height, const void* pixels, b
     if (width <= 0 || height <= 0) {
         throw_error(Result::InvalidArgument, "Texture::from_rgba8: invalid size %dx%d", width, height);
     }
-    const uint32_t levels = generate_mipmaps ? full_mip_count(width, height) : 1;
-
-    GLuint id = 0;
-    glGenTextures(1, &id);
-    glBindTexture(GL_TEXTURE_2D, id);
-    glTexStorage2D(GL_TEXTURE_2D, static_cast<GLsizei>(levels), srgb ? GL_SRGB8_ALPHA8 : GL_RGBA8, width, height);
-    if (pixels) {
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        if (levels > 1) glGenerateMipmap(GL_TEXTURE_2D);
-    }
+    const uint32_t levels = generate_mipmaps ? gles::texture_utilities::full_mip_count(width, height) : 1;
+    const gles::GlUint id = gles::texture_utilities::create_texture_2d(
+        width, height, pixels, srgb ? TextureFormat::Rgba8UnormSrgb : TextureFormat::Rgba8Unorm, generate_mipmaps);
     apply_default_sampler(id, levels);
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    try {
-        check_gl("Texture::from_rgba8");
-    } catch (...) {
-        glDeleteTextures(1, &id);
-        throw;
-    }
     return adopt(id, width, height, levels);
 }
 
@@ -318,11 +261,11 @@ Texture& Texture::operator=(Texture&& other) noexcept {
 void Texture::set_sampler(const SamplerDesc& s) {
     require_context();
     glBindTexture(GL_TEXTURE_2D, id_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLint>(min_filter_gl(s.min_filter)));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLint>(gles::converter::convert_filter(s.min_filter)));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                    s.mag_filter == Filter::Nearest ? GL_NEAREST : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLint>(wrap_gl(s.wrap_u)));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLint>(wrap_gl(s.wrap_v)));
+                    s.mag_filter == Filter::Nearest ? GL_NEAREST : GL_LINEAR);   // only Nearest and Linear are valid
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLint>(gles::converter::convert_wrap(s.wrap_u)));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLint>(gles::converter::convert_wrap(s.wrap_v)));
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 

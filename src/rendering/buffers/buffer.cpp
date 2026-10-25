@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "internal.hpp"
+#include "ris/gles/utilities/debug_label_utilities.hpp"
 #include "rendering/buffers/buffers_internal.hpp"
 
 using namespace ris::detail;
@@ -36,7 +37,9 @@ BufferBase::BufferBase(BufferType type, BufferUsageFlags usage, const void* data
     : buffer_(type, has_flag(usage, BufferUsageFlags::CopyDst) ? BufferUsage::Dynamic : BufferUsage::Static, data,
               byte_size),
       usage_(usage),
-      label_(std::move(label)) {}
+      label_(std::move(label)) {
+    gles::debug_label_utilities::set_label(gles::debug_label_utilities::ObjectKind::Buffer, buffer_.gl_handle(), label_);
+}
 
 void BufferBase::write(size_t byte_offset, const void* data, size_t size, const char* what) {
     if (!has_flag(usage_, BufferUsageFlags::CopyDst)) {

@@ -3,44 +3,13 @@
 #include <utility>
 
 #include "internal.hpp"
+#include "ris/gles/gles.hpp"
 
 using namespace ris::detail;
 
 namespace ris {
 
 namespace {
-
-GLenum compare_func(CompareFunc f) {
-    switch (f) {
-        case CompareFunc::Never: return GL_NEVER;
-        case CompareFunc::Less: return GL_LESS;
-        case CompareFunc::Equal: return GL_EQUAL;
-        case CompareFunc::LessEqual: return GL_LEQUAL;
-        case CompareFunc::Greater: return GL_GREATER;
-        case CompareFunc::NotEqual: return GL_NOTEQUAL;
-        case CompareFunc::GreaterEqual: return GL_GEQUAL;
-        case CompareFunc::Always: return GL_ALWAYS;
-    }
-    return GL_LESS;
-}
-
-GLenum buffer_target(BufferType t) {
-    switch (t) {
-        case BufferType::Vertex: return GL_ARRAY_BUFFER;
-        case BufferType::Index: return GL_ELEMENT_ARRAY_BUFFER;
-        case BufferType::Uniform: return GL_UNIFORM_BUFFER;
-    }
-    return GL_ARRAY_BUFFER;
-}
-
-GLenum buffer_usage(BufferUsage u) {
-    switch (u) {
-        case BufferUsage::Static: return GL_STATIC_DRAW;
-        case BufferUsage::Dynamic: return GL_DYNAMIC_DRAW;
-        case BufferUsage::Stream: return GL_STREAM_DRAW;
-    }
-    return GL_STATIC_DRAW;
-}
 
 GLuint g_current_program = 0;
 
@@ -88,32 +57,35 @@ void clear(float r, float g, float b, float a, ClearFlags flags) {
 
 void set_blend_mode(BlendMode mode) {
     require_context();
+    using namespace gles::blending_utilities;
     switch (mode) {
         case BlendMode::None:
-            glDisable(GL_BLEND);
+            disable_blend();
             return;
         case BlendMode::Alpha:
-            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            enable_blend({{BlendOperation::Add, BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha},
+                          {BlendOperation::Add, BlendFactor::One, BlendFactor::OneMinusSrcAlpha}});
             break;
         case BlendMode::Premultiplied:
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            enable_blend({{BlendOperation::Add, BlendFactor::One, BlendFactor::OneMinusSrcAlpha},
+                          {BlendOperation::Add, BlendFactor::One, BlendFactor::OneMinusSrcAlpha}});
             break;
         case BlendMode::Additive:
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            enable_blend({{BlendOperation::Add, BlendFactor::SrcAlpha, BlendFactor::One},
+                          {BlendOperation::Add, BlendFactor::SrcAlpha, BlendFactor::One}});
             break;
         case BlendMode::Multiply:
-            glBlendFunc(GL_DST_COLOR, GL_ZERO);
+            enable_blend({{BlendOperation::Add, BlendFactor::DstColor, BlendFactor::Zero},
+                          {BlendOperation::Add, BlendFactor::DstColor, BlendFactor::Zero}});
             break;
     }
-    glBlendEquation(GL_FUNC_ADD);
-    glEnable(GL_BLEND);
 }
 
 void set_depth_state(bool test_enabled, bool write_enabled, CompareFunc func) {
     require_context();
     if (test_enabled) {
         glEnable(GL_DEPTH_TEST);
-        glDepthFunc(compare_func(func));
+        glDepthFunc(gles::converter::convert_compare_func(func));
     } else {
         glDisable(GL_DEPTH_TEST);
     }
@@ -123,12 +95,11 @@ void set_depth_state(bool test_enabled, bool write_enabled, CompareFunc func) {
 void set_cull_mode(CullMode mode) {
     require_context();
     if (mode == CullMode::None) {
-        glDisable(GL_CULL_FACE);
+        gles::culling_utilities::set_culling(CullMode::None);
         return;
     }
-    glFrontFace(GL_CCW);
-    glCullFace(mode == CullMode::Back ? GL_BACK : GL_FRONT);
-    glEnable(GL_CULL_FACE);
+    gles::culling_utilities::set_front_face(FrontFace::Ccw);
+    gles::culling_utilities::set_culling(mode);
 }
 
 std::vector<uint8_t> read_pixels(int32_t x, int32_t y, int32_t width, int32_t height) {
@@ -148,23 +119,7 @@ std::vector<uint8_t> read_pixels(int32_t x, int32_t y, int32_t width, int32_t he
 // ---- Buffer ---------------------------------------------------------------------------------
 
 Buffer::Buffer(BufferType type, BufferUsage usage, const void* data, size_t size) : type_(type), size_(size) {
-    require_context();
-    if (size == 0) {
-        throw_error(Result::InvalidArgument, "Buffer: size must be greater than zero");
-    }
-    glGenBuffers(1, &id_);
-    // GL_COPY_WRITE_BUFFER keeps the VAO's element array binding untouched.
-    const GLenum target = type == BufferType::Index ? GL_COPY_WRITE_BUFFER : buffer_target(type);
-    glBindBuffer(target, id_);
-    glBufferData(target, static_cast<GLsizeiptr>(size), data, buffer_usage(usage));
-    glBindBuffer(target, 0);
-    try {
-        check_gl("Buffer::Buffer");
-    } catch (...) {
-        glDeleteBuffers(1, &id_);
-        id_ = 0;
-        throw;
-    }
+    id_ = gles::buffer_utilities::create_buffer(type, data, size, gles::converter::convert_buffer_usage(usage));
 }
 
 Buffer::~Buffer() {
@@ -192,11 +147,8 @@ void Buffer::update(size_t offset, const void* data, size_t size) {
         throw_error(Result::InvalidArgument, "Buffer::update: range [%zu, %zu) is outside the buffer (size %zu)", offset,
                     offset + size, size_);
     }
-    const GLenum target = type_ == BufferType::Index ? GL_COPY_WRITE_BUFFER : buffer_target(type_);
-    glBindBuffer(target, id_);
-    glBufferSubData(target, static_cast<GLintptr>(offset), static_cast<GLsizeiptr>(size), data);
-    glBindBuffer(target, 0);
-    check_gl("Buffer::update");
+    if (size == 0) return;
+    gles::buffer_utilities::update_buffer(type_, id_, offset, data, size);
 }
 
 void Buffer::bind_base(uint32_t binding) const {
@@ -206,60 +158,21 @@ void Buffer::bind_base(uint32_t binding) const {
 
 // ---- Shader ---------------------------------------------------------------------------------
 
-namespace {
-
-GLuint compile_stage(GLenum type, const std::string& source, const char* stage_name) {
-    const GLuint shader = glCreateShader(type);
-    const char* src = source.c_str();
-    glShaderSource(shader, 1, &src, nullptr);
-    glCompileShader(shader);
-
-    GLint ok = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &ok);
-    if (!ok) {
-        GLint len = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-        std::string log_text(static_cast<size_t>(len > 0 ? len : 1), '\0');
-        glGetShaderInfoLog(shader, len, nullptr, log_text.data());
-        glDeleteShader(shader);
-        throw_error(Result::Compile, "%s shader compile error:\n%s", stage_name, log_text.c_str());
-    }
-    return shader;
-}
-
-} // namespace
-
 Shader::Shader(const std::string& vertex_source, const std::string& fragment_source) {
+    using namespace gles;
     require_context();
-    const GLuint vs = compile_stage(GL_VERTEX_SHADER, vertex_source, "vertex");
+    GLuint vs = shader_utilities::create_vertex_shader(vertex_source);
     GLuint fs = 0;
     try {
-        fs = compile_stage(GL_FRAGMENT_SHADER, fragment_source, "fragment");
+        fs = shader_utilities::create_fragment_shader(fragment_source);
+        program_ = program_utilities::create(vs, fs);
     } catch (...) {
-        glDeleteShader(vs);
+        shader_utilities::delete_shader(vs);
+        shader_utilities::delete_shader(fs);
         throw;
     }
-
-    program_ = glCreateProgram();
-    glAttachShader(program_, vs);
-    glAttachShader(program_, fs);
-    glLinkProgram(program_);
-    glDetachShader(program_, vs);
-    glDetachShader(program_, fs);
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-
-    GLint ok = 0;
-    glGetProgramiv(program_, GL_LINK_STATUS, &ok);
-    if (!ok) {
-        GLint len = 0;
-        glGetProgramiv(program_, GL_INFO_LOG_LENGTH, &len);
-        std::string log_text(static_cast<size_t>(len > 0 ? len : 1), '\0');
-        glGetProgramInfoLog(program_, len, nullptr, log_text.data());
-        glDeleteProgram(program_);
-        program_ = 0;
-        throw_error(Result::Compile, "shader link error:\n%s", log_text.c_str());
-    }
+    shader_utilities::delete_shader(vs);
+    shader_utilities::delete_shader(fs);
 }
 
 Shader::~Shader() {
@@ -342,35 +255,6 @@ void Shader::bind_uniform_block(const char* block_name, uint32_t binding) const 
 
 // ---- VertexArray -----------------------------------------------------------------------------------
 
-namespace {
-
-GLenum attrib_gl_type(AttribType t) {
-    switch (t) {
-        case AttribType::Float: return GL_FLOAT;
-        case AttribType::UByte: return GL_UNSIGNED_BYTE;
-        case AttribType::Byte: return GL_BYTE;
-        case AttribType::UShort: return GL_UNSIGNED_SHORT;
-        case AttribType::Short: return GL_SHORT;
-        case AttribType::UInt: return GL_UNSIGNED_INT;
-        case AttribType::Int: return GL_INT;
-    }
-    return GL_FLOAT;
-}
-
-GLenum topology_gl(Topology t) {
-    switch (t) {
-        case Topology::Triangles: return GL_TRIANGLES;
-        case Topology::TriangleStrip: return GL_TRIANGLE_STRIP;
-        case Topology::TriangleFan: return GL_TRIANGLE_FAN;
-        case Topology::Lines: return GL_LINES;
-        case Topology::LineStrip: return GL_LINE_STRIP;
-        case Topology::Points: return GL_POINTS;
-    }
-    return GL_TRIANGLES;
-}
-
-} // namespace
-
 VertexArray::VertexArray(const VertexArrayDesc& desc) : index_type_(desc.index_type) {
     require_context();
     if (desc.attribs.empty() || desc.attribs.size() > 16) {
@@ -391,16 +275,7 @@ VertexArray::VertexArray(const VertexArrayDesc& desc) : index_type_(desc.index_t
     for (const VertexAttrib& a : desc.attribs) {
         const VertexBufferBinding& binding = desc.vertex_buffers[a.buffer_slot];
         glBindBuffer(GL_ARRAY_BUFFER, binding.buffer->gl_handle());
-        const void* offset = reinterpret_cast<const void*>(static_cast<uintptr_t>(a.offset));
-        if (a.as_integer && a.type != AttribType::Float) {
-            glVertexAttribIPointer(a.location, static_cast<GLint>(a.components), attrib_gl_type(a.type),
-                                   static_cast<GLsizei>(binding.stride), offset);
-        } else {
-            glVertexAttribPointer(a.location, static_cast<GLint>(a.components), attrib_gl_type(a.type),
-                                  a.normalized ? GL_TRUE : GL_FALSE, static_cast<GLsizei>(binding.stride), offset);
-        }
-        glEnableVertexAttribArray(a.location);
-        glVertexAttribDivisor(a.location, a.divisor);
+        gles::vertex_attribute::enable(a, binding.stride);
     }
     if (desc.index_buffer) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, desc.index_buffer->gl_handle());
@@ -439,14 +314,14 @@ void VertexArray::draw(Topology topology, uint32_t first, uint32_t count, uint32
     if (count == 0) return;
     if (instance_count == 0) instance_count = 1;
     glBindVertexArray(vao_);
-    const GLenum mode = topology_gl(topology);
+    const GLenum mode = gles::converter::convert_primitive_type(topology);
     if (index_type_ == IndexType::None) {
         glDrawArraysInstanced(mode, static_cast<GLint>(first), static_cast<GLsizei>(count),
                               static_cast<GLsizei>(instance_count));
     } else {
         const bool wide = index_type_ == IndexType::UInt32;
         const uintptr_t byte_offset = static_cast<uintptr_t>(first) * (wide ? 4u : 2u);
-        glDrawElementsInstanced(mode, static_cast<GLsizei>(count), wide ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
+        glDrawElementsInstanced(mode, static_cast<GLsizei>(count), gles::converter::convert_index_type(index_type_),
                                 reinterpret_cast<const void*>(byte_offset), static_cast<GLsizei>(instance_count));
     }
     glBindVertexArray(0);
@@ -455,39 +330,28 @@ void VertexArray::draw(Topology topology, uint32_t first, uint32_t count, uint32
 // ---- RenderTarget ---------------------------------------------------------------------------
 
 RenderTarget::RenderTarget(int32_t width, int32_t height, bool with_depth_stencil) {
+    using namespace gles;
     require_context();
     if (width <= 0 || height <= 0) {
         throw_error(Result::InvalidArgument, "RenderTarget: invalid size %dx%d", width, height);
     }
 
-    GLuint tex = 0;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // The colour texture is owned by `color_` from here on, so it is released if anything below throws.
+    GLuint tex = texture_utilities::create_texture_2d(width, height, static_cast<const void*>(nullptr));
     color_ = Texture::adopt(tex, width, height, 1);
+    color_.set_sampler(SamplerDesc{Filter::Linear, Filter::Linear, Wrap::Clamp, Wrap::Clamp});
 
-    glGenFramebuffers(1, &fbo_);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
-    if (with_depth_stencil) {
-        glGenRenderbuffers(1, &depth_);
-        glBindRenderbuffer(GL_RENDERBUFFER, depth_);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    if (!with_depth_stencil) {
+        fbo_ = framebuffer_utilities::create(tex);
+        return;
     }
-    const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        if (depth_) glDeleteRenderbuffers(1, &depth_);
-        glDeleteFramebuffers(1, &fbo_);
-        fbo_ = depth_ = 0;
-        throw_error(Result::Graphics, "RenderTarget: framebuffer incomplete (0x%04X)", static_cast<unsigned>(status));
+    depth_ = renderbuffer_utilities::create(TextureFormat::Depth24Stencil8, width, height);
+    try {
+        fbo_ = framebuffer_utilities::create_with_renderbuffer_as_depth_buffer(tex, DepthAttachmentType::DepthStencil,
+                                                                               depth_);
+    } catch (...) {
+        renderbuffer_utilities::delete_renderbuffer(depth_);
+        throw;
     }
 }
 

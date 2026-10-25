@@ -16,6 +16,8 @@ There are two APIs:
 Window and GL context, events, buffers, shaders, meshes (instancing), textures (PNG/JPEG via stb, KTX2 with
 ASTC > ETC2 > RGBA8 transcoding), render targets, sprite batch. Math is [glm](https://github.com/g-truc/glm) (`ris::Mat4` is `glm::mat4`).
 
+The OpenGL ES helpers (buffers, shaders, programs, textures, samplers, framebuffers, blending, culling, ...) live in `ris/gles/` and mirror `webgl/` of ris-framework-ts; `ris/gles/gles.hpp` includes all of them.
+
 ## Building
 
 Needs CMake 3.30+, a C++20 compiler and [vcpkg](https://github.com/microsoft/vcpkg).

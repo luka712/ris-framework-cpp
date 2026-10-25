@@ -98,6 +98,22 @@ add_library(${TARGET_NAME}
         src/rendering/buffers/vertex_buffer.cpp
         src/rendering/buffers/vertex_buffer_layout.cpp
         src/rendering/buffers/vertex_format.cpp
+        src/gles/rendering/vertex_attribute.cpp
+        src/gles/rendering/vertex_buffer_layout.cpp
+        src/gles/utilities/anisotropic_filter_utilities.cpp
+        src/gles/utilities/blending_utilities.cpp
+        src/gles/utilities/buffer_utilities.cpp
+        src/gles/utilities/culling_utilities.cpp
+        src/gles/utilities/debug_label_utilities.cpp
+        src/gles/utilities/error_utilities.cpp
+        src/gles/utilities/extension_utilities.cpp
+        src/gles/utilities/framebuffer_utilities.cpp
+        src/gles/utilities/gles_converter.cpp
+        src/gles/utilities/program_utilities.cpp
+        src/gles/utilities/renderbuffer_utilities.cpp
+        src/gles/utilities/sampler_utilities.cpp
+        src/gles/utilities/shader_utilities.cpp
+        src/gles/utilities/texture_utilities.cpp
         src/c_api.cpp
 )
 add_library(ris_framework::ris_framework ALIAS ${TARGET_NAME})

@@ -23,7 +23,8 @@ namespace ris {
 /// must not be used again. Requires the window's GL context for every operation (see the rules in buffers.hpp).
 class RIS_API BufferBase {
 public:
-    /// The debug label given at creation, empty if none. The label is kept on the CPU only.
+    /// The debug label given at creation, empty if none. It is also set as the GL object label (`glObjectLabel`, visible in
+    /// graphics debuggers) where `GL_KHR_debug` is available.
     const std::string& label() const noexcept { return label_; }
     /// Size of the GPU storage in bytes. Uniform buffers report their padded size.
     size_t byte_size() const noexcept { return buffer_.size(); }
