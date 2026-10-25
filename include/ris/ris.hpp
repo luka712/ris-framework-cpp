@@ -4,8 +4,8 @@
 ///
 /// Two layers:
 ///  - high level, like ris-framework-ts: framework.hpp (Framework, Scene, cameras, lights, materials, content)
-///  - low level: window.hpp, graphics.hpp, buffers.hpp, sprite_batch.hpp (windows, buffers, shaders, textures)
-#include "buffers.hpp"
+///  - low level: window.hpp, graphics.hpp, rendering/buffers/buffers.hpp, sprite_batch.hpp
+///    (windows, buffers, shaders, textures)
 #include "camera.hpp"
 #include "content.hpp"
 #include "core.hpp"
@@ -17,6 +17,7 @@
 #include "material.hpp"
 #include "math.hpp"
 #include "mesh.hpp"
+#include "rendering/buffers/buffers.hpp"
 #include "scene.hpp"
 #include "sprite_batch.hpp"
 #include "time.hpp"

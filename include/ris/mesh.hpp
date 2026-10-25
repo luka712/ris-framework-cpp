@@ -3,11 +3,12 @@
 #include <memory>
 #include <vector>
 
-#include "buffers.hpp"
 #include "core.hpp"
 #include "data.hpp"
 #include "graphics.hpp"
 #include "material.hpp"
+#include "rendering/buffers/index_buffer.hpp"
+#include "rendering/buffers/vertex_buffer.hpp"
 
 namespace ris {
 

@@ -1,4 +1,6 @@
 #include "ris/mesh.hpp"
+#include "ris/rendering/buffers/make_vertex_array_desc.hpp"
+#include "ris/rendering/buffers/vertex_buffer_layout.hpp"
 #include "ris/scene.hpp"
 
 #include <algorithm>

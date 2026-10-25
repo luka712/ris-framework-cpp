@@ -90,7 +90,14 @@ add_library(${TARGET_NAME}
         src/mesh_scene.cpp
         src/content.cpp
         src/framework.cpp
-        src/buffers.cpp
+        src/rendering/buffers/buffer.cpp
+        src/rendering/buffers/buffer_factory.cpp
+        src/rendering/buffers/index_buffer.cpp
+        src/rendering/buffers/make_vertex_array_desc.cpp
+        src/rendering/buffers/uniform_buffer.cpp
+        src/rendering/buffers/vertex_buffer.cpp
+        src/rendering/buffers/vertex_buffer_layout.cpp
+        src/rendering/buffers/vertex_format.cpp
         src/c_api.cpp
 )
 add_library(ris_framework::ris_framework ALIAS ${TARGET_NAME})
@@ -172,7 +179,7 @@ endif()
 if(RIS_FRAMEWORK_BUILD_TESTS)
     enable_testing()
     find_package(Catch2 CONFIG REQUIRED)
-    file(GLOB TEST_SRC_FILES CONFIGURE_DEPENDS tests/*.cpp)
+    file(GLOB_RECURSE TEST_SRC_FILES CONFIGURE_DEPENDS tests/*.cpp)
     add_executable(${TARGET_NAME}_tests ${TEST_SRC_FILES})
     target_link_libraries(${TARGET_NAME}_tests PRIVATE ${TARGET_NAME} Catch2::Catch2 Catch2::Catch2WithMain)
     target_compile_definitions(${TARGET_NAME}_tests PRIVATE RIS_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
