@@ -95,13 +95,11 @@ add_library(${TARGET_NAME}
         src/input/touch_location.cpp
         src/sdl3/input/sdl3_input_manager.cpp
         src/sdl3/sdl3_event_tap.cpp
-        src/sdl3/time/sdl3_clock.cpp
-        src/sdl3/time/sdl3_time_manager.cpp
-        src/time/a_clock.cpp
-        src/time/default_time_manager.cpp
+        src/time/clock_source.cpp
         src/time/frame_rate_counter.cpp
         src/time/stopwatch.cpp
-        src/time/time_manager_base.cpp
+        src/time/system_clock.cpp
+        src/time/time_manager.cpp
         src/time/timer.cpp
         src/rendering/default_buffer_factory.cpp
         src/rendering/buffers/buffer_validation.cpp
@@ -219,9 +217,10 @@ if(RIS_FRAMEWORK_BUILD_TESTS)
     target_compile_definitions(${TARGET_NAME}_tests PRIVATE RIS_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
     add_test(NAME ${TARGET_NAME}_tests COMMAND ${TARGET_NAME}_tests)
 
-    # The headers of ris/rendering/, ris/input/ and ris/time/ are API neutral: each must compile on its own, with only the
-    # public usage requirements of ris_framework (no OpenGL ES / ANGLE / SDL include path), and must not include
-    # a backend header (ris/gles/..., ris/sdl3/...), a GL or SDL header, or the OpenGL ES based graphics.hpp.
+    # The headers of ris/rendering/ and ris/input/ are API neutral, and the ones of ris/time/ never expose SDL: each
+    # must compile on its own, with only the public usage requirements of ris_framework (no OpenGL ES / ANGLE / SDL
+    # include path), and must not include a backend header (ris/gles/..., ris/sdl3/...), a GL or SDL header, or the
+    # OpenGL ES based graphics.hpp.
     file(GLOB_RECURSE _ris_neutral_headers CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include"
          include/ris/rendering/*.hpp include/ris/input/*.hpp include/ris/time/*.hpp)
     set(_ris_neutral_sources "")

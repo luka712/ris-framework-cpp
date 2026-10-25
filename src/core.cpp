@@ -1,6 +1,6 @@
 #include "internal.hpp"
 #include "ris/gles/utilities/error_utilities.hpp"
-#include "ris/time/default_time_manager.hpp"
+#include "ris/time/system_clock.hpp"
 #include "ris/time/time_units.hpp"
 
 
@@ -48,7 +48,7 @@ std::string vformat(const char* fmt, va_list args) {
 }
 
 uint64_t time_origin_ns() {
-    static const uint64_t origin = ris::default_clock().now_ns();
+    static const uint64_t origin = ris::system_clock::now_ns();
     return origin;
 }
 
@@ -119,9 +119,9 @@ void set_log_level(LogLevel level) noexcept {
 
 double time_seconds() noexcept {
     const uint64_t origin = time_origin_ns();
-    return static_cast<double>(default_clock().now_ns() - origin) * 1e-9;
+    return static_cast<double>(ris::system_clock::now_ns() - origin) * 1e-9;
 }
 
-void sleep_ms(uint32_t milliseconds) noexcept { default_clock().delay_ns(static_cast<uint64_t>(milliseconds) * time_units::ns_per_ms); }
+void sleep_ms(uint32_t milliseconds) noexcept { ris::system_clock::delay_ns(static_cast<uint64_t>(milliseconds) * time_units::ns_per_ms); }
 
 } // namespace ris

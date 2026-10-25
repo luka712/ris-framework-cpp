@@ -1,7 +1,8 @@
 # Fails if a header of the API neutral layers includes a backend, OpenGL or SDL header:
 #  - ris/rendering/ (graphics API neutral): no ris/gles/, GL / EGL / ANGLE headers, graphics.hpp
 #  - ris/input/ (windowing API neutral): no ris/sdl3/, SDL headers, window.hpp, graphics.hpp, GL headers
-#  - ris/time/ (platform time API neutral): the same as ris/input/
+#  - ris/time/ (SDL3 is integral to the engine, so there is no time backend split, but SDL must stay private):
+#    no ris/gles/, ris/sdl3/, SDL headers, window.hpp, graphics.hpp, GL headers (the same as ris/input/)
 # Usage: cmake -DRIS_INCLUDE_DIR=<path to include/> -P check_neutral_headers.cmake
 set(_bad "")
 set(_checked 0)

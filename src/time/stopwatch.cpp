@@ -1,9 +1,19 @@
 #include "ris/time/stopwatch.hpp"
 
+#include <utility>
+
 namespace ris {
 
-Stopwatch Stopwatch::start_new(const AClock& clock) noexcept {
-    Stopwatch stopwatch(clock);
+Stopwatch::Stopwatch(ClockSource clock) : clock_(std::move(clock)) { clock_.validate(); }
+
+Stopwatch Stopwatch::start_new() {
+    Stopwatch stopwatch;
+    stopwatch.start();
+    return stopwatch;
+}
+
+Stopwatch Stopwatch::start_new(ClockSource clock) {
+    Stopwatch stopwatch(std::move(clock));
     stopwatch.start();
     return stopwatch;
 }
@@ -12,7 +22,7 @@ void Stopwatch::start() noexcept {
     if (running_) {
         return;
     }
-    started_at_ticks_ = clock_->ticks();
+    started_at_ticks_ = clock_.ticks();
     running_ = true;
 }
 
@@ -36,10 +46,10 @@ void Stopwatch::restart() noexcept {
 }
 
 uint64_t Stopwatch::elapsed_ticks() const noexcept {
-    return running_ ? accumulated_ticks_ + (clock_->ticks() - started_at_ticks_) : accumulated_ticks_;
+    return running_ ? accumulated_ticks_ + (clock_.ticks() - started_at_ticks_) : accumulated_ticks_;
 }
 
-uint64_t Stopwatch::elapsed_ns() const noexcept { return clock_->ticks_to_ns(elapsed_ticks()); }
+uint64_t Stopwatch::elapsed_ns() const noexcept { return clock_.ticks_to_ns(elapsed_ticks()); }
 
 double Stopwatch::elapsed_ms() const noexcept { return static_cast<double>(elapsed_ns()) * 1e-6; }
 

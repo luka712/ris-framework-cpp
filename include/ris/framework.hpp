@@ -16,7 +16,7 @@
 #include "mesh.hpp"
 #include "scene.hpp"
 #include "sprite_batch.hpp"
-#include "ris/time/time.hpp"
+#include "ris/time.hpp"
 #include "window.hpp"
 
 namespace ris {
@@ -39,7 +39,7 @@ struct FrameworkConfiguration {
     bool hidden = false;               ///< hidden window, for automated runs
     bool exit_on_escape = true;
     int32_t max_frames = -1;           ///< >= 0: stop after this many frames and use a deterministic 60 Hz time step
-    double target_frames_per_second = 0; ///< > 0: `ATimeManager::frame_end` sleeps to cap the frame rate; 0 = no cap
+    double target_frames_per_second = 0; ///< > 0: `TimeManager::frame_end` sleeps to cap the frame rate; 0 = no cap
     double fixed_time_step_ms = 0;     ///< > 0: enables fixed update steps (`add_on_fixed_update_listener`) of this length
     std::string screenshot_path;       ///< when set, the last frame is written there as a binary PPM
 };
@@ -104,8 +104,8 @@ public:
     Renderer& renderer() { return *renderer_; }
     /// The input manager of the default backend (SDL3), created and initialised with the window.
     AInputManager& input_manager() { return *input_; }
-    /// The time manager of the default backend (SDL3), created with the framework.
-    ATimeManager& time_manager() { return *time_; }
+    /// The time manager (SDL3 time API), created with the framework.
+    TimeManager& time_manager() { return time_; }
     ContentManager& content() { return content_; }
     CameraFactory& camera_factory() { return camera_factory_; }
     MaterialFactory& material_factory() { return material_factory_; }
@@ -116,7 +116,7 @@ public:
     ListenerId add_on_load_content_listener(std::function<void()> listener);
     ListenerId add_on_initialized_listener(std::function<void()> listener);
     ListenerId add_on_update_listener(std::function<void(const GameTime&)> listener);
-    /// Registers a listener for the fixed update steps: when `ATimeManager::fixed_time_step_ms()` is > 0 (see
+    /// Registers a listener for the fixed update steps: when `TimeManager::fixed_time_step_ms()` is > 0 (see
     /// `FrameworkConfiguration::fixed_time_step_ms`) it runs zero or more times per frame, before the update
     /// listeners, once for every full fixed step; its `GameTime::delta_time_ms` is the step and `elapsed_time_ms`
     /// the fixed simulation time. Never runs without a fixed time step.
@@ -143,7 +143,7 @@ private:
     std::unique_ptr<WindowManager> window_manager_;
     std::unique_ptr<Renderer> renderer_;
     std::unique_ptr<AInputManager> input_;   // declared after window_: disposed before the window goes away
-    std::unique_ptr<ATimeManager> time_;
+    TimeManager time_;
     ContentManager content_;
     CameraFactory camera_factory_;
     MaterialFactory material_factory_;

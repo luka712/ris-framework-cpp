@@ -12,7 +12,7 @@ namespace ris {
 /// values are real (clock) time and keep running while the game is paused or slowed down.
 struct GameTime {
     /// Scaled time since the loop started, in milliseconds. In real time mode it includes the current frame's
-    /// delta; in deterministic mode (`ATimeManager::set_deterministic_step_ms`) it is the time at the start of the
+    /// delta; in deterministic mode (`TimeManager::set_deterministic_step_ms`) it is the time at the start of the
     /// frame, so the first frame is at 0.
     double elapsed_time_ms = 0;
     /// Scaled time since the previous frame, in milliseconds: the unscaled delta times the time scale, and 0
@@ -22,7 +22,7 @@ struct GameTime {
     double unscaled_elapsed_time_ms = 0;
     /// Unscaled (real) time since the previous frame, in milliseconds.
     double unscaled_delta_time_ms = 0;
-    /// The unscaled delta, smoothed with an exponential moving average (see `ATimeManager::set_delta_smoothing`).
+    /// The unscaled delta, smoothed with an exponential moving average (see `TimeManager::set_delta_smoothing`).
     /// Equal to `unscaled_delta_time_ms` while smoothing is off (the default).
     double smoothed_delta_time_ms = 0;
     /// Frames per second, measured over the last half second of unscaled time; 0 before the first frame.
@@ -34,8 +34,8 @@ struct GameTime {
     /// True while the time manager is paused: `delta_time_ms` is 0 and `elapsed_time_ms` stands still.
     bool is_paused = false;
     /// True when this frame took clearly longer than the target frame time (see
-    /// `ATimeManager::set_target_frames_per_second`), or when fixed steps had to be dropped to catch up (see
-    /// `ATimeManager::set_max_fixed_steps_per_frame`). Never set on the first frame.
+    /// `TimeManager::set_target_frames_per_second`), or when fixed steps had to be dropped to catch up (see
+    /// `TimeManager::set_max_fixed_steps_per_frame`). Never set on the first frame.
     bool is_running_slowly = false;
 
     /// `elapsed_time_ms` in seconds.

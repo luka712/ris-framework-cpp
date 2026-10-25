@@ -3,7 +3,7 @@
 
 #include <limits>
 
-#include <ris/time/time.hpp>
+#include <ris/time.hpp>
 
 #include "fake_clock.hpp"
 
@@ -11,7 +11,7 @@ using Catch::Approx;
 
 TEST_CASE("Stopwatch accumulates between start and stop") {
     ris_test::FakeClock clock(1'000'000, 123'456);   // 1 MHz, odd start
-    ris::Stopwatch watch(clock);
+    ris::Stopwatch watch(clock.source());
     REQUIRE_FALSE(watch.is_running());
     REQUIRE(watch.elapsed_ns() == 0);
 
@@ -50,7 +50,7 @@ TEST_CASE("Stopwatch accumulates between start and stop") {
     REQUIRE_FALSE(watch.is_running());
     REQUIRE(watch.elapsed_ns() == 0);
 
-    auto running = ris::Stopwatch::start_new(clock);
+    auto running = ris::Stopwatch::start_new(clock.source());
     REQUIRE(running.is_running());
     clock.advance_ms(1);
     REQUIRE(running.elapsed_ms() == Approx(1.0));

@@ -4,8 +4,8 @@
 
 namespace ris {
 
-/// A calendar date and time (Gregorian calendar), the result of `AClock::to_date_time()` and the input of
-/// `AClock::from_date_time()`. A plain value type; it names no platform type.
+/// A calendar date and time (Gregorian calendar), the result of `system_clock::to_date_time()` and the input of
+/// `system_clock::from_date_time()` (ris/time/system_clock.hpp). A plain value type; it names no platform type.
 struct DateTime {
     int32_t year = 1970;          ///< the year, for example 2026
     int32_t month = 1;            ///< month of the year, 1 (January) to 12

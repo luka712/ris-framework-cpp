@@ -1,5 +1,6 @@
-#include "ris/time/a_clock.hpp"
+#include "ris/time/clock_source.hpp"
 
+#include "ris/time/system_clock.hpp"
 #include "ris/time/time_units.hpp"
 
 namespace ris {
@@ -11,8 +12,29 @@ constexpr uint64_t max_exact_frequency = UINT64_MAX / time_units::ns_per_second;
 
 } // namespace
 
-uint64_t AClock::ticks_to_ns(uint64_t tick_count) const noexcept {
-    const uint64_t frequency = ticks_per_second();
+ClockSource ClockSource::system() {
+    ClockSource source;
+    source.ticks = &system_clock::ticks;
+    source.ticks_per_second = system_clock::ticks_per_second();
+    source.delay_precise_ns = &system_clock::delay_precise_ns;
+    return source;
+}
+
+void ClockSource::validate() const {
+    if (!ticks) {
+        throw Error(Result::InvalidArgument, "ClockSource::ticks is empty");
+    }
+    if (ticks_per_second == 0) {
+        throw Error(Result::InvalidArgument, "ClockSource::ticks_per_second must be > 0");
+    }
+}
+
+uint64_t ClockSource::now_ns() const { return ticks_to_ns(ticks()); }
+
+double ClockSource::now_seconds() const { return static_cast<double>(now_ns()) * 1e-9; }
+
+uint64_t ClockSource::ticks_to_ns(uint64_t tick_count) const noexcept {
+    const uint64_t frequency = ticks_per_second;
     if (frequency == 0) {
         return 0;
     }
@@ -24,8 +46,8 @@ uint64_t AClock::ticks_to_ns(uint64_t tick_count) const noexcept {
     return whole * time_units::ns_per_second + rest_ns;
 }
 
-uint64_t AClock::ns_to_ticks(uint64_t ns) const noexcept {
-    const uint64_t frequency = ticks_per_second();
+uint64_t ClockSource::ns_to_ticks(uint64_t ns) const noexcept {
+    const uint64_t frequency = ticks_per_second;
     const uint64_t whole = ns / time_units::ns_per_second;
     const uint64_t rest = ns % time_units::ns_per_second;
     const uint64_t rest_ticks = frequency <= max_exact_frequency

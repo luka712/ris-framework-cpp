@@ -3,7 +3,7 @@
 
 #include <limits>
 
-#include <ris/time/time.hpp>
+#include <ris/time.hpp>
 
 #include "fake_clock.hpp"
 
@@ -41,7 +41,7 @@ TEST_CASE("time units") {
     REQUIRE(seconds_to_ns(-1) == 0);
 }
 
-TEST_CASE("AClock converts ticks and nanoseconds at any frequency without overflow") {
+TEST_CASE("ClockSource converts ticks and nanoseconds at any frequency without overflow") {
     SECTION("1 GHz: ticks are nanoseconds") {
         ris_test::FakeClock clock(1'000'000'000);
         REQUIRE(clock.ticks_to_ns(123'456'789'012'345ull) == 123'456'789'012'345ull);

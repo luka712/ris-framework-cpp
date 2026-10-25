@@ -1,22 +1,22 @@
-// TimeManagerBase driven by a fake clock: fully deterministic, no SDL and no display.
+// TimeManager driven by a fake ClockSource: fully deterministic, no sleeping and no display.
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <cmath>
 #include <limits>
 
-#include <ris/time/time.hpp>
+#include <ris/time.hpp>
 
 #include "fake_clock.hpp"
 
 using Catch::Approx;
 using ris::GameTime;
-using ris::TimeManagerBase;
+using ris::TimeManager;
 
-TEST_CASE("TimeManagerBase mirrors the TypeScript TimeManager") {
+TEST_CASE("TimeManager mirrors the TypeScript TimeManager") {
     // Same sequence as tests/time.test.ts of ris-framework-ts, with a clock in place of Date.now.
     ris_test::FakeClock clock(1'000'000'000, 5'000'000'000ull);
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
 
     manager.prepare_start();
     REQUIRE(manager.time().elapsed_time_ms == 0);
@@ -44,21 +44,22 @@ TEST_CASE("TimeManagerBase mirrors the TypeScript TimeManager") {
     REQUIRE(manager.time().delta_time_ms == Approx(100));
     REQUIRE(manager.time().elapsed_time_ms == Approx(100));
     REQUIRE(manager.time().frame_number == 1);
-    REQUIRE(&manager.clock() == &clock);
+    REQUIRE(manager.clock().ticks() == clock.ticks());
+    REQUIRE(manager.clock().ticks_per_second == 1'000'000'000);
 }
 
-TEST_CASE("TimeManagerBase works at any clock frequency") {
+TEST_CASE("TimeManager works at any clock frequency") {
     ris_test::FakeClock clock(24'000'000, 7);   // 24 MHz
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
     manager.prepare_start();
     clock.advance_ms(16);
     manager.frame_start();
     REQUIRE(manager.time().delta_time_ms == Approx(16.0).epsilon(0.001));
 }
 
-TEST_CASE("TimeManagerBase defaults") {
+TEST_CASE("TimeManager defaults") {
     ris_test::FakeClock clock;
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
     REQUIRE(manager.time_scale() == 1.0);
     REQUIRE_FALSE(manager.is_paused());
     REQUIRE(manager.target_frames_per_second() == 0);
@@ -73,7 +74,7 @@ TEST_CASE("TimeManagerBase defaults") {
 
 TEST_CASE("time scale and pause change the scaled time only") {
     ris_test::FakeClock clock;
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
     manager.prepare_start();
 
     clock.advance_ms(100);
@@ -134,7 +135,7 @@ TEST_CASE("time scale and pause change the scaled time only") {
 
 TEST_CASE("setters reject invalid values and change nothing") {
     ris_test::FakeClock clock;
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
     const double nan = std::numeric_limits<double>::quiet_NaN();
     const double inf = std::numeric_limits<double>::infinity();
 
@@ -172,7 +173,7 @@ TEST_CASE("setters reject invalid values and change nothing") {
 
 TEST_CASE("fixed time step accumulates and is consumed in whole steps") {
     ris_test::FakeClock clock;
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
     manager.set_fixed_time_step_ms(10.0);
     manager.prepare_start();
 
@@ -223,7 +224,7 @@ TEST_CASE("fixed time step accumulates and is consumed in whole steps") {
 
 TEST_CASE("fixed time step drops time instead of spiralling") {
     ris_test::FakeClock clock;
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
     manager.set_fixed_time_step_ms(10.0);
     manager.set_max_fixed_steps_per_frame(3);
     manager.prepare_start();
@@ -254,7 +255,7 @@ TEST_CASE("fixed time step drops time instead of spiralling") {
 
 TEST_CASE("deterministic mode ignores the clock and keeps elapsed time at the start of the frame") {
     ris_test::FakeClock clock;
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
     const double step_ms = 1000.0 / 60.0;
     manager.set_deterministic_step_ms(step_ms);
     manager.prepare_start();
@@ -274,7 +275,6 @@ TEST_CASE("deterministic mode ignores the clock and keeps elapsed time at the st
     manager.set_target_frames_per_second(30);
     manager.frame_end();
     REQUIRE(clock.precise_delays.empty());
-    REQUIRE(clock.coarse_delays.empty());
 
     // time scale and pause still apply
     manager.set_time_scale(0.5);
@@ -288,7 +288,7 @@ TEST_CASE("deterministic mode ignores the clock and keeps elapsed time at the st
 
 TEST_CASE("frame_end limits the frame rate") {
     ris_test::FakeClock clock;
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
 
     manager.prepare_start();
     clock.advance_ms(3);
@@ -303,7 +303,6 @@ TEST_CASE("frame_end limits the frame rate") {
     manager.frame_end();
     REQUIRE(clock.precise_delays.size() == 1);
     REQUIRE(clock.precise_delays[0] == Approx(6'000'000.0).epsilon(1e-6));
-    REQUIRE(clock.coarse_delays.empty());
 
     clock.advance_ms(0);
     manager.frame_start();   // the next frame starts exactly at the end of the sleep: delta is 10 ms
@@ -325,7 +324,7 @@ TEST_CASE("frame_end limits the frame rate") {
 
 TEST_CASE("running slowly needs a target frame rate, and never flags the first frame") {
     ris_test::FakeClock clock;
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
     manager.prepare_start();
     clock.advance_ms(500);
     manager.frame_start();
@@ -345,7 +344,7 @@ TEST_CASE("running slowly needs a target frame rate, and never flags the first f
 
 TEST_CASE("delta smoothing is an exponential moving average of the unscaled delta") {
     ris_test::FakeClock clock;
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
     manager.prepare_start();
 
     clock.advance_ms(10);
@@ -375,7 +374,7 @@ TEST_CASE("delta smoothing is an exponential moving average of the unscaled delt
 
 TEST_CASE("frames per second") {
     ris_test::FakeClock clock;
-    TimeManagerBase manager(clock);
+    TimeManager manager(clock.source());
     manager.prepare_start();
     REQUIRE(manager.time().frames_per_second == 0);
     for (int i = 0; i < 40; ++i) {
@@ -393,13 +392,21 @@ TEST_CASE("frames per second") {
     REQUIRE(manager.time().frames_per_second == 0);
 }
 
-TEST_CASE("a time manager is usable through the abstract interface") {
+TEST_CASE("TimeManager rejects an unusable clock source") {
+    ris::ClockSource no_ticks;
+    REQUIRE_THROWS_AS(TimeManager(no_ticks), ris::Error);
+
     ris_test::FakeClock clock;
-    TimeManagerBase concrete(clock);
-    ris::ATimeManager& manager = concrete;
+    ris::ClockSource zero_frequency = clock.source();
+    zero_frequency.ticks_per_second = 0;
+    REQUIRE_THROWS_AS(TimeManager(zero_frequency), ris::Error);
+    REQUIRE_THROWS_AS(ris::Stopwatch(zero_frequency), ris::Error);
+
+    ris::ClockSource no_delay = clock.source();
+    no_delay.delay_precise_ns = nullptr;   // allowed: frame_end just does not wait
+    TimeManager manager(no_delay);
+    manager.set_target_frames_per_second(60);
     manager.prepare_start();
-    clock.advance_ms(16);
     manager.frame_start();
-    REQUIRE(manager.time().delta_time_ms == Approx(16));
-    REQUIRE(&manager.time() == &concrete.time());
+    REQUIRE_NOTHROW(manager.frame_end());
 }

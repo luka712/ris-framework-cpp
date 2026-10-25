@@ -85,12 +85,11 @@ bool remove_listener(V& v, ListenerId id) {
 
 Framework::Framework(const FrameworkConfiguration& config)
     : config_(config),
-      time_(create_default_time_manager()),
       content_(*this),
       camera_factory_(*this) {
-    if (config_.max_frames >= 0) time_->set_deterministic_step_ms(1000.0 / 60.0);
-    time_->set_target_frames_per_second(config_.target_frames_per_second);
-    time_->set_fixed_time_step_ms(config_.fixed_time_step_ms);
+    if (config_.max_frames >= 0) time_.set_deterministic_step_ms(1000.0 / 60.0);
+    time_.set_target_frames_per_second(config_.target_frames_per_second);
+    time_.set_fixed_time_step_ms(config_.fixed_time_step_ms);
     window_ = std::make_unique<Window>(make_window_desc(config_));
     window_manager_ = std::make_unique<WindowManager>(*window_);
     renderer_ = std::make_unique<Renderer>(*window_);
@@ -115,7 +114,7 @@ bool Framework::remove_on_render_listener(ListenerId id) { return remove_listene
 
 void Framework::initialize() {
     quit_ = false;
-    time_->prepare_start();
+    time_.prepare_start();
 
     { auto copy = load_content_; for (auto& [id, l] : copy) l(); }
     { auto copy = initialized_; for (auto& [id, l] : copy) l(); }
@@ -134,13 +133,13 @@ void Framework::initialize() {
         }
         if (quit_ || (config_.max_frames >= 0 && frame >= config_.max_frames)) break;
 
-        time_->frame_start();
+        time_.frame_start();
         input_->update();
         if (!fixed_update_.empty()) {
             GameTime step;
-            while (time_->consume_fixed_step(step)) { auto copy = fixed_update_; for (auto& [id, l] : copy) l(step); }
+            while (time_.consume_fixed_step(step)) { auto copy = fixed_update_; for (auto& [id, l] : copy) l(step); }
         }
-        { auto copy = update_; for (auto& [id, l] : copy) l(time_->time()); }
+        { auto copy = update_; for (auto& [id, l] : copy) l(time_.time()); }
         input_->after_update();
 
         const Vec2 size = renderer_->back_buffer_size();
@@ -154,7 +153,7 @@ void Framework::initialize() {
             write_ppm(config_.screenshot_path, static_cast<int32_t>(size.x), static_cast<int32_t>(size.y));
         }
         window_->swap_buffers();
-        time_->frame_end();
+        time_.frame_end();
     }
 }
 
