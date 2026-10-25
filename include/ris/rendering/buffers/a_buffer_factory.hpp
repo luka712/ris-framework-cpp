@@ -29,7 +29,7 @@ public:
     /// index is <= 65535 and 32 bit indices otherwise, see AIndexBuffer::type().
     /// @param indices the indices (copied), must not be empty.
     /// @param label   optional debug label.
-    /// @throws Error(InvalidArgument) if empty, Error(NotInitialized) without a device, Error(Graphics) if
+    /// @throws std::invalid_argument if empty, std::logic_error without a device, std::runtime_error if
     ///         the backend fails.
     virtual std::unique_ptr<AIndexBuffer> create_index_buffer(std::span<const uint32_t> indices,
                                                               std::string label = {}) const = 0;
@@ -47,9 +47,9 @@ public:
     /// @param usage       usage flags. Add BufferUsageFlags::CopyDst if AVertexBuffer::update will be used.
     ///                    Flags of other buffer kinds (Index, Uniform) are rejected.
     /// @param label       optional debug label.
-    /// @throws Error(InvalidArgument) for bad arguments, Error(Unsupported) for usage flags the backend
-    ///         cannot honour (Storage / MapRead on OpenGL ES 3.0), Error(NotInitialized) without a device,
-    ///         Error(Graphics) if the backend fails.
+    /// @throws std::invalid_argument for bad arguments, std::domain_error for usage flags the backend
+    ///         cannot honour (Storage / MapRead on OpenGL ES 3.0), std::logic_error without a device,
+    ///         std::runtime_error if the backend fails.
     virtual std::unique_ptr<AVertexBuffer> create_vertex_buffer(std::span<const float> data, uint32_t byte_stride,
                                                                 BufferUsageFlags usage = BufferUsageFlags::Vertex,
                                                                 std::string label = {}) const = 0;
@@ -66,8 +66,8 @@ public:
     /// @param usage  usage flags, add BufferUsageFlags::CopyDst if AUniformBuffer::update will be used. Flags of
     ///               other buffer kinds (Vertex, Index) are rejected.
     /// @param label  optional debug label.
-    /// @throws Error(InvalidArgument) for bad arguments, Error(Unsupported) for usage flags the backend
-    ///         cannot honour, Error(NotInitialized) without a device, Error(Graphics) if the backend fails.
+    /// @throws std::invalid_argument for bad arguments, std::domain_error for usage flags the backend
+    ///         cannot honour, std::logic_error without a device, std::runtime_error if the backend fails.
     virtual std::unique_ptr<AUniformBuffer> create_uniform_buffer(
         std::span<const float> data, BufferUsageFlags usage = BufferUsageFlags::Uniform | BufferUsageFlags::CopyDst,
         std::string label = {}) const = 0;

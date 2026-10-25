@@ -17,7 +17,7 @@ public:
     Stopwatch() : clock_(ClockSource::system()) {}
     /// Creates a stopped stopwatch at 0 on a custom time source (a test moves time by hand with it). The source is
     /// copied; whatever its functions capture must outlive the stopwatch.
-    /// @throws Error(Result::InvalidArgument) if `clock.ticks` is empty or `clock.ticks_per_second` is 0
+    /// @throws std::invalid_argument if `clock.ticks` is empty or `clock.ticks_per_second` is 0
     explicit Stopwatch(ClockSource clock);
 
     /// Creates a stopwatch that is already running, on the system clock.

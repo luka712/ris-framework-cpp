@@ -29,7 +29,7 @@ struct ClockSource {
     /// need to be initialised. Every call returns an equal source that is safe to use from any thread.
     RIS_API static ClockSource system();
 
-    /// Throws `Error(Result::InvalidArgument)` when `ticks` is empty or `ticks_per_second` is 0.
+    /// Throws `std::invalid_argument` when `ticks` is empty or `ticks_per_second` is 0.
     RIS_API void validate() const;
 
     /// `ticks()` in nanoseconds, since the unspecified origin of the counter.

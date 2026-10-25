@@ -65,7 +65,7 @@ enum class GlInfo : uint32_t {
  * everything down; all GPU objects (Buffer, Texture, ...) must be destroyed before the Window.
  *
  * Only one Window can exist at a time in 0.1.0, and it must be used from the thread that created it.
- * Throws ris::Error on failure.
+ * Throws standard exceptions (std::runtime_error, ...) on failure.
  */
 class RIS_API Window {
 public:

@@ -18,7 +18,7 @@ constexpr double step_epsilon_ms = 1e-9;
 
 void require_finite_non_negative(double value, const char* what) {
     if (!(value >= 0.0) || std::isinf(value)) {
-        throw Error(Result::InvalidArgument, std::string(what) + " must be a finite number >= 0");
+        throw std::invalid_argument(std::string(what) + " must be a finite number >= 0");
     }
 }
 
@@ -120,7 +120,7 @@ void TimeManager::set_fixed_time_step_ms(double step_ms) {
 
 void TimeManager::set_max_fixed_steps_per_frame(uint32_t max_steps) {
     if (max_steps < 1) {
-        throw Error(Result::InvalidArgument, "max fixed steps per frame must be >= 1");
+        throw std::invalid_argument("max fixed steps per frame must be >= 1");
     }
     max_fixed_steps_ = max_steps;
 }
@@ -146,7 +146,7 @@ double TimeManager::fixed_step_alpha() const noexcept {
 
 void TimeManager::set_delta_smoothing(double factor) {
     if (!(factor >= 0.0 && factor < 1.0)) {
-        throw Error(Result::InvalidArgument, "delta smoothing must be >= 0 and < 1");
+        throw std::invalid_argument("delta smoothing must be >= 0 and < 1");
     }
     smoothing_ = factor;
 }

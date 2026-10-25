@@ -57,10 +57,10 @@ TEST_CASE("Stopwatch accumulates between start and stop") {
 }
 
 TEST_CASE("Timer one shot") {
-    REQUIRE_THROWS_AS(ris::Timer(0), ris::Error);
-    REQUIRE_THROWS_AS(ris::Timer(-5), ris::Error);
-    REQUIRE_THROWS_AS(ris::Timer(std::numeric_limits<double>::quiet_NaN()), ris::Error);
-    REQUIRE_THROWS_AS(ris::Timer(std::numeric_limits<double>::infinity()), ris::Error);
+    REQUIRE_THROWS_AS(ris::Timer(0), std::invalid_argument);
+    REQUIRE_THROWS_AS(ris::Timer(-5), std::invalid_argument);
+    REQUIRE_THROWS_AS(ris::Timer(std::numeric_limits<double>::quiet_NaN()), std::invalid_argument);
+    REQUIRE_THROWS_AS(ris::Timer(std::numeric_limits<double>::infinity()), std::invalid_argument);
 
     ris::Timer timer(100.0);
     REQUIRE(timer.is_running());

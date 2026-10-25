@@ -56,10 +56,11 @@ GlUint create_texture_2d(int32_t width, int32_t height, std::span<const MipLevel
                          bool use_mip_maps, float anisotropy, std::string_view label) {
     require_context();
     if (width <= 0 || height <= 0) {
-        throw_error(Result::InvalidArgument, "create_texture_2d: invalid size %dx%d", width, height);
+        throw std::invalid_argument(std::string("create_texture_2d: invalid size ") + std::to_string(width) + "x"
+                                    + std::to_string(height));
     }
     if (converter::is_compressed_format(format)) {
-        throw_error(Result::Unsupported, "create_texture_2d: compressed formats need create_compressed_texture_2d");
+        throw std::domain_error("create_texture_2d: compressed formats need create_compressed_texture_2d");
     }
     const GLenum internal_format = converter::convert_internal_format(format);
     const GLenum pixel_format = converter::convert_to_pixel_format(format);
@@ -67,12 +68,13 @@ GlUint create_texture_2d(int32_t width, int32_t height, std::span<const MipLevel
 
     const uint32_t max_levels = full_mip_count(width, height);
     if (data.size() > max_levels) {
-        throw_error(Result::InvalidArgument, "create_texture_2d: %zu mip levels given but a %dx%d texture has only %u",
-                    data.size(), width, height, max_levels);
+        throw std::invalid_argument(std::string("create_texture_2d: ") + std::to_string(data.size())
+                                    + " mip levels given but a " + std::to_string(width) + "x" + std::to_string(height)
+                                    + " texture has only " + std::to_string(max_levels));
     }
     const bool generate = use_mip_maps && data.size() <= 1;
     if (generate && is_depth_format(format)) {
-        throw_error(Result::InvalidArgument, "create_texture_2d: mip maps cannot be generated for a depth format");
+        throw std::invalid_argument("create_texture_2d: mip maps cannot be generated for a depth format");
     }
     const uint32_t levels = generate ? max_levels : static_cast<uint32_t>(std::max<size_t>(1, data.size()));
 
@@ -80,8 +82,9 @@ GlUint create_texture_2d(int32_t width, int32_t height, std::span<const MipLevel
         const size_t lw = static_cast<size_t>(std::max(1, width >> i));
         const size_t lh = static_cast<size_t>(std::max(1, height >> i));
         if (!data[i].empty() && data[i].size() < lw * lh * kBytesPerPixel) {
-            throw_error(Result::InvalidArgument, "create_texture_2d: mip level %zu needs %zu bytes, got %zu", i,
-                        lw * lh * kBytesPerPixel, data[i].size());
+            throw std::invalid_argument(std::string("create_texture_2d: mip level ") + std::to_string(i) + " needs "
+                                        + std::to_string(lw * lh * kBytesPerPixel) + " bytes, got "
+                                        + std::to_string(data[i].size()));
         }
     }
 
@@ -124,19 +127,22 @@ GlUint create_compressed_texture_2d(int32_t width, int32_t height, int32_t block
                                     std::string_view label) {
     require_context();
     if (width <= 0 || height <= 0 || block_width <= 0 || block_height <= 0) {
-        throw_error(Result::InvalidArgument, "create_compressed_texture_2d: invalid size %dx%d or block %dx%d", width,
-                    height, block_width, block_height);
+        throw std::invalid_argument(std::string("create_compressed_texture_2d: invalid size ") + std::to_string(width)
+                                    + "x" + std::to_string(height) + " or block " + std::to_string(block_width) + "x"
+                                    + std::to_string(block_height));
     }
     if (!converter::is_compressed_format(format)) {
-        throw_error(Result::Unsupported, "create_compressed_texture_2d: format is not compressed");
+        throw std::domain_error("create_compressed_texture_2d: format is not compressed");
     }
     if (data.empty() || data.size() > full_mip_count(width, height)) {
-        throw_error(Result::InvalidArgument, "create_compressed_texture_2d: %zu mip levels given for a %dx%d texture",
-                    data.size(), width, height);
+        throw std::invalid_argument(std::string("create_compressed_texture_2d: ") + std::to_string(data.size())
+                                    + " mip levels given for a " + std::to_string(width) + "x" + std::to_string(height)
+                                    + " texture");
     }
     for (size_t i = 0; i < data.size(); ++i) {
         if (data[i].empty()) {
-            throw_error(Result::InvalidArgument, "create_compressed_texture_2d: mip level %zu is empty", i);
+            throw std::invalid_argument(std::string("create_compressed_texture_2d: mip level ") + std::to_string(i)
+                                        + " is empty");
         }
     }
     const GLenum internal_format = converter::convert_internal_format(format);

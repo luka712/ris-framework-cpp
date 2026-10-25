@@ -6,7 +6,7 @@
 // they are namespaces under ris::gles (`ris::gles::buffer_utilities::…`).
 //
 // All of them need a ris::Window, see the rules in rendering/buffers/a_buffer.hpp. Except for the converter
-// they throw Error(NotInitialized) without one.
+// they throw std::logic_error without one.
 
 #include "ris/gles/utilities/anisotropic_filter_utilities.hpp"
 #include "ris/gles/utilities/blending_utilities.hpp"

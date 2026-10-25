@@ -5,7 +5,7 @@
 #include "ris/rendering/blending/blend_operation.hpp"
 
 /// Blending state of the current context, like `WebGLBlendingUtilities` of ris-framework-ts. They need the
-/// window's GL context and throw Error(NotInitialized) without one.
+/// window's GL context and throw std::logic_error without one.
 namespace ris::gles::blending_utilities {
 
 /// Blend equation and factors for the colour or the alpha channel.

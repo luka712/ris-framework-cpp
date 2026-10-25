@@ -65,11 +65,11 @@ Mesh::Mesh(const Geometry& g, std::vector<SubMesh> sub_meshes) : sub_meshes_(std
     require_context();
     const size_t n = g.vertex_count();
     if (n == 0 || g.positions.size() % 3 != 0) {
-        throw_error(Result::InvalidArgument, "Mesh: geometry needs positions (3 floats per vertex)");
+        throw std::invalid_argument("Mesh: geometry needs positions (3 floats per vertex)");
     }
     if ((!g.texture_coords.empty() && g.texture_coords.size() != n * 2) || (!g.normals.empty() && g.normals.size() != n * 3) ||
         (!g.colors.empty() && g.colors.size() != n * 4)) {
-        throw_error(Result::InvalidArgument, "Mesh: texture_coords / normals / colors do not match the vertex count");
+        throw std::invalid_argument("Mesh: texture_coords / normals / colors do not match the vertex count");
     }
     std::vector<PackedVertex> vertices(n);
     for (size_t i = 0; i < n; ++i) {
@@ -94,7 +94,8 @@ Mesh::Mesh(const Geometry& g, std::vector<SubMesh> sub_meshes) : sub_meshes_(std
     };
     if (!g.indices.empty()) {
         for (uint32_t index : g.indices) {
-            if (index >= n) throw_error(Result::InvalidArgument, "Mesh: index %u is out of range (%zu vertices)", index, n);
+            if (index >= n) throw std::out_of_range(std::string("Mesh: index ") + std::to_string(index)
+                                                    + " is out of range (" + std::to_string(n) + " vertices)");
         }
         index_buffer_ = factory->create_index_buffer(std::span<const uint32_t>(g.indices));
         indexed_ = true;
@@ -106,8 +107,9 @@ Mesh::Mesh(const Geometry& g, std::vector<SubMesh> sub_meshes) : sub_meshes_(std
     vertex_array_ = std::make_unique<VertexArray>(desc);
     for (const SubMesh& s : sub_meshes_) {
         if (static_cast<uint64_t>(s.index_start) + s.index_count > draw_count_) {
-            throw_error(Result::InvalidArgument, "Mesh: sub mesh range [%u, +%u) exceeds %u indices", s.index_start,
-                        s.index_count, draw_count_);
+            throw std::out_of_range(std::string("Mesh: sub mesh range [") + std::to_string(s.index_start) + ", +"
+                                    + std::to_string(s.index_count) + ") exceeds " + std::to_string(draw_count_)
+                                    + " indices");
         }
     }
 }
@@ -176,7 +178,8 @@ void Scene::add(std::shared_ptr<AmbientLight> light) { add_unique(ambient_lights
 void Scene::add(std::shared_ptr<DirectionalLight> light) {
     if (directional_lights_.size() >= max_directional_lights &&
         std::find(directional_lights_.begin(), directional_lights_.end(), light) == directional_lights_.end()) {
-        throw_error(Result::InvalidArgument, "Scene: at most %u directional lights are supported", max_directional_lights);
+        throw std::invalid_argument(std::string("Scene: at most ") + std::to_string(max_directional_lights)
+                                    + " directional lights are supported");
     }
     add_unique(directional_lights_, std::move(light));
 }
@@ -184,7 +187,8 @@ void Scene::add(std::shared_ptr<DirectionalLight> light) {
 void Scene::add(std::shared_ptr<PointLight> light) {
     if (point_lights_.size() >= max_point_lights &&
         std::find(point_lights_.begin(), point_lights_.end(), light) == point_lights_.end()) {
-        throw_error(Result::InvalidArgument, "Scene: at most %u point lights are supported", max_point_lights);
+        throw std::invalid_argument(std::string("Scene: at most ") + std::to_string(max_point_lights)
+                                    + " point lights are supported");
     }
     add_unique(point_lights_, std::move(light));
 }
@@ -226,7 +230,7 @@ bool Scene::remove(const Mesh& mesh) {
 void Scene::update(const GameTime&) {}
 
 void Scene::render() {
-    if (!camera_) throw_error(Result::InvalidArgument, "Scene::render: the scene has no camera (set_camera or pass the scene to the camera factory)");
+    if (!camera_) throw std::invalid_argument("Scene::render: the scene has no camera (set_camera or pass the scene to the camera factory)");
     const RenderContext context{camera_.get(), this};
     for (const auto& mesh : meshes_) mesh->render(context);
 }

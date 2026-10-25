@@ -17,7 +17,7 @@ namespace ris::gles::vertex_buffer_layout {
 /// the divisor (Instance = 1). Needs no window.
 /// @param layout      the layout; VertexBufferLayout::validate() is called first.
 /// @param buffer_slot index into VertexArrayDesc::vertex_buffers that the attributes read from.
-/// @throws Error(InvalidArgument) if an attribute does not fit into `layout.array_stride`.
+/// @throws std::invalid_argument if an attribute does not fit into `layout.array_stride`.
 RIS_API std::vector<VertexAttrib> to_vertex_attribs(const VertexBufferLayout& layout, uint32_t buffer_slot = 0);
 
 /// Binds `buffer` to `GL_ARRAY_BUFFER` and sets up and enables all attributes of the layout on the
@@ -25,7 +25,7 @@ RIS_API std::vector<VertexAttrib> to_vertex_attribs(const VertexBufferLayout& la
 /// unbound afterwards.
 /// @param buffer the vertex buffer name (GlesVertexBuffer::gl_handle()).
 /// @param layout the layout, converted with to_vertex_attribs().
-/// @throws Error(InvalidArgument) if the layout is invalid or does not fit its stride.
+/// @throws std::invalid_argument if the layout is invalid or does not fit its stride.
 RIS_API void initialize(GlUint buffer, const VertexBufferLayout& layout);
 
 } // namespace ris::gles::vertex_buffer_layout

@@ -105,7 +105,8 @@ void set_cull_mode(CullMode mode) {
 std::vector<uint8_t> read_pixels(int32_t x, int32_t y, int32_t width, int32_t height) {
     require_context();
     if (width <= 0 || height <= 0) {
-        throw_error(Result::InvalidArgument, "read_pixels: invalid size %dx%d", width, height);
+        throw std::invalid_argument(std::string("read_pixels: invalid size ") + std::to_string(width) + "x"
+                                    + std::to_string(height));
     }
     std::vector<uint8_t> pixels(static_cast<size_t>(width) * static_cast<size_t>(height) * 4u);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -144,8 +145,9 @@ Buffer& Buffer::operator=(Buffer&& other) noexcept {
 void Buffer::update(size_t offset, const void* data, size_t size) {
     require_context();
     if (!data || offset + size > size_) {
-        throw_error(Result::InvalidArgument, "Buffer::update: range [%zu, %zu) is outside the buffer (size %zu)", offset,
-                    offset + size, size_);
+        throw std::out_of_range(std::string("Buffer::update: range [") + std::to_string(offset) + ", "
+                                + std::to_string(offset + size) + ") is outside the buffer (size "
+                                + std::to_string(size_) + ")");
     }
     if (size == 0) return;
     gles::buffer_utilities::update_buffer(type_, id_, offset, data, size);
@@ -248,7 +250,7 @@ void Shader::bind_uniform_block(const char* block_name, uint32_t binding) const 
     require_context();
     const GLuint index = glGetUniformBlockIndex(program_, block_name);
     if (index == GL_INVALID_INDEX) {
-        throw_error(Result::InvalidArgument, "shader has no uniform block named '%s'", block_name);
+        throw std::invalid_argument(std::string("shader has no uniform block named '") + block_name + "'");
     }
     glUniformBlockBinding(program_, index, binding);
 }
@@ -258,15 +260,17 @@ void Shader::bind_uniform_block(const char* block_name, uint32_t binding) const 
 VertexArray::VertexArray(const VertexArrayDesc& desc) : index_type_(desc.index_type) {
     require_context();
     if (desc.attribs.empty() || desc.attribs.size() > 16) {
-        throw_error(Result::InvalidArgument, "VertexArray: attribute count must be 1..16 (got %zu)", desc.attribs.size());
+        throw std::invalid_argument(std::string("VertexArray: attribute count must be 1..16 (got ")
+                                    + std::to_string(desc.attribs.size()) + ")");
     }
     if (desc.index_type != IndexType::None && !desc.index_buffer) {
-        throw_error(Result::InvalidArgument, "VertexArray: index_type is set but index_buffer is null");
+        throw std::invalid_argument("VertexArray: index_type is set but index_buffer is null");
     }
     for (const VertexAttrib& a : desc.attribs) {
         if (a.components < 1 || a.components > 4 || a.buffer_slot >= max_vertex_buffers ||
             !desc.vertex_buffers[a.buffer_slot].buffer) {
-            throw_error(Result::InvalidArgument, "VertexArray: invalid vertex attribute for location %u", a.location);
+            throw std::invalid_argument(std::string("VertexArray: invalid vertex attribute for location ")
+                                        + std::to_string(a.location));
         }
     }
 
@@ -333,7 +337,8 @@ RenderTarget::RenderTarget(int32_t width, int32_t height, bool with_depth_stenci
     using namespace gles;
     require_context();
     if (width <= 0 || height <= 0) {
-        throw_error(Result::InvalidArgument, "RenderTarget: invalid size %dx%d", width, height);
+        throw std::invalid_argument(std::string("RenderTarget: invalid size ") + std::to_string(width) + "x"
+                                    + std::to_string(height));
     }
 
     // The colour texture is owned by `color_` from here on, so it is released if anything below throws.

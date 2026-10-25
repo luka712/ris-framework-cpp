@@ -7,7 +7,7 @@ namespace ris {
 Timer::Timer(double interval_ms, bool repeating, bool start_running)
     : interval_ms_(interval_ms), repeating_(repeating), running_(start_running) {
     if (!(interval_ms > 0.0) || std::isinf(interval_ms)) {
-        throw Error(Result::InvalidArgument, "Timer interval must be a positive, finite number of milliseconds");
+        throw std::invalid_argument("Timer interval must be a positive, finite number of milliseconds");
     }
 }
 

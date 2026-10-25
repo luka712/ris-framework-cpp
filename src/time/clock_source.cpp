@@ -22,10 +22,10 @@ ClockSource ClockSource::system() {
 
 void ClockSource::validate() const {
     if (!ticks) {
-        throw Error(Result::InvalidArgument, "ClockSource::ticks is empty");
+        throw std::invalid_argument("ClockSource::ticks is empty");
     }
     if (ticks_per_second == 0) {
-        throw Error(Result::InvalidArgument, "ClockSource::ticks_per_second must be > 0");
+        throw std::invalid_argument("ClockSource::ticks_per_second must be > 0");
     }
 }
 

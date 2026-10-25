@@ -78,8 +78,8 @@ int main(int argc, char** argv) {
         }
         std::cout << "rendered " << frame << " frames\n";
         return 0;
-    } catch (const ris::Error& e) {
-        std::cerr << "ris error " << static_cast<int>(e.code()) << ": " << e.what() << "\n";
+    } catch (const std::exception& e) {
+        std::cerr << "ris error: " << e.what() << "\n";
         return 1;
     }
 }

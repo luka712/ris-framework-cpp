@@ -10,7 +10,7 @@
 #include "ris/rendering/sampler/sampler_filter.hpp"
 
 /// GL sampler objects (OpenGL ES 3.0), like `WebGlSamplerUtilities` of ris-framework-ts. They need the
-/// window's GL context and throw Error(NotInitialized) without one.
+/// window's GL context and throw std::logic_error without one.
 namespace ris::gles::sampler_utilities {
 
 /// The parameters of create(). The defaults are those of ris-framework-ts.

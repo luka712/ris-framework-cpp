@@ -14,8 +14,8 @@ GlUint create(const std::string& source, ShaderStage stage) {
         case ShaderStage::Vertex: type = GL_VERTEX_SHADER; stage_name = "vertex"; break;
         case ShaderStage::Fragment: type = GL_FRAGMENT_SHADER; stage_name = "fragment"; break;
         default:
-            throw_error(Result::Unsupported, "shader stage %u cannot be compiled with OpenGL ES 3.0",
-                        static_cast<unsigned>(stage));
+            throw std::domain_error(std::string("shader stage ") + std::to_string(static_cast<unsigned>(stage))
+                                    + " cannot be compiled with OpenGL ES 3.0");
     }
 
     const GLuint shader = glCreateShader(type);
@@ -31,7 +31,7 @@ GlUint create(const std::string& source, ShaderStage stage) {
         std::string log_text(static_cast<size_t>(len > 0 ? len : 1), '\0');
         glGetShaderInfoLog(shader, len, nullptr, log_text.data());
         glDeleteShader(shader);
-        throw_error(Result::Compile, "%s shader compile error:\n%s", stage_name, log_text.c_str());
+        throw std::runtime_error(std::string(stage_name) + " shader compile error:\n" + log_text);
     }
     return shader;
 }

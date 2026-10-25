@@ -74,25 +74,9 @@ void log(LogLevel level, const char* fmt, ...) {
     }
 }
 
-std::string format(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    std::string out = vformat(fmt, args);
-    va_end(args);
-    return out;
-}
-
-void throw_error(Result code, const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    std::string message = vformat(fmt, args);
-    va_end(args);
-    throw Error(code, message);
-}
-
 void require_context() {
     if (!g_context_alive.load(std::memory_order_acquire)) {
-        throw_error(Result::NotInitialized, "no ris::Window exists: create a Window before using graphics objects");
+        throw std::logic_error("no ris::Window exists: create a Window before using graphics objects");
     }
 }
 

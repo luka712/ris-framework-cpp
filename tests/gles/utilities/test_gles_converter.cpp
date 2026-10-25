@@ -37,7 +37,7 @@ TEST_CASE("converter: buffers") {
     REQUIRE(conv::convert_index_type(ris::IndexBufferType::UInt32) == 0x1405);
     REQUIRE(conv::convert_index_type(ris::IndexType::UInt16) == 0x1403);
     REQUIRE(conv::convert_index_type(ris::IndexType::UInt32) == 0x1405);
-    REQUIRE_THROWS_AS(conv::convert_index_type(ris::IndexType::None), ris::Error);
+    REQUIRE_THROWS_AS(conv::convert_index_type(ris::IndexType::None), std::invalid_argument);
 }
 
 TEST_CASE("converter: vertex formats and attribute types") {
@@ -100,19 +100,19 @@ TEST_CASE("converter: texture formats") {
     REQUIRE(conv::convert_internal_format(TextureFormat::Bc7RgbaUnorm) == 0x8E8C);
     REQUIRE(conv::convert_internal_format(TextureFormat::Etc2Rgba8Unorm) == 0x9278);
     REQUIRE(conv::convert_internal_format(TextureFormat::Astc4x4Rgba) == 0x93B0);
-    REQUIRE_THROWS_AS(conv::convert_internal_format(TextureFormat::Undefined), ris::Error);
-    REQUIRE_THROWS_AS(conv::convert_internal_format(TextureFormat::Red32Float), ris::Error);
+    REQUIRE_THROWS_AS(conv::convert_internal_format(TextureFormat::Undefined), std::domain_error);
+    REQUIRE_THROWS_AS(conv::convert_internal_format(TextureFormat::Red32Float), std::domain_error);
 
     REQUIRE(conv::convert_to_pixel_format(TextureFormat::Rgba8Unorm) == 0x1908);
     REQUIRE(conv::convert_to_pixel_format(TextureFormat::Rgba8UnormSrgb) == 0x1908);
     REQUIRE(conv::convert_to_pixel_format(TextureFormat::Depth32Float) == 0x1902);
     REQUIRE(conv::convert_to_pixel_format(TextureFormat::Depth24Stencil8) == 0x84F9);
-    REQUIRE_THROWS_AS(conv::convert_to_pixel_format(TextureFormat::Astc4x4Rgba), ris::Error);
+    REQUIRE_THROWS_AS(conv::convert_to_pixel_format(TextureFormat::Astc4x4Rgba), std::domain_error);
 
     REQUIRE(conv::convert_to_texture_type(TextureFormat::Rgba8Unorm) == 0x1401);
     REQUIRE(conv::convert_to_texture_type(TextureFormat::Depth32Float) == 0x1406);
     REQUIRE(conv::convert_to_texture_type(TextureFormat::Depth24Stencil8) == 0x84FA);
-    REQUIRE_THROWS_AS(conv::convert_to_texture_type(TextureFormat::Etc2Rgba8Unorm), ris::Error);
+    REQUIRE_THROWS_AS(conv::convert_to_texture_type(TextureFormat::Etc2Rgba8Unorm), std::domain_error);
 
     REQUIRE(conv::is_compressed_format(TextureFormat::Bc3RgbaUnorm));
     REQUIRE(conv::is_compressed_format(TextureFormat::Bc7RgbaUnorm));
@@ -154,7 +154,7 @@ TEST_CASE("converter: samplers") {
 }
 
 TEST_CASE("converter: values outside an enum throw") {
-    REQUIRE_THROWS_AS(conv::convert_blend_factor(static_cast<ris::BlendFactor>(99)), ris::Error);
-    REQUIRE_THROWS_AS(conv::convert_cull_face(static_cast<ris::CullMode>(99)), ris::Error);
-    REQUIRE_THROWS_AS(conv::convert_wrap(static_cast<ris::Wrap>(99)), ris::Error);
+    REQUIRE_THROWS_AS(conv::convert_blend_factor(static_cast<ris::BlendFactor>(99)), std::domain_error);
+    REQUIRE_THROWS_AS(conv::convert_cull_face(static_cast<ris::CullMode>(99)), std::domain_error);
+    REQUIRE_THROWS_AS(conv::convert_wrap(static_cast<ris::Wrap>(99)), std::domain_error);
 }

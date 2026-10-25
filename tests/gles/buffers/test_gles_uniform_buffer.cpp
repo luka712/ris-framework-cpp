@@ -19,14 +19,14 @@ TEST_CASE("uniform buffer on a real context") {
         REQUIRE(ris::has_flag(ub.usage(), F::Uniform));
         REQUIRE_NOTHROW(ub.update(ris::Vec4(1, 2, 3, 4), 16));
         REQUIRE_NOTHROW(ub.update(data, 12));
-        REQUIRE_THROWS_AS(ub.update(ris::Vec4(1), 20), ris::Error);
+        REQUIRE_THROWS_AS(ub.update(ris::Vec4(1), 20), std::out_of_range);
 
         auto sized = ris::gles::GlesUniformBuffer::with_byte_size(65);
         REQUIRE(sized.byte_size() == 80);
         REQUIRE_NOTHROW(sized.update(ris::Mat4(1.0f), 16));
-        REQUIRE_THROWS_AS(sized.update(ris::Mat4(1.0f), 32), ris::Error);
+        REQUIRE_THROWS_AS(sized.update(ris::Mat4(1.0f), 32), std::out_of_range);
 
         ris::gles::GlesUniformBuffer fixed(data, F::Uniform);   // no CopyDst
-        REQUIRE_THROWS_AS(fixed.update(data), ris::Error);
+        REQUIRE_THROWS_AS(fixed.update(data), std::invalid_argument);
     }
 }

@@ -22,7 +22,7 @@ GLenum scratch_target(BufferType type) {
 GlUint create_buffer(BufferType type, const void* data, size_t byte_size, GlEnum usage, std::string_view label) {
     require_context();
     if (byte_size == 0) {
-        throw_error(Result::InvalidArgument, "create_buffer: size must be greater than zero");
+        throw std::invalid_argument("create_buffer: size must be greater than zero");
     }
     GLuint id = 0;
     glGenBuffers(1, &id);
@@ -69,7 +69,7 @@ GlUint create_uniform_buffer(size_t byte_size, BufferUsageFlags usage, std::stri
 void update_buffer(BufferType type, GlUint buffer, size_t byte_offset, const void* data, size_t byte_size) {
     require_context();
     if (buffer == 0 || !data || byte_size == 0) {
-        throw_error(Result::InvalidArgument, "update_buffer: needs a buffer, data and a non-empty range");
+        throw std::invalid_argument("update_buffer: needs a buffer, data and a non-empty range");
     }
     const GLenum target = scratch_target(type);
     glBindBuffer(target, buffer);

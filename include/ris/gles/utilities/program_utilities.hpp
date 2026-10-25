@@ -12,8 +12,8 @@ namespace ris::gles::program_utilities {
 /// @param vertex_shader   a compiled vertex shader, see shader_utilities.
 /// @param fragment_shader a compiled fragment shader.
 /// @return the program name.
-/// @throws Error(Compile) with the info log ("shader link error: ..."), the program is deleted;
-///         Error(NotInitialized) without a window.
+/// @throws std::runtime_error with the info log ("shader link error: ..."), the program is deleted;
+///         std::logic_error without a window.
 RIS_API GlUint create(GlUint vertex_shader, GlUint fragment_shader);
 
 /// Deletes a program and sets the name to 0. Does nothing for 0, or when the window (and context) is gone.

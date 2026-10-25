@@ -6,7 +6,7 @@ comes from EGL (ANGLE on Windows and macOS), and KTX2 textures are loaded throug
 
 There are two APIs:
 
-- **C++** (`#include <ris/ris.hpp>`, namespace `ris`): RAII, move-only types, errors are `ris::Error` exceptions.
+- **C++** (`#include <ris/ris.hpp>`, namespace `ris`): RAII, move-only types, errors are standard exceptions (`std::invalid_argument`, `std::runtime_error`, ...).
   This is the primary API.
 - **C** (`#include <ris/ris.h>`): a flat `extern "C"` layer over the C++ API for P/Invoke and other FFIs. Opaque
   handles, `ris_result` codes, `ris_get_last_error()` (thread local), `uint32_t` booleans, column-major `float[16]` matrices.
@@ -22,7 +22,7 @@ Input (like `api/input` of ris-framework-ts): `ris/input/` holds the concrete `r
 
 Time (like `api/time` of ris-framework-ts): SDL3 is an integral part of the engine, so there is one concrete `ris::TimeManager` in `ris/time/` (no abstract class, no backend folder; only the rendering API is pluggable). It does the per frame logic (time scale, pause, a fixed time step with `Framework::addOnFixedUpdateListener`, frame limiting with `FrameworkConfiguration::target_frames_per_second`, delta smoothing, an FPS counter, a deterministic mode) on the SDL3 time API (`SDL_GetPerformanceCounter`, `SDL_DelayPrecise`, `SDL_GetCurrentTime`, ...), next to `GameTime`, `DateTime`, `FrameRateCounter`, `Stopwatch`, `Timer` and the `ris::system_clock` functions (counter, delays, wall clock, date conversion). No SDL types appear in the headers. `Framework::timeManager()` returns the `TimeManager&`. Unit tests drive it without sleeping by giving it a `ris::ClockSource` (a counter function, its frequency and an optional delay function).
 
-Rendering API layering: `ris/rendering/` holds the graphics API neutral interfaces (for buffers `ABuffer`, `AVertexBuffer`, `AIndexBuffer`, `AUniformBuffer`, `ABufferFactory`), and each backend implements them in its own folder; the OpenGL ES one is `ris/gles/buffers/` (`GlesVertexBuffer`, ...). `ris::create_default_buffer_factory()` returns the factory of the current backend, so code written against the `A*` classes does not change when other rendering APIs are added.
+Rendering API layering: `ris/rendering/` holds the graphics API neutral interfaces (for buffers `ABuffer`, `AVertexBuffer`, `AIndexBuffer`, `AUniformBuffer`, `ABufferFactory`), and each backend implements them in its own folder; the OpenGL ES one is `ris/gles/buffers/` (`GlesVertexBuffer`, ...). `ris::create_default_buffer_factory()` returns the factory of the current backend, so code written against the `A*` classes does not change when other rendering APIs are added. Textures follow the same pattern: `ATextureFactory` (`ris/rendering/texture/`) with the OpenGL ES implementation `GlesTextureFactory` (`ris/gles/texture/`), reached through `Framework::textureFactory()` or `ris::create_default_texture_factory()`. The GPU entry point is the same: `AGraphicsDevice` (`ris/rendering/a_graphics_device.hpp`: GPU info and features, default sampler / blend / primitive state, `createSampler`, `createPrimitiveState`, `createRenderPass`, `createSwapChain`, debug groups) with the OpenGL ES implementation `GlesGraphicsDevice` (`ris/gles/gles_graphics_device.hpp`, plus `GlesSampler`, `GlesBlendState`, `GlesPrimitiveState`, `GlesRenderPass`, `GlesSwapChain`), reached through `Framework::graphicsDevice()` or `ris::create_default_graphics_device()`. Objects it creates are owned by the caller (free them before the device).
 
 ## Building
 
@@ -51,27 +51,26 @@ lights, materials, `ContentManager`, `InputManager`, `SpriteBatch::draw(texture,
 int main() {
     ris::Framework framework({.title = "hello"});
     ris::Scene scene;   // declared after the framework: destroy scenes and textures before it
-    framework.addOnLoadContentListener([&] {
+    framework.addOnLoadContentListener([&](ris::Framework&) {
         framework.cameraFactory().create_perspective_camera({.aspect_ratio = 16.0f / 9.0f}, &scene);
         scene.create_directional_light({.direction = {-0.4f, -0.6f, 1}});
         framework.content().load_blinn_phong_mesh("cube.obj", scene);
     });
-    framework.addOnUpdateListener([&](const ris::GameTime& t) {
+    framework.addOnUpdateListener([&](ris::Framework&, const ris::GameTime& t) {
         scene.meshes()[0]->rotation.y += t.delta_time_sec();
         scene.camera()->update(t);
     });
-    framework.addOnRenderListener([&] { scene.render(); });
-    framework.renderer().clear_color = ris::Color::corner_flower_blue();
+    framework.addOnRenderListener([&](ris::Framework&) { scene.render(); });
+    framework.renderer().setClearColor(ris::Color::corner_flower_blue());
     framework.initialize();   // runs the loop until the window closes
 }
 ```
 
 Framework methods are camelCase like in ris-framework-ts (`windowManager()`, `inputManager()`, `timeManager()`,
-`cameraFactory()`, `materialFactory()`, `meshFactory()`, `spriteBatch()`, `addOnUpdateListener`, ...). `ris::Framework`
-derives from `ris::AFramework`, which holds the implementation. Every `add...Listener` returns a `uint32_t` id (1, 2, 3, ...)
-for the matching `remove...Listener`. A callback may take the framework as its first argument (`[&](ris::AFramework& f)`,
-`[&](ris::AFramework& f, const ris::GameTime& t)`) or leave it out. The callbacks of one kind are kept in a `std::map`
-keyed by id, so they run in registration order, and listeners may be added or removed from inside a listener.
+`cameraFactory()`, `materialFactory()`, `meshFactory()`, `textureFactory()`, `spriteBatch()`, `addOnUpdateListener`, ...). Every
+`add...Listener` returns a `uint32_t` id (1, 2, 3, ...) for the matching `remove...Listener`. A callback takes the
+framework as its first argument (`[&](ris::Framework& f)`, `[&](ris::Framework& f, const ris::GameTime& t)`). The
+callbacks of one kind are kept in a `std::map` keyed by id, so they run in registration order, and listeners may be added or removed from inside a listener.
 
 Differences to the TS API: calls are synchronous (no `async` content loading), lights are created with
 `scene.create_point_light(...)` instead of `new PointLight(..., scene)`, and the camera keeps the TS convention that the
@@ -99,7 +98,7 @@ RisFramework.Demo:
 
 | Target | What it shows |
 | --- | --- |
-| `ris_sample_sprite_batch` | `Framework`, `ContentManager::load_texture_2d`, `SpriteBatch::draw` |
+| `ris_sample_sprite_batch` | `Framework`, `ContentManager::loadTexture2D`, `SpriteBatch::draw` |
 | `ris_sample_unlit_mesh` | `Scene`, perspective camera, OBJ/MTL cube with `UnlitMaterial` per face |
 | `ris_sample_blinn_phong_mesh` | `BlinnPhongMaterial`, ambient, directional and two orbiting point lights |
 | `ris_sample_ktx2_quad` | loads a Basis Universal `.ktx2` (transcoded to ASTC or ETC2) and shows it as a textured quad |

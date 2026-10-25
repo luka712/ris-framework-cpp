@@ -26,7 +26,7 @@ struct RIS_API VertexBufferLayout {
 
     /// Checks that every attribute has a known format and fits into `array_stride`. Backends call this before
     /// they convert the layout, so all of them reject the same layouts.
-    /// @throws Error(InvalidArgument) if an attribute does not fit into `array_stride`.
+    /// @throws std::invalid_argument if an attribute does not fit into `array_stride`.
     void validate() const;
 };
 

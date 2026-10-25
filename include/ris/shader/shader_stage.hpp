@@ -10,7 +10,7 @@ enum class ShaderStage : uint32_t {
     None = 0,
     Vertex = 1,
     Fragment = 2,
-    Compute = 4   ///< Not available in OpenGL ES 3.0, compiling it throws Error(Unsupported).
+    Compute = 4   ///< Not available in OpenGL ES 3.0, compiling it throws std::domain_error.
 };
 
 } // namespace ris

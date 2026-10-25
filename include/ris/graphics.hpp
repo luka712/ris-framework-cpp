@@ -9,12 +9,15 @@
 
 #include "core.hpp"
 #include "math.hpp"
+#include "ris/rendering/primitive/cull_mode.hpp"
 
 // OpenGL ES 3 graphics objects. A ris::Window must exist (its context is current) while any of
 // these are created, used or destroyed, and everything must run on the window's thread.
-// All objects are RAII, move-only, and throw ris::Error on failure.
+// All objects are RAII, move-only, and throw standard exceptions (std::invalid_argument, std::runtime_error, ...) on failure.
 
 namespace ris {
+
+namespace gles { class GlesTextureFactory; }
 
 // ---- state ----------------------------------------------------------------------------------
 
@@ -33,7 +36,7 @@ enum class BlendMode : uint32_t {
 
 enum class CompareFunc : uint32_t { Never, Less, Equal, LessEqual, Greater, NotEqual, GreaterEqual, Always };
 
-enum class CullMode : uint32_t { None = 0, Back = 1, Front = 2 };
+// CullMode is graphics API neutral, see ris/rendering/primitive/cull_mode.hpp (included above).
 
 namespace gfx {
 RIS_API void viewport(int32_t x, int32_t y, int32_t width, int32_t height);
@@ -84,7 +87,7 @@ private:
 
 class RIS_API Shader {
 public:
-    /// GLSL ES 3.00 (`#version 300 es`) sources. Throws Error(Result::Compile) with the info log.
+    /// GLSL ES 3.00 (`#version 300 es`) sources. Throws std::runtime_error with the info log.
     Shader(const std::string& vertex_source, const std::string& fragment_source);
     ~Shader();
     Shader(Shader&& other) noexcept;
@@ -194,10 +197,7 @@ public:
     /// Loads PNG / JPG / BMP / TGA ... (stb_image through ris-ktx2) as an RGBA8 texture.
     static Texture from_image_file(const std::string& path, bool generate_mipmaps = true, bool srgb = true,
                                    bool flip_vertically = false);
-    /// Loads a KTX2 file with ris-ktx2 / libktx. Basis Universal (ETC1S / UASTC) textures are
-    /// transcoded to the best format the GPU supports: ASTC, then ETC2, then RGBA8.
-    /// All stored mip levels are uploaded. Only 2D textures are supported in 0.1.0.
-    static Texture from_ktx2_file(const std::string& path);
+
     static Texture from_ktx2_memory(const void* data, size_t size);
 
     ~Texture();
@@ -217,6 +217,7 @@ public:
 
 private:
     friend class RenderTarget;
+    friend class gles::GlesTextureFactory;
     Texture() = default;
     static Texture adopt(uint32_t id, int32_t width, int32_t height, uint32_t mip_levels);
 

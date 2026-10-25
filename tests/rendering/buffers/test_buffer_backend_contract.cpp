@@ -146,12 +146,12 @@ TEST_CASE("a backend can implement the abstract buffers without a graphics API")
     REQUIRE(ris::has_flag(vb->usage(), F::Vertex));
     const std::vector<float> one(5, 1.0f);
     REQUIRE_NOTHROW(vb->update(one, 20));
-    REQUIRE_THROWS_AS(vb->update(one, 24), ris::Error);
-    REQUIRE_THROWS_AS(factory->create_vertex_buffer(data, 20, F::Vertex | F::Index), ris::Error);
-    REQUIRE_THROWS_AS(factory->create_vertex_buffer(data, 16), ris::Error);
+    REQUIRE_THROWS_AS(vb->update(one, 24), std::out_of_range);
+    REQUIRE_THROWS_AS(factory->create_vertex_buffer(data, 20, F::Vertex | F::Index), std::invalid_argument);
+    REQUIRE_THROWS_AS(factory->create_vertex_buffer(data, 16), std::invalid_argument);
 
     auto fixed = factory->create_vertex_buffer(data, 20);   // no CopyDst
-    REQUIRE_THROWS_AS(fixed->update(one), ris::Error);
+    REQUIRE_THROWS_AS(fixed->update(one), std::invalid_argument);
 
     const std::vector<uint32_t> idx = {0, 1, 70000};
     auto ib = factory->create_index_buffer(std::span<const uint32_t>(idx), "ib");
@@ -167,5 +167,5 @@ TEST_CASE("a backend can implement the abstract buffers without a graphics API")
     REQUIRE(ub->byte_size() == 32);
     ub->update(ris::Vec4(1, 2, 3, 4), 16);   // convenience overloads of the abstract class
     REQUIRE(fake_ub->float_at(5) == 2.0f);
-    REQUIRE_THROWS_AS(ub->update(ris::Mat4(1.0f)), ris::Error);   // 64 bytes do not fit into 32
+    REQUIRE_THROWS_AS(ub->update(ris::Mat4(1.0f)), std::out_of_range);   // 64 bytes do not fit into 32
 }

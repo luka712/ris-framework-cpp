@@ -10,8 +10,10 @@
 
 #include <atomic>
 #include <cctype>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <stdexcept>
 #include <string>
 
 #include "internal.hpp"
@@ -48,7 +50,9 @@ const char* egl_error_string(EGLint error) {
 
 [[noreturn]] void throw_egl(const char* what) {
     const EGLint error = eglGetError();
-    throw_error(Result::Graphics, "%s failed: %s (0x%04X)", what, egl_error_string(error), static_cast<unsigned>(error));
+    char hex[16];
+    std::snprintf(hex, sizeof hex, "%04X", static_cast<unsigned>(error));
+    throw std::runtime_error(std::string(what) + " failed: " + egl_error_string(error) + " (0x" + hex + ")");
 }
 
 struct BackendChoice {
@@ -158,7 +162,7 @@ void Window::Impl::create_window(const WindowDesc& desc) {
     }
 #endif
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
-        throw_error(Result::Platform, "SDL_Init failed: %s", SDL_GetError());
+        throw std::runtime_error(std::string("SDL_Init failed: ") + SDL_GetError());
     }
     sdl_initialised = true;
 
@@ -175,7 +179,7 @@ void Window::Impl::create_window(const WindowDesc& desc) {
 
     window = SDL_CreateWindow(desc.title.c_str(), desc.width, desc.height, flags);
     if (!window) {
-        throw_error(Result::Platform, "SDL_CreateWindow failed: %s", SDL_GetError());
+        throw std::runtime_error(std::string("SDL_CreateWindow failed: ") + SDL_GetError());
     }
     RIS_LOG_I("SDL video driver: %s", SDL_GetCurrentVideoDriver());
 }
@@ -186,28 +190,28 @@ EGLNativeWindowType Window::Impl::native_window(EGLNativeDisplayType* native_dis
 
 #if defined(_WIN32)
     void* hwnd = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
-    if (!hwnd) throw_error(Result::Platform, "could not get the Win32 window handle");
+    if (!hwnd) throw std::runtime_error("could not get the Win32 window handle");
     return reinterpret_cast<EGLNativeWindowType>(hwnd);
 #elif defined(__APPLE__)
     metal_view = SDL_Metal_CreateView(window);
-    if (!metal_view) throw_error(Result::Platform, "SDL_Metal_CreateView failed: %s", SDL_GetError());
+    if (!metal_view) throw std::runtime_error(std::string("SDL_Metal_CreateView failed: ") + SDL_GetError());
     void* layer = SDL_Metal_GetLayer(static_cast<SDL_MetalView>(metal_view));
-    if (!layer) throw_error(Result::Platform, "SDL_Metal_GetLayer failed: %s", SDL_GetError());
+    if (!layer) throw std::runtime_error(std::string("SDL_Metal_GetLayer failed: ") + SDL_GetError());
     return reinterpret_cast<EGLNativeWindowType>(layer);
 #elif defined(__ANDROID__)
     void* native = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER, nullptr);
-    if (!native) throw_error(Result::Platform, "could not get the ANativeWindow");
+    if (!native) throw std::runtime_error("could not get the ANativeWindow");
     return reinterpret_cast<EGLNativeWindowType>(native);
 #else
     const char* driver = SDL_GetCurrentVideoDriver();
     if (!driver || std::strcmp(driver, "x11") != 0) {
-        throw_error(Result::Unsupported,
-                    "ANGLE needs the X11 video driver on Linux (current: %s). Run with SDL_VIDEO_DRIVER=x11.",
-                    driver ? driver : "none");
+        throw std::domain_error(std::string("ANGLE needs the X11 video driver on Linux (current: ")
+                                + (driver ? driver : "none") +
+                                 "). Run with SDL_VIDEO_DRIVER=x11.");
     }
     void* x_display = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
     const Sint64 x_window = SDL_GetNumberProperty(props, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
-    if (!x_display || x_window == 0) throw_error(Result::Platform, "could not get the X11 window handle");
+    if (!x_display || x_window == 0) throw std::runtime_error("could not get the X11 window handle");
     *native_display_out = reinterpret_cast<EGLNativeDisplayType>(x_display);
     return static_cast<EGLNativeWindowType>(static_cast<uintptr_t>(x_window));
 #endif
@@ -265,8 +269,10 @@ void Window::Impl::create_egl(const WindowDesc& desc) {
     };
     if (!choose_config(desc.msaa_samples)) {
         if (desc.msaa_samples == 0 || !choose_config(0)) {
-            throw_error(Result::Graphics, "no matching EGL config (ES3, RGBA8, depth %u, stencil %u, %u samples)",
-                        desc.depth_bits, desc.stencil_bits, desc.msaa_samples);
+            throw std::runtime_error(std::string("no matching EGL config (ES3, RGBA8, depth ")
+                                     + std::to_string(desc.depth_bits) + ", stencil "
+                                     + std::to_string(desc.stencil_bits) + ", " + std::to_string(desc.msaa_samples)
+                                     + " samples)");
         }
         RIS_LOG_W("%u x MSAA is not available, continuing without", desc.msaa_samples);
     }
@@ -309,11 +315,12 @@ void Window::Impl::create_egl(const WindowDesc& desc) {
 
 Window::Window(const WindowDesc& desc) {
     if (desc.width <= 0 || desc.height <= 0) {
-        throw_error(Result::InvalidArgument, "window size must be positive (got %dx%d)", desc.width, desc.height);
+        throw std::invalid_argument(std::string("window size must be positive (got ") + std::to_string(desc.width)
+                                    + "x" + std::to_string(desc.height) + ")");
     }
     bool expected = false;
     if (!g_window_exists.compare_exchange_strong(expected, true)) {
-        throw_error(Result::Unsupported, "only one ris::Window can exist at a time");
+        throw std::domain_error("only one ris::Window can exist at a time");
     }
     try {
         impl_ = std::make_unique<Impl>(desc);

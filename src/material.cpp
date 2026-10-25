@@ -200,7 +200,7 @@ Material::~Material() = default;
 
 namespace {
 void require_camera(const RenderContext& c, const char* who) {
-    if (!c.camera) throw_error(Result::InvalidArgument, "%s: the scene has no camera", who);
+    if (!c.camera) throw std::invalid_argument(std::string(who) + ": the scene has no camera");
 }
 } // namespace
 

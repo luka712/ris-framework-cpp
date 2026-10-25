@@ -16,30 +16,11 @@ inline constexpr int version_patch = 0;
 /// "major.minor.patch".
 RIS_API const char* version_string() noexcept;
 
-/// Error categories. The values match the C API's `ris_result`.
-enum class Result : int32_t {
-    Ok = 0,
-    InvalidArgument = -1,
-    NotInitialized = -2,
-    Platform = -3,    ///< SDL / OS failure
-    Graphics = -4,    ///< EGL / ANGLE / OpenGL ES failure
-    Io = -5,          ///< a file could not be read
-    Unsupported = -6,
-    OutOfMemory = -7,
-    Compile = -8,     ///< shader compile / link failure
-    Ktx = -9          ///< KTX2 loading / transcoding failure
-};
-
-/// Thrown by every throwing function of the C++ API. The C API converts it to a `ris_result`
-/// and `ris_get_last_error()`.
-class RIS_API Error : public std::runtime_error {
-public:
-    Error(Result code, const std::string& message) : std::runtime_error(message), code_(code) {}
-    Result code() const noexcept { return code_; }
-
-private:
-    Result code_;
-};
+// The C++ API throws standard exceptions: std::invalid_argument (bad arguments, wrong call order),
+// std::out_of_range (an index or range outside its object), std::domain_error (a format / usage / feature the
+// backend does not support), std::logic_error (no ris::Window yet), std::ios_base::failure (a file could not be
+// read or written) and std::runtime_error (SDL / EGL / OpenGL ES / shader / KTX2 failures). The C API converts
+// them to a `ris_result` and `ris_get_last_error()`.
 
 enum class LogLevel : int32_t { Trace = 0, Debug = 1, Info = 2, Warn = 3, Error = 4, Off = 5 };
 

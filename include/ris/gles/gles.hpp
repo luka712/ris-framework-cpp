@@ -9,8 +9,16 @@
 // RenderTarget, the Gles buffers) are built on these utilities. No GL header is needed to use them.
 
 #include "ris/gles/buffers/buffers.hpp"
+#include "ris/gles/gles_graphics_device.hpp"
+#include "ris/gles/gles_graphics_device_features.hpp"
 #include "ris/gles/gles_types.hpp"
+#include "ris/gles/blending/gles_blend_state.hpp"
+#include "ris/gles/primitive/gles_primitive_state.hpp"
+#include "ris/gles/render_pass/gles_render_pass.hpp"
+#include "ris/gles/sampler/gles_sampler.hpp"
+#include "ris/gles/swap_chain/gles_swap_chain.hpp"
 #include "ris/gles/rendering/vertex_attribute.hpp"
+#include "ris/gles/texture/gles_texture_factory.hpp"
 #include "ris/gles/rendering/vertex_buffer_layout.hpp"
 #include "ris/gles/utilities/gles_utilities.hpp"
 #include "ris/utilities/align_utilities.hpp"

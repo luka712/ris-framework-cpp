@@ -1,4 +1,4 @@
-// Loads a Basis Universal (UASTC) .ktx2 file with ris::Texture::from_ktx2_file and shows it as a textured quad.
+// Loads a Basis Universal (UASTC) .ktx2 file with ris::Texture::from_ktx2_memory and shows it as a textured quad.
 //
 // The file is transcoded to the best format the GPU supports (ASTC, then ETC2, then RGBA8), see README.md.
 //
@@ -8,6 +8,7 @@
 #include <cstring>
 #include <iostream>
 
+#include "../common/ktx2_file.hpp"
 #include "../common/sample_app.hpp"
 
 namespace {
@@ -29,7 +30,7 @@ int main(int argc, char** argv) {
         const int window_size = 248 * scale + 2 * kMargin;
         sample::App app(argc, argv, "ris sample: ktx2_quad", window_size, window_size);
 
-        ris::Texture texture = ris::Texture::from_ktx2_file(sample::asset("ktx2_quad", "test_basis_uastc.ktx2"));
+        ris::Texture texture = sample::load_ktx2_file(sample::asset("ktx2_quad", "test_basis_uastc.ktx2"));
         texture.set_sampler({.min_filter = ris::Filter::Linear, .mag_filter = ris::Filter::Linear});
         std::cout << "Loaded test_basis_uastc.ktx2 (" << texture.width() << "x" << texture.height() << ", "
                   << texture.mip_levels() << " level(s)); ASTC "

@@ -14,7 +14,7 @@
 /// Gles buffers (GlesVertexBuffer, GlesIndexBuffer, GlesUniformBuffer) and the low level ris::Buffer are built on these.
 ///
 /// The functions return the plain GL buffer name, which you own and must delete with delete_buffer().
-/// They need the window's GL context and throw Error(NotInitialized) without one.
+/// They need the window's GL context and throw std::logic_error without one.
 ///
 /// Unlike the TypeScript utilities, which bind `ELEMENT_ARRAY_BUFFER` and unbind it afterwards (which
 /// detaches the index buffer of the current vertex array in WebGL, too), index buffers are bound to
@@ -29,7 +29,7 @@ namespace ris::gles::buffer_utilities {
 /// @param usage     the `glBufferData` usage hint, see converter::convert_buffer_usage.
 /// @param label     optional debug label, see debug_label_utilities.
 /// @return the buffer name, never 0.
-/// @throws Error(InvalidArgument) for a zero size, Error(Graphics) if GL reports an error (the buffer is
+/// @throws std::invalid_argument for a zero size, std::runtime_error if GL reports an error (the buffer is
 ///         deleted in that case).
 RIS_API GlUint create_buffer(BufferType type, const void* data, size_t byte_size, GlEnum usage,
                              std::string_view label = {});
@@ -60,7 +60,7 @@ RIS_API GlUint create_uniform_buffer(size_t byte_size, BufferUsageFlags usage, s
 /// @param type       the kind the buffer was created as.
 /// @param buffer     buffer name.
 /// @param byte_offset start of the range in bytes.
-/// @throws Error(InvalidArgument) for a null buffer, null data or an empty range, Error(Graphics) if GL fails.
+/// @throws std::invalid_argument for a null buffer, null data or an empty range, std::runtime_error if GL fails.
 RIS_API void update_buffer(BufferType type, GlUint buffer, size_t byte_offset, const void* data, size_t byte_size);
 
 /// `updateVertexBuffer` of ris-framework-ts: writes `data` into a `GL_ARRAY_BUFFER`.

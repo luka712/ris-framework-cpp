@@ -30,8 +30,8 @@ void VertexBufferLayout::validate() const {
     for (const VertexAttribute& a : attributes) {
         const uint32_t size = vertex_format_byte_size(a.format);
         if (size == 0 || a.offset > array_stride || size > array_stride - a.offset) {
-            throw Error(Result::InvalidArgument,
-                        "VertexBufferLayout: attribute at location " + std::to_string(a.shader_location) +
+            throw std::invalid_argument("VertexBufferLayout: attribute at location "
+                                        + std::to_string(a.shader_location) +
                             " (offset " + std::to_string(a.offset) + ", " + std::to_string(size) +
                             " bytes) does not fit the stride " + std::to_string(array_stride));
         }

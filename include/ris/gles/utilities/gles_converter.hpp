@@ -11,6 +11,7 @@
 #include "ris/rendering/buffers/index_buffer_type.hpp"
 #include "ris/rendering/buffers/vertex_format.hpp"
 #include "ris/rendering/primitive/front_face.hpp"
+#include "ris/rendering/primitive/primitive_topology.hpp"
 #include "ris/rendering/sampler/mip_map_sampler_filter.hpp"
 #include "ris/rendering/sampler/sampler_address_mode.hpp"
 #include "ris/rendering/sampler/sampler_compare_function.hpp"
@@ -21,7 +22,7 @@
 /// ris-framework-ts (which converts to WebGL 2 enums, the same values as OpenGL ES 3.0).
 ///
 /// All functions are pure: they need no window or GL context. Where the TypeScript converter throws
-/// "NotImplementedException" for a value, these throw Error(Unsupported), which in practice only happens for
+/// "NotImplementedException" for a value, these throw std::domain_error, which in practice only happens for
 /// TextureFormat values with no OpenGL ES mapping.
 namespace ris::gles::converter {
 
@@ -29,6 +30,10 @@ namespace ris::gles::converter {
 
 /// `Topology` to the draw mode (`GL_TRIANGLES`, `GL_LINES`, ...). `convertPrimitiveType` of ris-framework-ts.
 RIS_API GlEnum convert_primitive_type(Topology topology);
+
+/// `PrimitiveTopology` (the neutral enum of PrimitiveStateDescriptor) to the draw mode, the same values as
+/// convert_primitive_type(Topology). `convertPrimitiveType` of ris-framework-ts.
+RIS_API GlEnum convert_primitive_topology(PrimitiveTopology topology);
 
 /// `CullMode` to the face to cull (`GL_BACK`, `GL_FRONT`). `CullMode::None` gives `GL_NONE` (0), the
 /// culling is switched off with `glDisable(GL_CULL_FACE)` instead (see culling_utilities).
@@ -55,7 +60,7 @@ RIS_API GlEnum convert_buffer_target(BufferType type);
 RIS_API GlEnum convert_index_type(IndexBufferType type);
 
 /// The low level `IndexType` to `GL_UNSIGNED_SHORT` / `GL_UNSIGNED_INT`.
-/// @throws Error(InvalidArgument) for `IndexType::None`.
+/// @throws std::invalid_argument for `IndexType::None`.
 RIS_API GlEnum convert_index_type(IndexType type);
 
 // ---- vertex attributes ------------------------------------------------------------------------
@@ -89,17 +94,17 @@ RIS_API GlEnum convert_compare_function(SamplerCompareFunction func);
 
 /// `TextureFormat` to the sized internal format (`GL_RGBA8`, `GL_SRGB8_ALPHA8`, `GL_DEPTH_COMPONENT32F`,
 /// `GL_DEPTH24_STENCIL8`, or the compressed format). `convertInternalFormat` of ris-framework-ts.
-/// @throws Error(Unsupported) for Undefined, Red32Float and Red32Typeless.
+/// @throws std::domain_error for Undefined, Red32Float and Red32Typeless.
 RIS_API GlEnum convert_internal_format(TextureFormat format);
 
 /// `TextureFormat` to the pixel format of an upload (`GL_RGBA`, `GL_DEPTH_COMPONENT`, `GL_DEPTH_STENCIL`).
 /// `convertToPixelFormat` of ris-framework-ts.
-/// @throws Error(Unsupported) for compressed and unmapped formats (they are uploaded without a pixel format).
+/// @throws std::domain_error for compressed and unmapped formats (they are uploaded without a pixel format).
 RIS_API GlEnum convert_to_pixel_format(TextureFormat format);
 
 /// `TextureFormat` to the pixel type of an upload (`GL_UNSIGNED_BYTE`, `GL_FLOAT`, `GL_UNSIGNED_INT_24_8`).
 /// `convertToTextureType` of ris-framework-ts.
-/// @throws Error(Unsupported) like convert_to_pixel_format.
+/// @throws std::domain_error like convert_to_pixel_format.
 RIS_API GlEnum convert_to_texture_type(TextureFormat format);
 
 /// True for BC3, BC7, ETC2 and ASTC formats.

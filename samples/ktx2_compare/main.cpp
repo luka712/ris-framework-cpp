@@ -1,4 +1,4 @@
-// The same image (a 248x248 UASTC .ktx2) as three KTX2 files side by side, loaded with ris::Texture::from_ktx2_file:
+// The same image (a 248x248 UASTC .ktx2) as three KTX2 files side by side, loaded with ris::Texture::from_ktx2_memory:
 //
 //   left    ASTC 4x4   (Basis transcode target when GL_KHR_texture_compression_astc_ldr is available)
 //   middle  ETC2 RGBA  (Basis transcode target otherwise; core in OpenGL ES 3)
@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 
+#include "../common/ktx2_file.hpp"
 #include "../common/sample_app.hpp"
 
 namespace {
@@ -58,7 +59,7 @@ int main(int argc, char** argv) {
         std::string title = "ris sample: ktx2_compare | left to right:";
         for (Panel& p : panels) {
             try {
-                p.texture = std::make_unique<ris::Texture>(ris::Texture::from_ktx2_file(sample::asset("ktx2_compare", p.file)));
+                p.texture = std::make_unique<ris::Texture>(sample::load_ktx2_file(sample::asset("ktx2_compare", p.file)));
                 p.texture->set_sampler({.min_filter = ris::Filter::Linear, .mag_filter = ris::Filter::Linear});
                 const long kib = static_cast<long>(p.texture->width()) * p.texture->height() * p.bytes_per_pixel / 1024;
                 p.status = "ok, " + std::to_string(p.texture->width()) + "x" + std::to_string(p.texture->height()) + ", ~" +

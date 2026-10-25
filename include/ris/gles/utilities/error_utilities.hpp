@@ -12,13 +12,13 @@ namespace ris::gles::error_utilities {
 RIS_API const char* error_name(GlEnum error) noexcept;
 
 /// Reads and discards every pending GL error.
-/// @throws Error(NotInitialized) without a window.
+/// @throws std::logic_error without a window.
 RIS_API void clear_errors();
 
 /// Throws if `glGetError` reports an error, and discards all other pending errors.
 /// @param what the operation that was just performed, used in the message
 ///        ("OpenGL ES error 0x0502 in <what>").
-/// @throws Error(Graphics) on a GL error, Error(NotInitialized) without a window.
+/// @throws std::runtime_error on a GL error, std::logic_error without a window.
 RIS_API void check_error(const char* what);
 
 } // namespace ris::gles::error_utilities

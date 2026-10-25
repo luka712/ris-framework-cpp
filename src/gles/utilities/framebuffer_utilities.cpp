@@ -1,5 +1,8 @@
 #include "ris/gles/utilities/framebuffer_utilities.hpp"
 
+#include <cstdio>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 #include "internal.hpp"
@@ -17,7 +20,8 @@ GLenum attachment_point(DepthAttachmentType type) {
         case DepthAttachmentType::DepthStencil: return GL_DEPTH_STENCIL_ATTACHMENT;
         case DepthAttachmentType::Stencil: return GL_STENCIL_ATTACHMENT;
     }
-    throw_error(Result::InvalidArgument, "invalid depth attachment type %u", static_cast<unsigned>(type));
+    throw std::invalid_argument(std::string("invalid depth attachment type ")
+                                + std::to_string(static_cast<unsigned>(type)));
 }
 
 /// Creates and binds a framebuffer. Restores the previous binding and deletes the framebuffer unless
@@ -44,7 +48,9 @@ public:
     void require_complete() const {
         const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
-            throw_error(Result::Graphics, "Framebuffer is not complete (status 0x%04X)", static_cast<unsigned>(status));
+            char hex[16];
+            std::snprintf(hex, sizeof hex, "%04X", static_cast<unsigned>(status));
+            throw std::runtime_error(std::string("Framebuffer is not complete (status 0x") + hex + ")");
         }
     }
 
@@ -82,12 +88,11 @@ private:
 GlUint create(std::span<const GlUint> color_textures, std::string_view label) {
     require_context();
     if (color_textures.empty()) {
-        throw_error(Result::InvalidArgument, "framebuffer_utilities::create: no colour textures");
+        throw std::invalid_argument("framebuffer_utilities::create: no colour textures");
     }
     for (const GlUint texture : color_textures) {
         if (texture == 0) {
-            throw_error(Result::InvalidArgument,
-                        "Cannot bind texture to the frame buffer. Texture id not specified");
+            throw std::invalid_argument("Cannot bind texture to the frame buffer. Texture id not specified");
         }
     }
 
@@ -135,7 +140,7 @@ DepthAttachmentType depth_attachment_type_for(TextureFormat format) {
         case TextureFormat::Depth24Stencil8: return DepthAttachmentType::DepthStencil;
         default: break;
     }
-    throw_error(Result::Unsupported, "Unsupported depth/stencil texture format");
+    throw std::domain_error("Unsupported depth/stencil texture format");
 }
 
 void attach_depth_stencil_renderbuffer(GlUint framebuffer, GlUint render_buffer, TextureFormat format) {

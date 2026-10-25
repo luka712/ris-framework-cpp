@@ -20,10 +20,10 @@ TEST_CASE("vertex format sizes and layouts") {
         ris::VertexBufferLayout bad;
         bad.array_stride = 16;
         bad.attributes = {{ris::VertexFormat::Float32x4, 4, 0}};
-        REQUIRE_THROWS_AS(bad.validate(), ris::Error);
+        REQUIRE_THROWS_AS(bad.validate(), std::invalid_argument);
         bad.attributes = {{ris::VertexFormat::Float32x4, 0, 0}};
         REQUIRE_NOTHROW(bad.validate());
         bad.attributes = {{ris::VertexFormat::Float32x4, 20, 0}};   // offset behind the stride
-        REQUIRE_THROWS_AS(bad.validate(), ris::Error);
+        REQUIRE_THROWS_AS(bad.validate(), std::invalid_argument);
     }
 }

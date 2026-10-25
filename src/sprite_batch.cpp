@@ -156,7 +156,7 @@ SpriteBatch& SpriteBatch::operator=(SpriteBatch&&) noexcept = default;
 void SpriteBatch::begin(const float* view_projection, BlendMode blend) {
     require_context();
     if (impl_->active) {
-        throw_error(Result::InvalidArgument, "SpriteBatch::begin called twice without end()");
+        throw std::invalid_argument("SpriteBatch::begin called twice without end()");
     }
     impl_->active = true;
     impl_->current = nullptr;
@@ -180,7 +180,7 @@ void SpriteBatch::begin(const float* view_projection, BlendMode blend) {
 
 void SpriteBatch::draw(const Sprite& sprite) {
     if (!impl_->active) {
-        throw_error(Result::InvalidArgument, "SpriteBatch::draw called outside begin()/end()");
+        throw std::invalid_argument("SpriteBatch::draw called outside begin()/end()");
     }
     impl_->push(sprite);
 }
@@ -202,7 +202,7 @@ void SpriteBatch::draw_quad(const Texture* texture, float x, float y, float widt
 
 void SpriteBatch::end() {
     if (!impl_->active) {
-        throw_error(Result::InvalidArgument, "SpriteBatch::end called without begin()");
+        throw std::invalid_argument("SpriteBatch::end called without begin()");
     }
     impl_->flush();
     impl_->active = false;

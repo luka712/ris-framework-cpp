@@ -1,5 +1,9 @@
 #include "ris/gles/utilities/error_utilities.hpp"
 
+#include <cstdio>
+#include <stdexcept>
+#include <string>
+
 #include "internal.hpp"
 
 using namespace ris::detail;
@@ -31,7 +35,9 @@ void check_error(const char* what) {
     const GLenum first = err;
     while ((err = glGetError()) != GL_NO_ERROR) {
     }
-    throw_error(Result::Graphics, "OpenGL ES error 0x%04X in %s", static_cast<unsigned>(first), what);
+    char hex[16];
+    std::snprintf(hex, sizeof hex, "%04X", static_cast<unsigned>(first));
+    throw std::runtime_error(std::string("OpenGL ES error 0x") + hex + " in " + what);
 }
 
 } // namespace ris::gles::error_utilities

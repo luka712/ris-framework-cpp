@@ -14,8 +14,7 @@ TEST_CASE("vertex array description checks the stride") {
 
     const std::vector<float> data(10, 0.0f);
     ris::gles::GlesVertexBuffer vb(data, 20);
-    REQUIRE_THROWS_AS(ris::gles::make_vertex_array_desc(vb, ris::VertexBufferLayout::create_float3_float4_float2()),
-                      ris::Error);
+    REQUIRE_THROWS_AS(ris::gles::make_vertex_array_desc(vb, ris::VertexBufferLayout::create_float3_float4_float2()), std::invalid_argument);
 }
 
 TEST_CASE("typed buffers draw a quad with a uniform block") {

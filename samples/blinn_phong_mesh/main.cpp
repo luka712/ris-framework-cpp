@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
         constexpr float orbit_speed = 1.2f;      // radians per second
         constexpr float pi = 3.14159265358979f;
 
-        framework.addOnLoadContentListener([&] {
+        framework.addOnLoadContentListener([&](ris::Framework&) {
             const ris::Vec2 size = framework.renderer().back_buffer_size();
             // Passing the scene makes the camera the scene's camera. The eye z is flipped by the look-at
             // (ris-framework-ts convention), so -3 views the cube from world z = +3.
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
             std::cout << "Loaded cube.obj: " << cube->sub_meshes().size() << " submeshes, Blinn-Phong materials, ambient light.\n";
         });
 
-        framework.addOnUpdateListener([&](const ris::GameTime& time) {
+        framework.addOnUpdateListener([&](ris::Framework&, const ris::GameTime& time) {
             if (!camera || !cube) return;
 
             // Slowly pulse the ambient light.
@@ -60,9 +60,9 @@ int main(int argc, char** argv) {
             camera->update(time);
         });
 
-        framework.addOnRenderListener([&] { scene.render(); });
+        framework.addOnRenderListener([&](ris::Framework&) { scene.render(); });
 
-        framework.renderer().clear_color = ris::Color::corner_flower_blue();
+        framework.renderer().setClearColor(ris::Color::corner_flower_blue());
         framework.initialize();
         return 0;
     } catch (const std::exception& e) {

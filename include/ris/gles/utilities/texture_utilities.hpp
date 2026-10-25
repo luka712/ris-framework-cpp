@@ -9,7 +9,7 @@
 #include "ris/rendering/texture/texture_format.hpp"
 
 /// Creating 2D textures, like `WebGlTextureUtilities` of ris-framework-ts. They need the window's GL context
-/// and throw Error(NotInitialized) without one.
+/// and throw std::logic_error without one.
 ///
 /// Textures are created with immutable storage (`glTexStorage2D`). The sampler state is left at the GL
 /// defaults, as in the TypeScript version: set it with Texture::set_sampler(), with a sampler object
@@ -39,9 +39,9 @@ using MipLevelData = std::span<const uint8_t>;
 /// @param anisotropy      anisotropic filtering level, 1 for none.
 /// @param label           optional debug label, see debug_label_utilities.
 /// @return the texture name, to be deleted with delete_texture().
-/// @throws Error(InvalidArgument) for a bad size, more levels than the size has, a level that is too small,
-///         or mip maps for a depth format; Error(Unsupported) for compressed or unknown formats;
-///         Error(Graphics) if GL reports an error (the texture is deleted then).
+/// @throws std::invalid_argument for a bad size, more levels than the size has, a level that is too small,
+///         or mip maps for a depth format; std::domain_error for compressed or unknown formats;
+///         std::runtime_error if GL reports an error (the texture is deleted then).
 RIS_API GlUint create_texture_2d(int32_t width, int32_t height, std::span<const MipLevelData> data = {},
                                  TextureFormat format = TextureFormat::Rgba8Unorm, bool use_mip_maps = false,
                                  float anisotropy = 1.0f, std::string_view label = {});
@@ -68,7 +68,7 @@ RIS_API GlUint create_texture_2d(int32_t width, int32_t height, const void* pixe
 /// @param anisotropy anisotropic filtering level, 1 for none.
 /// @param label    optional debug label.
 /// @return the texture name, to be deleted with delete_texture().
-/// @throws Error(InvalidArgument), Error(Unsupported) for an uncompressed format, Error(Graphics) if GL
+/// @throws std::invalid_argument, std::domain_error for an uncompressed format, std::runtime_error if GL
 ///         reports an error (for example the format is not available; the texture is deleted then).
 RIS_API GlUint create_compressed_texture_2d(int32_t width, int32_t height, int32_t block_width, int32_t block_height,
                                             std::span<const MipLevelData> data,

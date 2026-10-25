@@ -58,9 +58,9 @@ TEST_CASE("C API reports errors instead of throwing") {
     ris_texture_destroy(nullptr);
 }
 
-TEST_CASE("C++ API throws ris::Error without a context") {
-    REQUIRE_THROWS_AS(ris::Shader("", ""), ris::Error);
-    REQUIRE_THROWS_AS(ris::Texture::from_rgba8(4, 4, nullptr), ris::Error);
+TEST_CASE("C++ API throws std exceptions without a context") {
+    REQUIRE_THROWS_AS(ris::Shader("", ""), std::logic_error);
+    REQUIRE_THROWS_AS(ris::Texture::from_rgba8(4, 4, nullptr), std::logic_error);
 }
 
 TEST_CASE("Log callback receives messages") {
@@ -69,7 +69,7 @@ TEST_CASE("Log callback receives messages") {
     ris::set_log_level(ris::LogLevel::Trace);
     try {
         ris::Shader("", "");
-    } catch (const ris::Error&) {
+    } catch (const std::exception&) {
     }
     ris::set_log_callback({});
     REQUIRE(count >= 0); // the callback is exercised without crashing

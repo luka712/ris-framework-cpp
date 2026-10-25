@@ -5,7 +5,7 @@
 #include "ris/rendering/primitive/front_face.hpp"
 
 /// Face culling of the current context, like `WebGLCullingUtilities` of ris-framework-ts. They need the
-/// window's GL context and throw Error(NotInitialized) without one.
+/// window's GL context and throw std::logic_error without one.
 namespace ris::gles::culling_utilities {
 
 /// Sets the culling mode: `CullMode::None` disables `GL_CULL_FACE`, the other modes enable it and select

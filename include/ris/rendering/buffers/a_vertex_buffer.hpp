@@ -20,7 +20,7 @@ public:
     /// Overwrites part of the buffer with `data`. The data is copied, the call does not keep the pointer.
     /// @param data        the floats to write.
     /// @param byte_offset where to start writing, in bytes.
-    /// @throws Error(InvalidArgument) if the buffer lacks BufferUsageFlags::CopyDst or the range
+    /// @throws std::invalid_argument if the buffer lacks BufferUsageFlags::CopyDst, std::out_of_range if the range
     ///         [byte_offset, byte_offset + data bytes) is outside the buffer. Nothing is written in that case.
     virtual void update(std::span<const float> data, size_t byte_offset = 0) = 0;
 

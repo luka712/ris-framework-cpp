@@ -15,8 +15,8 @@ namespace ris::gles::shader_utilities {
 /// @param source GLSL ES 3.00 source (`#version 300 es`).
 /// @param stage  Vertex or Fragment.
 /// @return the shader name.
-/// @throws Error(Compile) with the info log (the message starts with "vertex shader compile error:" or
-///         "fragment shader compile error:"), Error(Unsupported) for other stages, Error(NotInitialized)
+/// @throws std::runtime_error with the info log (the message starts with "vertex shader compile error:" or
+///         "fragment shader compile error:"), std::domain_error for other stages, std::logic_error
 ///         without a window.
 RIS_API GlUint create(const std::string& source, ShaderStage stage);
 

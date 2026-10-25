@@ -21,8 +21,8 @@ TEST_CASE("buffer utilities create, update and delete buffers") {
         REQUIRE(vb != 0);
         REQUIRE_NOTHROW(bu::update_vertex_buffer(vb, std::vector<float>{2, 3}, 40));   // last two floats
         REQUIRE_NOTHROW(bu::update_vertex_buffer(vb, std::vector<float>{2, 3}));
-        REQUIRE_THROWS_AS(bu::update_vertex_buffer(vb, std::span<const float>{}), ris::Error);
-        REQUIRE_THROWS_AS(bu::update_vertex_buffer(0, data), ris::Error);
+        REQUIRE_THROWS_AS(bu::update_vertex_buffer(vb, std::span<const float>{}), std::invalid_argument);
+        REQUIRE_THROWS_AS(bu::update_vertex_buffer(0, data), std::invalid_argument);
         bu::delete_buffer(vb);
         REQUIRE(vb == 0);
         REQUIRE_NOTHROW(bu::delete_buffer(vb));   // deleting 0 does nothing
@@ -30,8 +30,8 @@ TEST_CASE("buffer utilities create, update and delete buffers") {
         gles::GlUint empty = bu::create_vertex_buffer(64, F::Vertex);
         REQUIRE(empty != 0);
         bu::delete_buffer(empty);
-        REQUIRE_THROWS_AS(bu::create_vertex_buffer(std::span<const float>{}, F::Vertex), ris::Error);
-        REQUIRE_THROWS_AS(bu::create_vertex_buffer(0, F::Vertex), ris::Error);
+        REQUIRE_THROWS_AS(bu::create_vertex_buffer(std::span<const float>{}, F::Vertex), std::invalid_argument);
+        REQUIRE_THROWS_AS(bu::create_vertex_buffer(0, F::Vertex), std::invalid_argument);
     }
     SECTION("index buffers") {
         const std::vector<uint16_t> narrow = {0, 1, 2};

@@ -19,11 +19,11 @@ TEST_CASE("error utilities name the GL errors") {
 
 TEST_CASE("utilities need a window") {
     // No Window exists here: every call that talks to GL throws instead of crashing.
-    REQUIRE_THROWS_AS(gles::error_utilities::check_error("test"), ris::Error);
-    REQUIRE_THROWS_AS(gles::extension_utilities::has_extension("GL_KHR_debug"), ris::Error);
-    REQUIRE_THROWS_AS(gles::buffer_utilities::create_vertex_buffer(16, ris::BufferUsageFlags::Vertex), ris::Error);
-    REQUIRE_THROWS_AS(gles::texture_utilities::create_texture_2d(4, 4, static_cast<const void*>(nullptr)), ris::Error);
-    REQUIRE_THROWS_AS(gles::shader_utilities::create_vertex_shader("x"), ris::Error);
+    REQUIRE_THROWS_AS(gles::error_utilities::check_error("test"), std::logic_error);
+    REQUIRE_THROWS_AS(gles::extension_utilities::has_extension("GL_KHR_debug"), std::logic_error);
+    REQUIRE_THROWS_AS(gles::buffer_utilities::create_vertex_buffer(16, ris::BufferUsageFlags::Vertex), std::logic_error);
+    REQUIRE_THROWS_AS(gles::texture_utilities::create_texture_2d(4, 4, static_cast<const void*>(nullptr)), std::logic_error);
+    REQUIRE_THROWS_AS(gles::shader_utilities::create_vertex_shader("x"), std::logic_error);
     // deleting needs no window
     gles::GlUint none = 7;
     gles::buffer_utilities::delete_buffer(none);

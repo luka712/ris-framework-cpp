@@ -139,36 +139,30 @@ TEST_CASE("setters reject invalid values and change nothing") {
     const double nan = std::numeric_limits<double>::quiet_NaN();
     const double inf = std::numeric_limits<double>::infinity();
 
-    REQUIRE_THROWS_AS(manager.set_time_scale(-1), ris::Error);
-    REQUIRE_THROWS_AS(manager.set_time_scale(nan), ris::Error);
-    REQUIRE_THROWS_AS(manager.set_time_scale(inf), ris::Error);
+    REQUIRE_THROWS_AS(manager.set_time_scale(-1), std::invalid_argument);
+    REQUIRE_THROWS_AS(manager.set_time_scale(nan), std::invalid_argument);
+    REQUIRE_THROWS_AS(manager.set_time_scale(inf), std::invalid_argument);
     REQUIRE(manager.time_scale() == 1.0);
 
-    REQUIRE_THROWS_AS(manager.set_target_frames_per_second(-30), ris::Error);
-    REQUIRE_THROWS_AS(manager.set_target_frames_per_second(nan), ris::Error);
+    REQUIRE_THROWS_AS(manager.set_target_frames_per_second(-30), std::invalid_argument);
+    REQUIRE_THROWS_AS(manager.set_target_frames_per_second(nan), std::invalid_argument);
     REQUIRE(manager.target_frames_per_second() == 0);
 
-    REQUIRE_THROWS_AS(manager.set_fixed_time_step_ms(-1), ris::Error);
-    REQUIRE_THROWS_AS(manager.set_fixed_time_step_ms(inf), ris::Error);
+    REQUIRE_THROWS_AS(manager.set_fixed_time_step_ms(-1), std::invalid_argument);
+    REQUIRE_THROWS_AS(manager.set_fixed_time_step_ms(inf), std::invalid_argument);
     REQUIRE(manager.fixed_time_step_ms() == 0);
 
-    REQUIRE_THROWS_AS(manager.set_max_fixed_steps_per_frame(0), ris::Error);
+    REQUIRE_THROWS_AS(manager.set_max_fixed_steps_per_frame(0), std::invalid_argument);
     REQUIRE(manager.max_fixed_steps_per_frame() == 8);
 
-    REQUIRE_THROWS_AS(manager.set_delta_smoothing(-0.1), ris::Error);
-    REQUIRE_THROWS_AS(manager.set_delta_smoothing(1.0), ris::Error);
-    REQUIRE_THROWS_AS(manager.set_delta_smoothing(nan), ris::Error);
+    REQUIRE_THROWS_AS(manager.set_delta_smoothing(-0.1), std::invalid_argument);
+    REQUIRE_THROWS_AS(manager.set_delta_smoothing(1.0), std::invalid_argument);
+    REQUIRE_THROWS_AS(manager.set_delta_smoothing(nan), std::invalid_argument);
     REQUIRE(manager.delta_smoothing() == 0);
 
-    REQUIRE_THROWS_AS(manager.set_deterministic_step_ms(-1), ris::Error);
+    REQUIRE_THROWS_AS(manager.set_deterministic_step_ms(-1), std::invalid_argument);
     REQUIRE(manager.deterministic_step_ms() == 0);
 
-    try {
-        manager.set_time_scale(-1);
-        FAIL("expected an exception");
-    } catch (const ris::Error& error) {
-        REQUIRE(error.code() == ris::Result::InvalidArgument);
-    }
 }
 
 TEST_CASE("fixed time step accumulates and is consumed in whole steps") {
@@ -394,13 +388,13 @@ TEST_CASE("frames per second") {
 
 TEST_CASE("TimeManager rejects an unusable clock source") {
     ris::ClockSource no_ticks;
-    REQUIRE_THROWS_AS(TimeManager(no_ticks), ris::Error);
+    REQUIRE_THROWS_AS(TimeManager(no_ticks), std::invalid_argument);
 
     ris_test::FakeClock clock;
     ris::ClockSource zero_frequency = clock.source();
     zero_frequency.ticks_per_second = 0;
-    REQUIRE_THROWS_AS(TimeManager(zero_frequency), ris::Error);
-    REQUIRE_THROWS_AS(ris::Stopwatch(zero_frequency), ris::Error);
+    REQUIRE_THROWS_AS(TimeManager(zero_frequency), std::invalid_argument);
+    REQUIRE_THROWS_AS(ris::Stopwatch(zero_frequency), std::invalid_argument);
 
     ris::ClockSource no_delay = clock.source();
     no_delay.delay_precise_ns = nullptr;   // allowed: frame_end just does not wait

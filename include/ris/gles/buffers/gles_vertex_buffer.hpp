@@ -24,8 +24,8 @@ public:
     /// @param usage       usage flags. Add BufferUsageFlags::CopyDst if update() will be used. Flags of other
     ///                    buffer kinds (Index, Uniform) are rejected.
     /// @param label       optional debug label.
-    /// @throws Error(InvalidArgument) for bad arguments, Error(Unsupported) for Storage / MapRead,
-    ///         Error(NotInitialized) without a window, Error(Graphics) if GL fails.
+    /// @throws std::invalid_argument for bad arguments, std::domain_error for Storage / MapRead,
+    ///         std::logic_error without a window, std::runtime_error if GL fails.
     GlesVertexBuffer(std::span<const float> data, uint32_t byte_stride,
                      BufferUsageFlags usage = BufferUsageFlags::Vertex, std::string label = {});
 

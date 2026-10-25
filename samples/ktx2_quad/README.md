@@ -1,6 +1,6 @@
 # ktx2_quad
 
-Loads `assets/test_basis_uastc.ktx2` with `ris::Texture::from_ktx2_file` and shows it as a textured quad with
+Loads `assets/test_basis_uastc.ktx2` with `ris::Texture::from_ktx2_memory` and shows it as a textured quad with
 `ris::SpriteBatch`, in front of a checkerboard so that the alpha channel is visible. Uses the KTX2 support of
 [ris-ktx2-cpp](https://github.com/luka712/ris-ktx2-cpp).
 

@@ -20,11 +20,10 @@ const std::string kFragment = R"(#version 300 es
     void main() { frag = vec4(1.0); }
 )";
 
-std::string error_message(const std::function<void()>& fn, ris::Result* code = nullptr) {
+std::string error_message(const std::function<void()>& fn) {
     try {
         fn();
-    } catch (const ris::Error& e) {
-        if (code) *code = e.code();
+    } catch (const std::runtime_error& e) {
         return e.what();
     }
     return {};
@@ -50,9 +49,7 @@ TEST_CASE("shader and program utilities") {
         REQUIRE_NOTHROW(gles::error_utilities::check_error("shader utilities"));
     }
     SECTION("compile errors carry the stage and the log") {
-        ris::Result code = ris::Result::Ok;
-        const std::string vertex = error_message([] { gles::shader_utilities::create_vertex_shader("#version 300 es\nnot glsl"); }, &code);
-        REQUIRE(code == ris::Result::Compile);
+        const std::string vertex = error_message([] { gles::shader_utilities::create_vertex_shader("#version 300 es\nnot glsl"); });
         REQUIRE(vertex.find("vertex shader compile error") != std::string::npos);
         const std::string fragment = error_message([] { gles::shader_utilities::create_fragment_shader("#version 300 es\nnot glsl"); });
         REQUIRE(fragment.find("fragment shader compile error") != std::string::npos);
@@ -66,15 +63,13 @@ TEST_CASE("shader and program utilities") {
             out vec4 frag;
             void main() { frag = vec4(v_missing, 0.0, 1.0); }
         )");
-        ris::Result code = ris::Result::Ok;
-        const std::string msg = error_message([&] { gles::program_utilities::create(vs, fs); }, &code);
-        REQUIRE(code == ris::Result::Compile);
+        const std::string msg = error_message([&] { gles::program_utilities::create(vs, fs); });
         REQUIRE(msg.find("shader link error") != std::string::npos);
         gles::shader_utilities::delete_shader(vs);
         gles::shader_utilities::delete_shader(fs);
     }
     SECTION("only vertex and fragment stages compile") {
-        REQUIRE_THROWS_AS(gles::shader_utilities::create(kVertex, ris::ShaderStage::Compute), ris::Error);
-        REQUIRE_THROWS_AS(gles::shader_utilities::create(kVertex, ris::ShaderStage::None), ris::Error);
+        REQUIRE_THROWS_AS(gles::shader_utilities::create(kVertex, ris::ShaderStage::Compute), std::domain_error);
+        REQUIRE_THROWS_AS(gles::shader_utilities::create(kVertex, ris::ShaderStage::None), std::domain_error);
     }
 }

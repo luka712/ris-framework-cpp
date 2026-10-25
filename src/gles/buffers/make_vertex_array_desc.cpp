@@ -12,8 +12,7 @@ VertexArrayDesc make_vertex_array_desc(const AVertexBuffer& vertex_buffer, const
     const auto* gles_vertex = dynamic_cast<const GlesVertexBuffer*>(&vertex_buffer);
     const auto* gles_index = index_buffer ? dynamic_cast<const GlesIndexBuffer*>(index_buffer) : nullptr;
     if (!gles_vertex || (index_buffer && !gles_index)) {
-        throw Error(Result::InvalidArgument,
-                    "make_vertex_array_desc: the buffers were not created by the OpenGL ES backend");
+        throw std::invalid_argument("make_vertex_array_desc: the buffers were not created by the OpenGL ES backend");
     }
     buffer_validation::check_layout_stride(layout, gles_vertex->byte_stride(), "make_vertex_array_desc");
     VertexArrayDesc desc;

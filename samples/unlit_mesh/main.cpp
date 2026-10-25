@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
         float angle = 0.0f;
         constexpr float rotation_speed = 0.6f;   // radians per second, independent of the frame rate
 
-        framework.addOnLoadContentListener([&] {
+        framework.addOnLoadContentListener([&](ris::Framework&) {
             // Passing the scene makes the camera the scene's camera.
             const ris::Vec2 size = framework.renderer().back_buffer_size();
             camera = framework.cameraFactory().create_perspective_camera(
@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
             std::cout << "Loaded cube.obj: " << cube->sub_meshes().size() << " submeshes, unlit materials.\n";
         });
 
-        framework.addOnUpdateListener([&](const ris::GameTime& time) {
+        framework.addOnUpdateListener([&](ris::Framework&, const ris::GameTime& time) {
             if (!camera || !cube) return;
             angle += rotation_speed * time.delta_time_sec();
             cube->rotation = {angle * 0.7f, angle, 0};   // Euler radians (x, y, z), applied Y then X
@@ -38,9 +38,9 @@ int main(int argc, char** argv) {
             scene.update(time);
         });
 
-        framework.addOnRenderListener([&] { scene.render(); });
+        framework.addOnRenderListener([&](ris::Framework&) { scene.render(); });
 
-        framework.renderer().clear_color = ris::Color::light_pink();
+        framework.renderer().setClearColor(ris::Color::light_pink());
         framework.initialize();
         return 0;
     } catch (const std::exception& e) {

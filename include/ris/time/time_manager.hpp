@@ -25,7 +25,7 @@ namespace ris {
 ///  3. after the frame has been presented, `frame_end()` sleeps when a target frame rate is set.
 ///
 /// All methods must be called from the thread that runs the frame loop; nothing is synchronised. Setters throw
-/// `Error(Result::InvalidArgument)` for values that make no sense (negative, NaN, infinite) and change nothing.
+/// `std::invalid_argument` for values that make no sense (negative, NaN, infinite) and change nothing.
 class RIS_API TimeManager {
 public:
     /// Creates a manager on the system clock (`ClockSource::system()`). Ready to use; call `prepare_start()` before
@@ -33,7 +33,7 @@ public:
     TimeManager();
     /// Creates a manager on a custom time source, for tests that move time by hand.
     /// @param clock the time source; copied. Whatever its functions capture must outlive the manager.
-    /// @throws Error(Result::InvalidArgument) if `clock.ticks` is empty or `clock.ticks_per_second` is 0
+    /// @throws std::invalid_argument if `clock.ticks` is empty or `clock.ticks_per_second` is 0
     explicit TimeManager(ClockSource clock);
 
     TimeManager(const TimeManager&) = delete;

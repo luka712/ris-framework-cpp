@@ -12,7 +12,8 @@ namespace ris::gles::renderbuffer_utilities {
 GlUint create(TextureFormat format, int32_t width, int32_t height, std::string_view label) {
     require_context();
     if (width <= 0 || height <= 0) {
-        throw_error(Result::InvalidArgument, "renderbuffer_utilities::create: invalid size %dx%d", width, height);
+        throw std::invalid_argument(std::string("renderbuffer_utilities::create: invalid size ")
+                                    + std::to_string(width) + "x" + std::to_string(height));
     }
     const GLenum internal_format = converter::convert_internal_format(format);
 

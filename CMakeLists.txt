@@ -100,16 +100,26 @@ add_library(${TARGET_NAME}
         src/time/time_manager.cpp
         src/time/timer.cpp
         src/rendering/default_buffer_factory.cpp
+        src/rendering/default_graphics_device.cpp
+        src/rendering/default_texture_factory.cpp
         src/rendering/buffers/buffer_validation.cpp
         src/rendering/buffers/vertex_buffer_layout.cpp
         src/rendering/buffers/vertex_format.cpp
+        src/gles/blending/gles_blend_state.cpp
         src/gles/buffers/gles_buffer_factory.cpp
         src/gles/buffers/gles_buffer_object.cpp
         src/gles/buffers/gles_index_buffer.cpp
         src/gles/buffers/gles_uniform_buffer.cpp
         src/gles/buffers/gles_vertex_buffer.cpp
         src/gles/buffers/make_vertex_array_desc.cpp
+        src/gles/gles_graphics_device.cpp
+        src/gles/gles_graphics_device_features.cpp
+        src/gles/primitive/gles_primitive_state.cpp
+        src/gles/render_pass/gles_render_pass.cpp
+        src/gles/sampler/gles_sampler.cpp
+        src/gles/swap_chain/gles_swap_chain.cpp
         src/gles/rendering/vertex_attribute.cpp
+        src/gles/texture/gles_texture_factory.cpp
         src/gles/rendering/vertex_buffer_layout.cpp
         src/gles/utilities/anisotropic_filter_utilities.cpp
         src/gles/utilities/blending_utilities.cpp
@@ -209,6 +219,8 @@ if(RIS_FRAMEWORK_BUILD_TESTS)
     file(GLOB_RECURSE TEST_SRC_FILES CONFIGURE_DEPENDS tests/*.cpp)
     add_executable(${TARGET_NAME}_tests ${TEST_SRC_FILES})
     target_link_libraries(${TARGET_NAME}_tests PRIVATE ${TARGET_NAME} Catch2::Catch2 Catch2::Catch2WithMain)
+    # The texture factory tests create ktxTexture2 objects for ATextureFactory::createFromKtx2.
+    target_link_libraries(${TARGET_NAME}_tests PRIVATE ris_ktx2::ris_ktx2)
     # The input manager tests build synthetic SDL_Event structs: they need the SDL headers (the library itself keeps
     # SDL private and never exposes it in its own headers).
     target_include_directories(${TARGET_NAME}_tests PRIVATE $<TARGET_PROPERTY:${_ris_sdl3_target},INTERFACE_INCLUDE_DIRECTORIES>)
@@ -221,7 +233,9 @@ if(RIS_FRAMEWORK_BUILD_TESTS)
     # OpenGL ES based graphics.hpp.
     file(GLOB_RECURSE _ris_neutral_headers CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include"
          include/ris/rendering/*.hpp include/ris/input/*.hpp include/ris/time/*.hpp)
-    set(_ris_neutral_sources "")
+    set(_ris_neutral_sources ""
+            include/ris/rendering/a_graphics_device_features.hpp
+            include/ris/rendering/a_graphics_device.hpp)
     foreach(_header IN LISTS _ris_neutral_headers)
         string(MAKE_C_IDENTIFIER "${_header}" _id)
         set(_source "${CMAKE_CURRENT_BINARY_DIR}/neutral_headers/${_id}.cpp")

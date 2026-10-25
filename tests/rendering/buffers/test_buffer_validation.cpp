@@ -2,23 +2,11 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstdint>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 #include <ris/ris.hpp>
-
-namespace {
-
-template <typename Fn>
-ris::Result code_of(Fn&& fn) {
-    try {
-        fn();
-    } catch (const ris::Error& e) {
-        return e.code();
-    }
-    return ris::Result::Ok;
-}
-
-} // namespace
 
 TEST_CASE("usage flags are resolved per buffer kind") {
     namespace bv = ris::buffer_validation;
@@ -27,17 +15,15 @@ TEST_CASE("usage flags are resolved per buffer kind") {
 
     REQUIRE(bv::resolve_usage(F::CopyDst, F::Vertex, "T", unsupported, "API") == (F::Vertex | F::CopyDst));
     REQUIRE(bv::resolve_usage(F::None, F::Index, "T", unsupported, "API") == F::Index);
-    REQUIRE(code_of([&] { bv::resolve_usage(F::Index, F::Vertex, "T", unsupported, "API"); }) ==
-            ris::Result::InvalidArgument);
-    REQUIRE(code_of([&] { bv::resolve_usage(F::Storage, F::Vertex, "T", unsupported, "API"); }) ==
-            ris::Result::Unsupported);
+    REQUIRE_THROWS_AS(([&] { bv::resolve_usage(F::Index, F::Vertex, "T", unsupported, "API"); })(), std::invalid_argument);
+    REQUIRE_THROWS_AS(([&] { bv::resolve_usage(F::Storage, F::Vertex, "T", unsupported, "API"); })(), std::domain_error);
     // a backend that supports storage buffers simply passes fewer unsupported flags
     REQUIRE(bv::resolve_usage(F::Storage, F::Vertex, "T", F::None, "API") == (F::Vertex | F::Storage));
 
     try {
         bv::resolve_usage(F::MapRead, F::Uniform, "UniformBuffer", unsupported, "Some API 1.0");
         FAIL("expected an error");
-    } catch (const ris::Error& e) {
+    } catch (const std::exception& e) {
         REQUIRE(std::string(e.what()).find("Some API 1.0") != std::string::npos);
     }
 }
@@ -48,27 +34,24 @@ TEST_CASE("vertex, index and uniform sizes are validated") {
     const F unsupported = F::Storage | F::MapRead;
 
     REQUIRE(bv::resolve_vertex_buffer(48, 12, F::Vertex, unsupported, "API") == F::Vertex);
-    REQUIRE(code_of([&] { bv::resolve_vertex_buffer(48, 0, F::Vertex, unsupported, "API"); }) ==
-            ris::Result::InvalidArgument);
-    REQUIRE(code_of([&] { bv::resolve_vertex_buffer(0, 12, F::Vertex, unsupported, "API"); }) ==
-            ris::Result::InvalidArgument);
-    REQUIRE(code_of([&] { bv::resolve_vertex_buffer(48, 20, F::Vertex, unsupported, "API"); }) ==
-            ris::Result::InvalidArgument);
+    REQUIRE_THROWS_AS(([&] { bv::resolve_vertex_buffer(48, 0, F::Vertex, unsupported, "API"); })(), std::invalid_argument);
+    REQUIRE_THROWS_AS(([&] { bv::resolve_vertex_buffer(0, 12, F::Vertex, unsupported, "API"); })(), std::invalid_argument);
+    REQUIRE_THROWS_AS(([&] { bv::resolve_vertex_buffer(48, 20, F::Vertex, unsupported, "API"); })(), std::invalid_argument);
 
     REQUIRE(bv::resolve_index_buffer(6) == F::Index);
-    REQUIRE(code_of([] { bv::resolve_index_buffer(0); }) == ris::Result::InvalidArgument);
+    REQUIRE_THROWS_AS(([] { bv::resolve_index_buffer(0); })(), std::invalid_argument);
 
     REQUIRE(bv::padded_uniform_byte_size(1) == 16);
     REQUIRE(bv::padded_uniform_byte_size(16) == 16);
     REQUIRE(bv::padded_uniform_byte_size(65) == 80);
-    REQUIRE(code_of([] { bv::padded_uniform_byte_size(0); }) == ris::Result::InvalidArgument);
+    REQUIRE_THROWS_AS(([] { bv::padded_uniform_byte_size(0); })(), std::invalid_argument);
 
     const std::vector<float> five(5, 1.0f);
     const std::vector<float> padded = bv::pad_uniform_data(five);
     REQUIRE(padded.size() == 8);
     REQUIRE(padded[4] == 1.0f);
     REQUIRE(padded[5] == 0.0f);
-    REQUIRE(code_of([] { bv::pad_uniform_data({}); }) == ris::Result::InvalidArgument);
+    REQUIRE_THROWS_AS(([] { bv::pad_uniform_data({}); })(), std::invalid_argument);
 }
 
 TEST_CASE("index type selection picks 16 bit when everything fits") {
@@ -87,13 +70,13 @@ TEST_CASE("update checks") {
     const float value = 1.0f;
 
     REQUIRE_NOTHROW(bv::check_update_allowed(F::Vertex | F::CopyDst, "T"));
-    REQUIRE(code_of([&] { bv::check_update_allowed(F::Vertex, "T"); }) == ris::Result::InvalidArgument);
+    REQUIRE_THROWS_AS(([&] { bv::check_update_allowed(F::Vertex, "T"); })(), std::invalid_argument);
 
     REQUIRE_NOTHROW(bv::check_update_range(16, 12, &value, 4, "T"));
-    REQUIRE(code_of([&] { bv::check_update_range(16, 13, &value, 4, "T"); }) == ris::Result::InvalidArgument);
-    REQUIRE(code_of([&] { bv::check_update_range(16, 0, nullptr, 4, "T"); }) == ris::Result::InvalidArgument);
+    REQUIRE_THROWS_AS(([&] { bv::check_update_range(16, 13, &value, 4, "T"); })(), std::out_of_range);
+    REQUIRE_THROWS_AS(([&] { bv::check_update_range(16, 0, nullptr, 4, "T"); })(), std::invalid_argument);
 
     auto layout = ris::VertexBufferLayout::create_float3_float2();
     REQUIRE_NOTHROW(bv::check_layout_stride(layout, 20, "T"));
-    REQUIRE(code_of([&] { bv::check_layout_stride(layout, 24, "T"); }) == ris::Result::InvalidArgument);
+    REQUIRE_THROWS_AS(([&] { bv::check_layout_stride(layout, 24, "T"); })(), std::invalid_argument);
 }

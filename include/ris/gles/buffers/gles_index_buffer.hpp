@@ -19,8 +19,8 @@ public:
     /// is <= 65535 and 32 bit indices otherwise, see type().
     /// @param indices the indices (copied), must not be empty.
     /// @param label   optional debug label.
-    /// @throws Error(InvalidArgument) if empty, Error(NotInitialized) without a window,
-    ///         Error(Graphics) if GL fails.
+    /// @throws std::invalid_argument if empty, std::logic_error without a window,
+    ///         std::runtime_error if GL fails.
     explicit GlesIndexBuffer(std::span<const uint32_t> indices, std::string label = {});
     /// Creates the buffer from 16 bit indices, stored as UInt16. Same errors as above.
     explicit GlesIndexBuffer(std::span<const uint16_t> indices, std::string label = {});

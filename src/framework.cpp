@@ -2,8 +2,11 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <ios>
 
 #include "internal.hpp"
+#include "ris/rendering/default_graphics_device.hpp"
+#include "ris/rendering/default_texture_factory.hpp"
 
 using namespace ris::detail;
 
@@ -37,8 +40,8 @@ void dispatch(const Map& listeners, Args&&... args) {
 WindowDesc make_window_desc(const FrameworkConfiguration& c) {
     WindowDesc d;
     d.title = c.title;
-    d.width = static_cast<int32_t>(c.back_buffer_size.x);
-    d.height = static_cast<int32_t>(c.back_buffer_size.y);
+    d.width = static_cast<int32_t>(c.backBufferSize.x);
+    d.height = static_cast<int32_t>(c.backBufferSize.y);
     d.flags = WindowFlags::None;
     if (c.resizable) d.flags = d.flags | WindowFlags::Resizable;
     if (c.high_dpi) d.flags = d.flags | WindowFlags::HighDpi;
@@ -51,7 +54,7 @@ WindowDesc make_window_desc(const FrameworkConfiguration& c) {
 void write_ppm(const std::string& path, int32_t w, int32_t h) {
     const std::vector<uint8_t> px = gfx::read_pixels(0, 0, w, h);
     std::FILE* f = std::fopen(path.c_str(), "wb");
-    if (!f) throw_error(Result::Io, "could not write screenshot %s", path.c_str());
+    if (!f) throw std::ios_base::failure(std::string("could not write screenshot ") + path);
     std::fprintf(f, "P6\n%d %d\n255\n", w, h);
     std::vector<uint8_t> row(static_cast<size_t>(w) * 3);
     for (int32_t y = h - 1; y >= 0; --y) {   // OpenGL's origin is the bottom left
@@ -68,13 +71,13 @@ void write_ppm(const std::string& path, int32_t w, int32_t h) {
 
 } // namespace
 
-uint32_t AFramework::s_loadContentIds = 0;
-uint32_t AFramework::s_initializedIds = 0;
-uint32_t AFramework::s_updateIds = 0;
-uint32_t AFramework::s_fixedUpdateIds = 0;
-uint32_t AFramework::s_renderIds = 0;
+uint32_t Framework::s_loadContentIds = 0;
+uint32_t Framework::s_initializedIds = 0;
+uint32_t Framework::s_updateIds = 0;
+uint32_t Framework::s_fixedUpdateIds = 0;
+uint32_t Framework::s_renderIds = 0;
 
-AFramework::AFramework(const FrameworkConfiguration& config)
+Framework::Framework(const FrameworkConfiguration& config)
     : config_(config),
       content_(*this),
       camera_factory_(*this) {
@@ -85,13 +88,18 @@ AFramework::AFramework(const FrameworkConfiguration& config)
     window_manager_ = std::make_unique<WindowManager>(*window_);
     renderer_ = std::make_unique<Renderer>(*window_);
     input_.initialize();
+    texture_factory_ = create_default_texture_factory();
+    GraphicsDeviceDescriptor graphics_device_descriptor;
+    graphics_device_descriptor.samplerFilteringPreset = config_.textureFiltering;
+    graphics_device_ = create_default_graphics_device(graphics_device_descriptor);
+    graphics_device_->initialize();
     sprite_batch_ = std::make_unique<SpriteBatch>();
     RIS_LOG_I("ris-framework %s | %s | %s", version_string(), renderer_->device_name(), renderer_->backend_name());
 }
 
-AFramework::~AFramework() = default;
+Framework::~Framework() = default;
 
-void AFramework::initialize() {
+void Framework::initialize() {
     quit_ = false;
     time_.prepare_start();
 
@@ -122,7 +130,8 @@ void AFramework::initialize() {
         const Vec2 size = renderer_->back_buffer_size();
         gfx::viewport(0, 0, static_cast<int32_t>(size.x), static_cast<int32_t>(size.y));
         gfx::set_depth_state(true, true);
-        gfx::clear(renderer_->clear_color.r, renderer_->clear_color.g, renderer_->clear_color.b, renderer_->clear_color.a);
+        const Color clear_color = renderer_->getClearColor();
+        gfx::clear(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
         dispatch(m_onRenderListeners, *this);
 
         ++frame;
@@ -130,6 +139,7 @@ void AFramework::initialize() {
             write_ppm(config_.screenshot_path, static_cast<int32_t>(size.x), static_cast<int32_t>(size.y));
         }
         window_->swap_buffers();
+        graphics_device_->frameEnd();
         time_.frame_end();
     }
 }

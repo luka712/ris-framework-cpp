@@ -13,7 +13,7 @@ namespace ris::gles {
 /// array, so the buffers must have been created by the OpenGL ES backend (GlesBufferFactory or the Gles
 /// buffer classes).
 /// The returned description holds pointers to the buffers, so they must outlive the VertexArray created from it.
-/// @throws Error(InvalidArgument) if `layout.array_stride` differs from the buffer's stride, an attribute does
+/// @throws std::invalid_argument if `layout.array_stride` differs from the buffer's stride, an attribute does
 ///         not fit into the stride, or a buffer was created by another backend.
 RIS_API VertexArrayDesc make_vertex_array_desc(const AVertexBuffer& vertex_buffer, const VertexBufferLayout& layout,
                                                const AIndexBuffer* index_buffer = nullptr);

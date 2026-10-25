@@ -13,7 +13,7 @@ namespace ris {
 class RIS_API Timer {
 public:
     /// @param interval_ms time until it fires, in milliseconds; must be > 0 (otherwise it throws
-    ///        `Error(Result::InvalidArgument)`)
+    ///        `std::invalid_argument`)
     /// @param repeating true: fires every `interval_ms`; false: fires once
     /// @param start_running true starts counting at once; false needs `start()`
     explicit Timer(double interval_ms, bool repeating = false, bool start_running = true);

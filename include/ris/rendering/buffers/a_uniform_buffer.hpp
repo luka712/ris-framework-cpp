@@ -20,8 +20,8 @@ public:
     /// Overwrites part of the buffer with `data`. The data is copied.
     /// @param data        the floats to write.
     /// @param byte_offset where to start writing, in bytes. The range must be inside the (padded) buffer.
-    /// @throws Error(InvalidArgument) if the buffer lacks BufferUsageFlags::CopyDst or the range is outside
-    ///         the buffer. Nothing is written in that case.
+    /// @throws std::invalid_argument if the buffer lacks BufferUsageFlags::CopyDst, std::out_of_range if the range is
+    ///         outside the buffer. Nothing is written in that case.
     virtual void update(std::span<const float> data, size_t byte_offset = 0) = 0;
 
     /// Writes a column-major matrix (64 bytes) at `byte_offset`. Same rules as the span overload.

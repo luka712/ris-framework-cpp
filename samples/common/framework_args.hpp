@@ -32,7 +32,7 @@ inline void apply_args(ris::FrameworkConfiguration& config, int argc, char** arg
             config.screenshot_path = argv[++i];
         } else if (!std::strcmp(argv[i], "--size") && i + 1 < argc) {
             int w = 0, h = 0;
-            if (std::sscanf(argv[++i], "%dx%d", &w, &h) == 2) config.back_buffer_size = {static_cast<float>(w), static_cast<float>(h)};
+            if (std::sscanf(argv[++i], "%dx%d", &w, &h) == 2) config.backBufferSize = {static_cast<float>(w), static_cast<float>(h)};
         }
     }
 }

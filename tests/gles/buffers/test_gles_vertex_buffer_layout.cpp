@@ -31,6 +31,6 @@ TEST_CASE("layouts convert to OpenGL ES vertex attributes") {
         ris::VertexBufferLayout bad;
         bad.array_stride = 16;
         bad.attributes = {{ris::VertexFormat::Float32x4, 4, 0}};
-        REQUIRE_THROWS_AS(ris::gles::vertex_buffer_layout::to_vertex_attribs(bad), ris::Error);
+        REQUIRE_THROWS_AS(ris::gles::vertex_buffer_layout::to_vertex_attribs(bad), std::invalid_argument);
     }
 }

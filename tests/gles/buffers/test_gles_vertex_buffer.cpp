@@ -25,8 +25,8 @@ TEST_CASE("vertex buffer on a real context") {
 
         const std::vector<float> one(5, 1.0f);
         REQUIRE_NOTHROW(vb.update(one, 60));                             // last vertex
-        REQUIRE_THROWS_AS(vb.update(one, 64), ris::Error);               // 4 bytes too far
-        REQUIRE_THROWS_AS(vb.update(std::span<const float>{}, 0), ris::Error);   // null data
+        REQUIRE_THROWS_AS(vb.update(one, 64), std::out_of_range);               // 4 bytes too far
+        REQUIRE_THROWS_AS(vb.update(std::span<const float>{}, 0), std::out_of_range);   // null data
 
         ris::gles::GlesVertexBuffer moved(std::move(vb));
         REQUIRE(moved.vertex_count() == 4);
@@ -39,6 +39,6 @@ TEST_CASE("vertex buffer on a real context") {
     SECTION("vertex buffer without CopyDst cannot be updated") {
         const std::vector<float> data(5, 0.0f);
         ris::gles::GlesVertexBuffer vb(data, 20);
-        REQUIRE_THROWS_AS(vb.update(data), ris::Error);
+        REQUIRE_THROWS_AS(vb.update(data), std::invalid_argument);
     }
 }

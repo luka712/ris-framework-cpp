@@ -7,7 +7,7 @@ namespace ris {
 /// The format of a texture or render buffer, like `TextureFormat` of ris-framework-ts.
 ///
 /// Used by the OpenGL ES utilities in `ris/gles/` (see ris::gles::converter). Not every format can be
-/// created with every utility, unsupported combinations throw Error(Unsupported).
+/// created with every utility, unsupported combinations throw std::domain_error.
 enum class TextureFormat : uint32_t {
     Undefined = 0,         ///< Unknown format. Default value.
     Rgba8Unorm = 1,        ///< Red, green, blue, alpha, 8 bit unsigned normalized each.

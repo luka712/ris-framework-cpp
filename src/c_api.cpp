@@ -4,8 +4,13 @@
 #include <cstddef>
 #include <cstring>
 #include <exception>
+#include <ios>
+#include <fstream>
+#include <iterator>
 #include <new>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "internal.hpp"
 #include "ris/ris.h"
@@ -59,8 +64,6 @@ static_assert(offsetof(ris::Sprite, r) == offsetof(ris_sprite, r), "");
 static_assert(offsetof(ris::Sprite, rotation) == offsetof(ris_sprite, rotation), "");
 static_assert(offsetof(ris::Sprite, origin_y) == offsetof(ris_sprite, origin_y), "");
 
-static_assert(static_cast<int>(ris::Result::Ktx) == RIS_ERROR_KTX, "");
-static_assert(static_cast<int>(ris::Result::Compile) == RIS_ERROR_COMPILE, "");
 static_assert(static_cast<int>(ris::BlendMode::Multiply) == RIS_BLEND_MULTIPLY, "");
 static_assert(static_cast<int>(ris::Topology::Points) == RIS_TOPOLOGY_POINTS, "");
 static_assert(static_cast<int>(ris::AttribType::Int) == RIS_ATTRIB_INT, "");
@@ -79,14 +82,28 @@ ris_result fail(ris_result code, const char* message) {
     return code;
 }
 
-/// Runs `fn`, returning RIS_OK or the translated error.
+/// Runs `fn`, returning RIS_OK or the translated error:
+///   std::invalid_argument, std::out_of_range -> RIS_ERROR_INVALID_ARGUMENT
+///   std::domain_error                        -> RIS_ERROR_UNSUPPORTED
+///   std::logic_error (e.g. no window yet)    -> RIS_ERROR_NOT_INITIALIZED
+///   std::ios_base::failure                   -> RIS_ERROR_IO
+///   std::bad_alloc                           -> RIS_ERROR_OUT_OF_MEMORY
+///   any other exception                      -> RIS_ERROR_PLATFORM (the message says what failed)
 template <typename Fn>
 ris_result guard(Fn&& fn) noexcept {
     try {
         fn();
         return RIS_OK;
-    } catch (const ris::Error& e) {
-        return fail(static_cast<ris_result>(e.code()), e.what());
+    } catch (const std::invalid_argument& e) {
+        return fail(RIS_ERROR_INVALID_ARGUMENT, e.what());
+    } catch (const std::out_of_range& e) {
+        return fail(RIS_ERROR_INVALID_ARGUMENT, e.what());
+    } catch (const std::domain_error& e) {
+        return fail(RIS_ERROR_UNSUPPORTED, e.what());
+    } catch (const std::logic_error& e) {
+        return fail(RIS_ERROR_NOT_INITIALIZED, e.what());
+    } catch (const std::ios_base::failure& e) {
+        return fail(RIS_ERROR_IO, e.what());
     } catch (const std::bad_alloc&) {
         return fail(RIS_ERROR_OUT_OF_MEMORY, "out of memory");
     } catch (const std::exception& e) {
@@ -396,7 +413,12 @@ ris_texture* RIS_CALL ris_texture_load_ktx2_file(const char* path) {
         invalid("ris_texture_load_ktx2_file: path is null");
         return nullptr;
     }
-    return guard_ptr<ris_texture>([&] { return new ris_texture{ris::Texture::from_ktx2_file(path)}; });
+    return guard_ptr<ris_texture>([&] {
+        std::ifstream file(path, std::ios::binary);
+        if (!file) throw std::ios_base::failure(std::string("could not open KTX2 '") + path + "'");
+        const std::vector<char> bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        return new ris_texture{ris::Texture::from_ktx2_memory(bytes.data(), bytes.size())};
+    });
 }
 ris_texture* RIS_CALL ris_texture_load_ktx2_memory(const void* data, size_t size) {
     return guard_ptr<ris_texture>([&] { return new ris_texture{ris::Texture::from_ktx2_memory(data, size)}; });

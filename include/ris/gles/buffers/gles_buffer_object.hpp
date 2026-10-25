@@ -24,7 +24,7 @@ public:
     /// GL_STATIC_DRAW is used.
     /// @param type  selects the binding target (array, element array or uniform).
     /// @param label sets the GL object label (`glObjectLabel`) where `GL_KHR_debug` is available.
-    /// @throws Error(NotInitialized) without a window, Error(Graphics) if GL fails.
+    /// @throws std::logic_error without a window, std::runtime_error if GL fails.
     GlesBufferObject(BufferType type, BufferUsageFlags usage, const void* data, size_t byte_size, std::string label);
 
     /// The debug label, empty if none.
@@ -41,8 +41,8 @@ public:
 
     /// Writes `size` bytes at `byte_offset` (`glBufferSubData`).
     /// @param what name of the calling function for error messages.
-    /// @throws Error(InvalidArgument) if the usage lacks CopyDst or the range / pointer is invalid (nothing
-    ///         is written), Error(NotInitialized) without a window, Error(Graphics) if GL fails.
+    /// @throws std::invalid_argument if the usage lacks CopyDst or the pointer is null, std::out_of_range if the
+    ///         range is outside the buffer (nothing is written), std::logic_error without a window, std::runtime_error if GL fails.
     void write(size_t byte_offset, const void* data, size_t size, const char* what);
 
     GlesBufferObject(const GlesBufferObject&) = delete;

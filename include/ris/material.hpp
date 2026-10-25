@@ -30,7 +30,7 @@ struct MaterialResources;   // shared shaders and the 1x1 white texture
 
 struct UnlitMaterialDescriptor {
     Color diffuse_color = Color::white();
-    std::shared_ptr<Texture> diffuse_texture;   ///< optional
+    Texture* diffuse_texture = nullptr;   ///< optional, not owned (see `ContentManager::loadTexture2D`)
     CullMode cull_mode = CullMode::Back;
 };
 
@@ -41,7 +41,7 @@ public:
     ~UnlitMaterial() override;
 
     Color diffuse_color;
-    std::shared_ptr<Texture> diffuse_texture;
+    Texture* diffuse_texture;
     CullMode cull_mode;
 
     void draw(const VertexArray& vertex_array, uint32_t first_index, uint32_t index_count, const Mat4& model,
@@ -56,7 +56,7 @@ struct BlinnPhongMaterialDescriptor {
     Color diffuse_color{0.8f, 0.8f, 0.8f};
     Color specular_color{0.5f, 0.5f, 0.5f};
     float shininess = 32.0f;
-    std::shared_ptr<Texture> diffuse_texture;   ///< optional
+    Texture* diffuse_texture = nullptr;   ///< optional, not owned (see `ContentManager::loadTexture2D`)
     CullMode cull_mode = CullMode::Back;
 };
 
@@ -69,7 +69,7 @@ public:
 
     Color ambient_color, diffuse_color, specular_color;
     float shininess;
-    std::shared_ptr<Texture> diffuse_texture;
+    Texture* diffuse_texture;
     CullMode cull_mode;
 
     void draw(const VertexArray& vertex_array, uint32_t first_index, uint32_t index_count, const Mat4& model,

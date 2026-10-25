@@ -25,7 +25,7 @@ GlUint create(GlUint vertex_shader, GlUint fragment_shader) {
         std::string log_text(static_cast<size_t>(len > 0 ? len : 1), '\0');
         glGetProgramInfoLog(program, len, nullptr, log_text.data());
         glDeleteProgram(program);
-        throw_error(Result::Compile, "shader link error:\n%s", log_text.c_str());
+        throw std::runtime_error(std::string("shader link error:\n") + log_text);
     }
     return program;
 }

@@ -14,7 +14,7 @@ constexpr GLenum kCompressedRgbaBptcUnorm = 0x8E8C;  // BC7, GL_EXT_texture_comp
 constexpr GLenum kCompressedRgbaAstc4x4 = 0x93B0;    // GL_KHR_texture_compression_astc_ldr
 
 [[noreturn]] void unsupported(const char* what, uint32_t value) {
-    throw_error(Result::Unsupported, "%s: value %u has no OpenGL ES 3 mapping", what, value);
+    throw std::domain_error(std::string(what) + ": value " + std::to_string(value) + " has no OpenGL ES 3 mapping");
 }
 
 } // namespace
@@ -31,6 +31,17 @@ GlEnum convert_primitive_type(Topology topology) {
         case Topology::Points: return GL_POINTS;
     }
     unsupported("convert_primitive_type", static_cast<uint32_t>(topology));
+}
+
+GlEnum convert_primitive_topology(PrimitiveTopology topology) {
+    switch (topology) {
+        case PrimitiveTopology::LineList: return GL_LINES;
+        case PrimitiveTopology::LineStrip: return GL_LINE_STRIP;
+        case PrimitiveTopology::PointList: return GL_POINTS;
+        case PrimitiveTopology::TriangleList: return GL_TRIANGLES;
+        case PrimitiveTopology::TriangleStrip: return GL_TRIANGLE_STRIP;
+    }
+    unsupported("convert_primitive_topology", static_cast<uint32_t>(topology));
 }
 
 GlEnum convert_cull_face(CullMode cull_mode) {
@@ -88,7 +99,7 @@ GlEnum convert_index_type(IndexType type) {
         case IndexType::UInt32: return GL_UNSIGNED_INT;
         case IndexType::None: break;
     }
-    throw_error(Result::InvalidArgument, "convert_index_type: IndexType::None has no OpenGL ES type");
+    throw std::invalid_argument("convert_index_type: IndexType::None has no OpenGL ES type");
 }
 
 // ---- vertex attributes ------------------------------------------------------------------------

@@ -7,25 +7,25 @@ int main(int argc, char** argv) {
     try {
         ris::FrameworkConfiguration config;
         config.title = "ris sample: sprite_batch";
-        config.back_buffer_size = {560, 380};
-        config.texture_filtering = ris::TextureFilteringPreset::Bilinear;
+        config.backBufferSize = {560, 380};
+        config.textureFiltering = ris::TextureFilteringPreset::Bilinear;
         sample::apply_args(config, argc, argv);
 
         ris::Framework framework(config);
 
-        std::shared_ptr<ris::Texture> parrots;
+        ris::Texture* parrots = nullptr;   // owned by framework.content()
         ris::Rect draw_rect(16, 16, 512, 341);
         const ris::Color color = ris::Color::white();
 
-        framework.addOnLoadContentListener([&] {
+        framework.addOnLoadContentListener([&](ris::Framework&) {
             // Kodak test image kodim23 (parrots), 512x341. See README.md for source and license.
-            parrots = framework.content().load_texture_2d(sample::asset("sprite_batch", "kodim23.png"));
+            parrots = framework.content().loadTexture2D(sample::asset("sprite_batch", "kodim23.png"));
             draw_rect.width = static_cast<float>(parrots->width());
             draw_rect.height = static_cast<float>(parrots->height());
             std::cout << "Loaded kodim23.png (" << parrots->width() << "x" << parrots->height() << ").\n";
         });
 
-        framework.addOnRenderListener([&] {
+        framework.addOnRenderListener([&](ris::Framework&) {
             if (!parrots) return;
             ris::SpriteBatch& sprite_batch = framework.spriteBatch();
             sprite_batch.begin();
@@ -33,9 +33,8 @@ int main(int argc, char** argv) {
             sprite_batch.end();
         });
 
-        framework.renderer().clear_color = ris::Color::light_pink();
+        framework.renderer().setClearColor(ris::Color::light_pink());
         framework.initialize();
-        parrots.reset();   // GPU objects must go before the framework
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "error: " << e.what() << "\n";

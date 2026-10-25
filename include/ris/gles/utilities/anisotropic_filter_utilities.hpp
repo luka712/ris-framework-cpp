@@ -5,7 +5,7 @@
 
 /// Anisotropic texture filtering through `GL_EXT_texture_filter_anisotropic`, like
 /// `WebGLFilterAnisotropicUtilities` of ris-framework-ts. They need the window's GL context and throw
-/// Error(NotInitialized) without one.
+/// std::logic_error without one.
 namespace ris::gles::anisotropic_filter_utilities {
 
 /// True if `GL_EXT_texture_filter_anisotropic` is available.

@@ -82,7 +82,7 @@ TEST_CASE("texture utilities create 2d textures") {
         REQUIRE(depth != 0);
         tu::delete_texture(depth);
         REQUIRE_THROWS_AS(
-            tu::create_texture_2d(8, 8, static_cast<const void*>(nullptr), TextureFormat::Depth32Float, true), ris::Error);
+            tu::create_texture_2d(8, 8, static_cast<const void*>(nullptr), TextureFormat::Depth32Float, true), std::invalid_argument);
     }
     SECTION("anisotropy is optional") {
         gles::GlUint tex = tu::create_texture_2d(4, 4, static_cast<const void*>(nullptr), TextureFormat::Rgba8Unorm, false, 8.0f);
@@ -94,14 +94,14 @@ TEST_CASE("texture utilities create 2d textures") {
     }
     SECTION("invalid arguments") {
         const auto small = solid(1, 1, 0, 0, 0, 0);
-        REQUIRE_THROWS_AS(tu::create_texture_2d(0, 4, static_cast<const void*>(nullptr)), ris::Error);
-        REQUIRE_THROWS_AS(tu::create_texture_2d(4, -1, static_cast<const void*>(nullptr)), ris::Error);
-        REQUIRE_THROWS_AS(tu::create_texture_2d(4, 4, static_cast<const void*>(nullptr), TextureFormat::Astc4x4Rgba), ris::Error);
-        REQUIRE_THROWS_AS(tu::create_texture_2d(4, 4, static_cast<const void*>(nullptr), TextureFormat::Red32Float), ris::Error);
+        REQUIRE_THROWS_AS(tu::create_texture_2d(0, 4, static_cast<const void*>(nullptr)), std::invalid_argument);
+        REQUIRE_THROWS_AS(tu::create_texture_2d(4, -1, static_cast<const void*>(nullptr)), std::invalid_argument);
+        REQUIRE_THROWS_AS(tu::create_texture_2d(4, 4, static_cast<const void*>(nullptr), TextureFormat::Astc4x4Rgba), std::domain_error);
+        REQUIRE_THROWS_AS(tu::create_texture_2d(4, 4, static_cast<const void*>(nullptr), TextureFormat::Red32Float), std::domain_error);
         const std::vector<tu::MipLevelData> too_small = {small};
-        REQUIRE_THROWS_AS(tu::create_texture_2d(4, 4, too_small), ris::Error);
+        REQUIRE_THROWS_AS(tu::create_texture_2d(4, 4, too_small), std::invalid_argument);
         const std::vector<tu::MipLevelData> too_many = {small, small, small, small};
-        REQUIRE_THROWS_AS(tu::create_texture_2d(4, 4, too_many), ris::Error);   // only 3 levels fit
+        REQUIRE_THROWS_AS(tu::create_texture_2d(4, 4, too_many), std::invalid_argument);   // only 3 levels fit
         REQUIRE_NOTHROW(gles::error_utilities::check_error("no stray error"));
     }
 }
@@ -127,16 +127,16 @@ TEST_CASE("texture utilities create compressed textures") {
     }
     SECTION("invalid arguments") {
         const std::vector<tu::MipLevelData> levels = {block};
-        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(4, 4, 4, 4, {}, TextureFormat::Etc2Rgba8Unorm), ris::Error);
-        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(4, 4, 4, 4, levels, TextureFormat::Rgba8Unorm), ris::Error);
-        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(0, 4, 4, 4, levels, TextureFormat::Etc2Rgba8Unorm), ris::Error);
-        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(4, 4, 0, 4, levels, TextureFormat::Etc2Rgba8Unorm), ris::Error);
+        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(4, 4, 4, 4, {}, TextureFormat::Etc2Rgba8Unorm), std::invalid_argument);
+        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(4, 4, 4, 4, levels, TextureFormat::Rgba8Unorm), std::domain_error);
+        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(0, 4, 4, 4, levels, TextureFormat::Etc2Rgba8Unorm), std::invalid_argument);
+        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(4, 4, 0, 4, levels, TextureFormat::Etc2Rgba8Unorm), std::invalid_argument);
         const std::vector<tu::MipLevelData> empty_level = {tu::MipLevelData{}};
-        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(4, 4, 4, 4, empty_level, TextureFormat::Etc2Rgba8Unorm), ris::Error);
+        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(4, 4, 4, 4, empty_level, TextureFormat::Etc2Rgba8Unorm), std::invalid_argument);
         // a block that is too short for the size makes GL fail: reported as Error, nothing leaks, no stray error
         const std::vector<uint8_t> short_block(4, 0);
         const std::vector<tu::MipLevelData> short_levels = {short_block};
-        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(4, 4, 4, 4, short_levels, TextureFormat::Etc2Rgba8Unorm), ris::Error);
+        REQUIRE_THROWS_AS(tu::create_compressed_texture_2d(4, 4, 4, 4, short_levels, TextureFormat::Etc2Rgba8Unorm), std::runtime_error);
         REQUIRE_NOTHROW(gles::error_utilities::check_error("no stray error"));
     }
 }
@@ -150,8 +150,8 @@ TEST_CASE("renderbuffer and framebuffer utilities") {
         REQUIRE(rb != 0);
         gles::renderbuffer_utilities::delete_renderbuffer(rb);
         REQUIRE(rb == 0);
-        REQUIRE_THROWS_AS(gles::renderbuffer_utilities::create(TextureFormat::Depth24Stencil8, 0, 16), ris::Error);
-        REQUIRE_THROWS_AS(gles::renderbuffer_utilities::create(TextureFormat::Undefined, 16, 16), ris::Error);
+        REQUIRE_THROWS_AS(gles::renderbuffer_utilities::create(TextureFormat::Depth24Stencil8, 0, 16), std::invalid_argument);
+        REQUIRE_THROWS_AS(gles::renderbuffer_utilities::create(TextureFormat::Undefined, 16, 16), std::domain_error);
     }
     SECTION("a colour framebuffer renders to its texture") {
         gles::GlUint tex = tu::create_texture_2d(8, 8, static_cast<const void*>(nullptr));
@@ -200,12 +200,12 @@ TEST_CASE("renderbuffer and framebuffer utilities") {
         REQUIRE_NOTHROW(fu::attach_depth_stencil_texture(plain, depth_tex, TextureFormat::Depth32Float));
         gles::GlUint plain2 = fu::create(color);
         REQUIRE_NOTHROW(fu::attach_depth_stencil_renderbuffer(plain2, rb, TextureFormat::Depth24Stencil8));
-        REQUIRE_THROWS_AS(fu::attach_depth_stencil_renderbuffer(plain2, rb, TextureFormat::Rgba8Unorm), ris::Error);
-        REQUIRE_THROWS_AS(fu::attach_depth_stencil_texture(plain2, depth_tex, TextureFormat::Astc4x4Rgba), ris::Error);
+        REQUIRE_THROWS_AS(fu::attach_depth_stencil_renderbuffer(plain2, rb, TextureFormat::Rgba8Unorm), std::domain_error);
+        REQUIRE_THROWS_AS(fu::attach_depth_stencil_texture(plain2, depth_tex, TextureFormat::Astc4x4Rgba), std::domain_error);
 
         REQUIRE(fu::depth_attachment_type_for(TextureFormat::Depth32Float) == gles::DepthAttachmentType::Depth);
         REQUIRE(fu::depth_attachment_type_for(TextureFormat::Depth24Stencil8) == gles::DepthAttachmentType::DepthStencil);
-        REQUIRE_THROWS_AS(fu::depth_attachment_type_for(TextureFormat::Rgba8Unorm), ris::Error);
+        REQUIRE_THROWS_AS(fu::depth_attachment_type_for(TextureFormat::Rgba8Unorm), std::domain_error);
 
         for (gles::GlUint* fb : {&with_rb, &with_tex, &plain, &plain2}) fu::delete_framebuffer(*fb);
         gles::renderbuffer_utilities::delete_renderbuffer(rb);
@@ -213,11 +213,11 @@ TEST_CASE("renderbuffer and framebuffer utilities") {
         tu::delete_texture(color);
     }
     SECTION("invalid arguments and incomplete framebuffers") {
-        REQUIRE_THROWS_AS(fu::create(std::span<const gles::GlUint>{}), ris::Error);
-        REQUIRE_THROWS_AS(fu::create(gles::GlUint{0}), ris::Error);
+        REQUIRE_THROWS_AS(fu::create(std::span<const gles::GlUint>{}), std::invalid_argument);
+        REQUIRE_THROWS_AS(fu::create(gles::GlUint{0}), std::invalid_argument);
         // a colour texture attached as depth is incomplete
         gles::GlUint color = tu::create_texture_2d(8, 8, static_cast<const void*>(nullptr));
-        REQUIRE_THROWS_AS(fu::create_with_texture_as_depth_buffer(color, gles::DepthAttachmentType::Depth, color), ris::Error);
+        REQUIRE_THROWS_AS(fu::create_with_texture_as_depth_buffer(color, gles::DepthAttachmentType::Depth, color), std::runtime_error);
         REQUIRE_NOTHROW(gles::error_utilities::check_error("no stray error"));
         tu::delete_texture(color);
     }

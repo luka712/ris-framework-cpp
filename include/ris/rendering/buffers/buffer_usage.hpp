@@ -8,14 +8,14 @@ namespace ris {
 ///
 /// (The low level `ris::BufferUsage` of graphics.hpp is the update frequency hint of the OpenGL ES layer, a
 /// different thing.) Which flags a backend can honour is up to the backend: OpenGL ES 3.0 only supports
-/// `Vertex`, `Index`, `Uniform` and `CopyDst` and rejects the others with Result::Unsupported.
+/// `Vertex`, `Index`, `Uniform` and `CopyDst` and rejects the others with std::domain_error.
 enum class BufferUsageFlags : uint32_t {
     None = 0,       ///< No usage defined.
     Vertex = 1,     ///< Vertex buffer of a draw operation.
     Index = 2,      ///< Index buffer of a draw operation.
     Uniform = 4,    ///< Uniform buffer of a draw operation.
-    Storage = 8,    ///< Storage buffer. Backends without storage buffers (OpenGL ES 3.0) throw Result::Unsupported.
-    MapRead = 16,   ///< Buffer can be read back by the CPU. Backends without it (OpenGL ES 3.0) throw Result::Unsupported.
+    Storage = 8,    ///< Storage buffer. Backends without storage buffers (OpenGL ES 3.0) throw std::domain_error.
+    MapRead = 16,   ///< Buffer can be read back by the CPU. Backends without it (OpenGL ES 3.0) throw std::domain_error.
     CopyDst = 32    ///< Buffer is written after creation (update()). Backends may choose a dynamic memory hint for it.
 };
 

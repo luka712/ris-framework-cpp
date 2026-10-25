@@ -1,6 +1,6 @@
 # ktx2_compare
 
-Shows the same 248x248 image as three KTX2 files side by side, each loaded with `ris::Texture::from_ktx2_file`:
+Shows the same 248x248 image as three KTX2 files side by side, each loaded with `ris::Texture::from_ktx2_memory`:
 
 | panel | file | GPU format |
 |-------|------|------------|
