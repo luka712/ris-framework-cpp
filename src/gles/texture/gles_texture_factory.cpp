@@ -32,13 +32,14 @@ struct GlFormat {
     GLenum type = 0;        // uncompressed only
     bool compressed = false;
     bool needs_astc = false;
+    TextureFormat texture_format = TextureFormat::Undefined;   // Undefined: TextureFormat has no such format
 };
 
 GlFormat map_vk_format(VkFormat vk) {
     const int v = static_cast<int>(vk);
     switch (vk) {
-        case VK_FORMAT_R8G8B8A8_UNORM: return {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, false, false};
-        case VK_FORMAT_R8G8B8A8_SRGB: return {GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE, false, false};
+        case VK_FORMAT_R8G8B8A8_UNORM: return {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, false, false, TextureFormat::Rgba8Unorm};
+        case VK_FORMAT_R8G8B8A8_SRGB: return {GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE, false, false, TextureFormat::Rgba8UnormSrgb};
         case VK_FORMAT_R8G8B8_UNORM: return {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, false, false};
         case VK_FORMAT_R8G8B8_SRGB: return {GL_SRGB8, GL_RGB, GL_UNSIGNED_BYTE, false, false};
         case VK_FORMAT_R8G8_UNORM: return {GL_RG8, GL_RG, GL_UNSIGNED_BYTE, false, false};
@@ -47,7 +48,7 @@ GlFormat map_vk_format(VkFormat vk) {
         case VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK: return {0x9275, 0, 0, true, false};
         case VK_FORMAT_ETC2_R8G8B8A1_UNORM_BLOCK: return {0x9276, 0, 0, true, false};
         case VK_FORMAT_ETC2_R8G8B8A1_SRGB_BLOCK: return {0x9277, 0, 0, true, false};
-        case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK: return {0x9278, 0, 0, true, false};
+        case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK: return {0x9278, 0, 0, true, false, TextureFormat::Etc2Rgba8Unorm};
         case VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK: return {0x9279, 0, 0, true, false};
         default: break;
     }
@@ -55,7 +56,8 @@ GlFormat map_vk_format(VkFormat vk) {
     if (v >= VK_FORMAT_ASTC_4x4_UNORM_BLOCK && v <= VK_FORMAT_ASTC_12x12_SRGB_BLOCK) {
         const int index = (v - VK_FORMAT_ASTC_4x4_UNORM_BLOCK) / 2;
         const bool srgb = ((v - VK_FORMAT_ASTC_4x4_UNORM_BLOCK) % 2) == 1;
-        return {static_cast<GLenum>((srgb ? kAstc4x4Srgb : kAstc4x4Unorm) + index), 0, 0, true, true};
+        return {static_cast<GLenum>((srgb ? kAstc4x4Srgb : kAstc4x4Unorm) + index), 0, 0, true, true,
+                (index == 0 && !srgb) ? TextureFormat::Astc4x4Rgba : TextureFormat::Undefined};
     }
     return {};
 }
@@ -84,10 +86,6 @@ uint8_t to_byte(float v) {
     return static_cast<uint8_t>(std::lround(std::clamp(v, 0.0f, 1.0f) * 255.0f));
 }
 
-void set_label(const Texture& texture, const std::string& label) {
-    debug_label_utilities::set_label(debug_label_utilities::ObjectKind::Texture, texture.gl_handle(), label);
-}
-
 /// Picks the Basis Universal transcode target for the descriptor format.
 ktx_transcode_fmt_e transcode_target(TextureFormat format, bool has_astc) {
     switch (format) {
@@ -111,9 +109,9 @@ ktx_transcode_fmt_e transcode_target(TextureFormat format, bool has_astc) {
 
 } // namespace
 
-Texture* GlesTextureFactory::createEmpty(int32_t width, int32_t height,
-                                                         std::optional<Color> defaultColor, TextureUsage textureUsage,
-                                                         TextureFormat textureFormat, std::string label) const {
+GlesTexture2D* GlesTextureFactory::createEmpty(int32_t width, int32_t height, std::optional<Color> defaultColor,
+                                               TextureUsage textureUsage, TextureFormat textureFormat,
+                                               std::string label) const {
     check_size("createEmpty", width, height);
     const bool srgb = resolve_rgba8("createEmpty", textureFormat, textureUsage);
     require_context();
@@ -124,14 +122,12 @@ Texture* GlesTextureFactory::createEmpty(int32_t width, int32_t height,
                                  to_byte(defaultColor->a)};
         for (size_t i = 0; i < pixels.size(); i += 4) std::memcpy(&pixels[i], rgba, 4);
     }
-    Texture* texture = new Texture(Texture::from_rgba8(width, height, pixels.data(), false, srgb));
-    set_label(*texture, label);
-    return texture;
+    return new GlesTexture2D(GlesTexture2D::from_rgba8(width, height, pixels.data(), false, srgb, textureUsage, label));
 }
 
-Texture* GlesTextureFactory::create(int32_t width, int32_t height, std::span<const uint8_t> data,
-                                                    int32_t channels, std::string label, TextureUsage usage,
-                                                    TextureFormat textureFormat, bool generateMipMaps) const {
+GlesTexture2D* GlesTextureFactory::create(int32_t width, int32_t height, std::span<const uint8_t> data,
+                                          int32_t channels, std::string label, TextureUsage usage,
+                                          TextureFormat textureFormat, bool generateMipMaps) const {
     check_size("create", width, height);
     if (data.empty()) {
         throw std::invalid_argument("create: data must not be empty (use createEmpty for no pixels)");
@@ -148,12 +144,10 @@ Texture* GlesTextureFactory::create(int32_t width, int32_t height, std::span<con
     }
     require_context();
 
-    Texture* texture = new Texture(Texture::from_rgba8(width, height, data.data(), generateMipMaps, srgb));
-    set_label(*texture, label);
-    return texture;
+    return new GlesTexture2D(GlesTexture2D::from_rgba8(width, height, data.data(), generateMipMaps, srgb, usage, label));
 }
 
-Texture* GlesTextureFactory::createFromKtx2(ktxTexture2* ktxTexture, const TextureDescriptor& descriptor) const {
+GlesTexture2D* GlesTextureFactory::createFromKtx2(ktxTexture2* ktxTexture, const TextureDescriptor& descriptor) const {
     if (!ktxTexture) {
         throw std::invalid_argument("createFromKtx2: ktxTexture is null");
     }
@@ -161,14 +155,13 @@ Texture* GlesTextureFactory::createFromKtx2(ktxTexture2* ktxTexture, const Textu
     if (has_flag(descriptor.textureUsage, TextureUsage::StorageBinding)) {
         throw std::domain_error("createFromKtx2: storage textures are not supported on OpenGL ES 3.0");
     }
-    require_context();
 
     // Ktx2 will have different cases, for now we consider the simple 2d case.
     if (ktxTexture->isCubemap || ktxTexture->isArray || ktxTexture->numDimensions != 2 || ktxTexture->baseDepth > 1) {
         throw std::domain_error("createFromKtx2: only plain 2D textures are supported in 0.1.0");
     }
 
-    const bool hasAstc = gles::extension_utilities::has_extension("GL_KHR_texture_compression_astc_ldr");
+    const bool hasAstc = GlesUtilities::context().isExtensionSupported("GL_KHR_texture_compression_astc_ldr");
 
     if (ris_ktxTexture2_NeedsTranscoding(ktxTexture)) {
         const ktx_transcode_fmt_e target = transcode_target(descriptor.textureFormat, hasAstc);
@@ -245,9 +238,21 @@ Texture* GlesTextureFactory::createFromKtx2(ktxTexture2* ktxTexture, const Textu
     RIS_LOG_D("createFromKtx2: %dx%d, %u levels, VkFormat %d, GL internal format 0x%04X", width, height, totalLevels,
               static_cast<int>(vk), static_cast<unsigned>(fmt.internal_format));
 
-    Texture* texture = new Texture(Texture::adopt(id, width, height, totalLevels));
-    set_label(*texture, descriptor.label);
-    return texture;
+    // The rough size in RAM: the stored size of every level for compressed data, else the pixels of every level.
+    uint64_t sizeBytes = 0;
+    if (fmt.compressed) {
+        for (uint32_t level = 0; level < levels; ++level) sizeBytes += ris_ktxTexture2_GetImageSize(ktxTexture, level);
+    } else {
+        const uint64_t bytesPerPixel = fmt.format == GL_RGBA ? 4 : fmt.format == GL_RGB ? 3 : fmt.format == GL_RG ? 2 : 1;
+        for (uint32_t level = 0; level < totalLevels; ++level) {
+            sizeBytes += static_cast<uint64_t>(std::max(1, width >> level)) * static_cast<uint64_t>(std::max(1, height >> level))
+                         * bytesPerPixel;
+        }
+    }
+
+    debug_label_utilities::set_label(debug_label_utilities::ObjectKind::Texture, id, descriptor.label);
+    return new GlesTexture2D(GlesTexture2D::adopt(id, width, height, totalLevels, fmt.texture_format,
+                                                  descriptor.textureUsage, descriptor.label, sizeBytes));
 }
 
 } // namespace ris::gles

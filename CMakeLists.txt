@@ -78,65 +78,10 @@ endif()
 # ---------------------------------------------------------------------------
 set(TARGET_NAME ris_framework)
 
-add_library(${TARGET_NAME}
-        src/core.cpp
-        src/window.cpp
-        src/graphics.cpp
-        src/texture.cpp
-        src/sprite_batch.cpp
-        src/lights_camera.cpp
-        src/material.cpp
-        src/mesh_scene.cpp
-        src/content.cpp
-        src/framework.cpp
-        src/input/event_tap.cpp
-        src/input/input_manager.cpp
-        src/input/touch_collection.cpp
-        src/input/touch_location.cpp
-        src/time/clock_source.cpp
-        src/time/frame_rate_counter.cpp
-        src/time/stopwatch.cpp
-        src/time/system_clock.cpp
-        src/time/time_manager.cpp
-        src/time/timer.cpp
-        src/rendering/default_buffer_factory.cpp
-        src/rendering/default_graphics_device.cpp
-        src/rendering/default_texture_factory.cpp
-        src/rendering/buffers/buffer_validation.cpp
-        src/rendering/buffers/vertex_buffer_layout.cpp
-        src/rendering/buffers/vertex_format.cpp
-        src/gles/blending/gles_blend_state.cpp
-        src/gles/buffers/gles_buffer_factory.cpp
-        src/gles/buffers/gles_buffer_object.cpp
-        src/gles/buffers/gles_index_buffer.cpp
-        src/gles/buffers/gles_uniform_buffer.cpp
-        src/gles/buffers/gles_vertex_buffer.cpp
-        src/gles/buffers/make_vertex_array_desc.cpp
-        src/gles/gles_graphics_device.cpp
-        src/gles/gles_graphics_device_features.cpp
-        src/gles/primitive/gles_primitive_state.cpp
-        src/gles/render_pass/gles_render_pass.cpp
-        src/gles/sampler/gles_sampler.cpp
-        src/gles/swap_chain/gles_swap_chain.cpp
-        src/gles/rendering/vertex_attribute.cpp
-        src/gles/texture/gles_texture_factory.cpp
-        src/gles/rendering/vertex_buffer_layout.cpp
-        src/gles/utilities/anisotropic_filter_utilities.cpp
-        src/gles/utilities/blending_utilities.cpp
-        src/gles/utilities/buffer_utilities.cpp
-        src/gles/utilities/culling_utilities.cpp
-        src/gles/utilities/debug_label_utilities.cpp
-        src/gles/utilities/error_utilities.cpp
-        src/gles/utilities/extension_utilities.cpp
-        src/gles/utilities/framebuffer_utilities.cpp
-        src/gles/utilities/gles_converter.cpp
-        src/gles/utilities/program_utilities.cpp
-        src/gles/utilities/renderbuffer_utilities.cpp
-        src/gles/utilities/sampler_utilities.cpp
-        src/gles/utilities/shader_utilities.cpp
-        src/gles/utilities/texture_utilities.cpp
-        src/c_api.cpp
-)
+# Every .cpp below src/ belongs to the library (src/ has no samples, tests or platform specific sources), like the
+# tests below it is a glob: new files are picked up on the next build.
+file(GLOB_RECURSE RIS_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+add_library(${TARGET_NAME} ${RIS_SOURCES})
 add_library(ris_framework::ris_framework ALIAS ${TARGET_NAME})
 
 target_compile_features(${TARGET_NAME} PUBLIC cxx_std_20)
@@ -206,7 +151,7 @@ if(RIS_FRAMEWORK_BUILD_SAMPLES)
         target_link_libraries(ris_sample_c PRIVATE m)
     endif()
     # Ports of the ris-framework-ts / RisFramework.Demo examples. Assets are read from samples/<name>/assets.
-    foreach(sample IN ITEMS sprite_batch unlit_mesh blinn_phong_mesh ktx2_quad ktx2_compare)
+    foreach(sample IN ITEMS sprite_batch unlit_mesh blinn_phong_mesh)
         add_executable(ris_sample_${sample} samples/${sample}/main.cpp)
         target_link_libraries(ris_sample_${sample} PRIVATE ${TARGET_NAME})
         target_compile_definitions(ris_sample_${sample} PRIVATE RIS_SAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/samples")
@@ -227,15 +172,21 @@ if(RIS_FRAMEWORK_BUILD_TESTS)
     target_compile_definitions(${TARGET_NAME}_tests PRIVATE RIS_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
     add_test(NAME ${TARGET_NAME}_tests COMMAND ${TARGET_NAME}_tests)
 
-    # The headers of ris/rendering/ are graphics API neutral, and the ones of ris/input/ and ris/time/ never expose
+    # The headers of ris/rendering/, ris/content/ and ris/data/ are graphics API neutral, and the ones of ris/input/ and ris/time/ never expose
     # SDL: each must compile on its own, with only the public usage requirements of ris_framework (no OpenGL ES /
     # ANGLE / SDL include path), and must not include a backend header (ris/gles/...), a GL or SDL header, or the
     # OpenGL ES based graphics.hpp.
     file(GLOB_RECURSE _ris_neutral_headers CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include"
-         include/ris/rendering/*.hpp include/ris/input/*.hpp include/ris/time/*.hpp)
+         include/ris/rendering/*.hpp include/ris/input/*.hpp include/ris/time/*.hpp
+         include/ris/content/*.hpp include/ris/data/*.hpp)
     set(_ris_neutral_sources ""
             include/ris/rendering/a_graphics_device_features.hpp
-            include/ris/rendering/a_graphics_device.hpp)
+            include/ris/rendering/a_graphics_device.hpp
+            include/ris/gles/utilities/gles_context_utilities.hpp
+            include/ris/gles/utilities/gles_utilities.hpp
+            include/ris/rendering/texture/a_texture2D.hpp
+            include/ris/content/a_content.hpp
+            include/ris/gles/gles_gpu_info.hpp)
     foreach(_header IN LISTS _ris_neutral_headers)
         string(MAKE_C_IDENTIFIER "${_header}" _id)
         set(_source "${CMAKE_CURRENT_BINARY_DIR}/neutral_headers/${_id}.cpp")

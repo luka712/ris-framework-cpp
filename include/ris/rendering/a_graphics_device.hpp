@@ -11,7 +11,7 @@
 #include "ris/rendering/a_graphics_device_features.hpp"
 #include "ris/rendering/blending/a_blend_state.hpp"
 #include "ris/rendering/blending/blend_state_descriptor.hpp"
-#include "ris/rendering/gpu_info.hpp"
+#include "ris/rendering/a_gpu_info.hpp"
 #include "ris/rendering/primitive/a_primitive_state.hpp"
 #include "ris/rendering/primitive/primitive_state_descriptor.hpp"
 #include "ris/rendering/render_pass/a_render_pass.hpp"
@@ -46,9 +46,9 @@ class RIS_API AGraphicsDevice {
 public:
     virtual ~AGraphicsDevice() = default;
 
-    /// The info about the GPU.
+    /// The info about the GPU. Owned by the device.
     /// @throws std::logic_error if the device was not initialised.
-    virtual const GpuInfo& getGpuInfo() const = 0;
+    virtual const AGpuInfo& getGpuInfo() const = 0;
 
     /// The features of the graphics device.
     /// @throws std::logic_error if the device was not initialised.

@@ -64,7 +64,7 @@ RIS_API GlUint create_texture_2d(int32_t width, int32_t height, const void* pixe
 /// @param block_height height of a compression block in pixels.
 /// @param data     the compressed bytes of each level, at least one. Levels must not be empty.
 /// @param format   a compressed format, see converter::is_compressed_format. The GL extension that provides
-///        it must be available (extension_utilities), the function does not check that.
+///        it must be available (GlesUtilities::context().isExtensionSupported), the function does not check that.
 /// @param anisotropy anisotropic filtering level, 1 for none.
 /// @param label    optional debug label.
 /// @return the texture name, to be deleted with delete_texture().

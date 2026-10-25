@@ -17,18 +17,18 @@ public:
     /// @throws std::logic_error without a window.
     GlesGraphicsDeviceFeatures();
 
-    bool supportsTextureCompressionS3TC() const override { return s3tc_; }
-    bool supportsTextureCompressionBC() const override { return bc_; }
-    bool supportsTextureCompressionETC2() const override { return etc2_; }
-    bool supportsTextureCompressionASTC() const override { return astc_; }
-    bool supportsTextureCompressionPVRTC() const override { return pvrtc_; }
+    bool supportsTextureCompressionS3TC() const override { return m_s3tc; }
+    bool supportsTextureCompressionBC() const override { return m_bc; }
+    bool supportsTextureCompressionETC2() const override { return m_etc2; }
+    bool supportsTextureCompressionASTC() const override { return m_astc; }
+    bool supportsTextureCompressionPVRTC() const override { return m_pvrtc; }
 
 private:
-    bool s3tc_ = false;
-    bool bc_ = false;
-    bool etc2_ = false;
-    bool astc_ = false;
-    bool pvrtc_ = false;
+    bool m_s3tc = false;
+    bool m_bc = false;
+    bool m_etc2 = false;
+    bool m_astc = false;
+    bool m_pvrtc = false;
 };
 
 } // namespace ris::gles

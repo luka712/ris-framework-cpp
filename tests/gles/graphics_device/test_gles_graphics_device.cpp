@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 #include <ris/ris.hpp>
 
@@ -44,14 +45,19 @@ TEST_CASE("graphics device initialize, GPU info and features") {
     }
 
     SECTION("GPU info is read from the GL strings") {
-        const ris::GpuInfo& info = device.getGpuInfo();
-        CHECK_FALSE(info.name.empty());
-        CHECK_FALSE(info.vendor.empty());
-        CHECK_FALSE(info.apiVersion.empty());
-        CHECK_FALSE(info.shadingLanguageVersion.empty());
-        CHECK(info.api == ris::RenderingBackend::OpenGLES);
-        CHECK(info.name == window.gl_info(ris::GlInfo::Renderer));
-        CHECK(info.apiVersion == window.gl_info(ris::GlInfo::Version));
+        const ris::AGpuInfo& info = device.getGpuInfo();
+        CHECK(dynamic_cast<const gles::GlesGpuInfo*>(&info) != nullptr);
+        CHECK(&info == &device.getGpuInfo());   // owned by the device
+        CHECK_FALSE(info.getName().empty());
+        CHECK_FALSE(info.getVendor().empty());
+        CHECK_FALSE(info.getApiVersion().empty());
+        CHECK(info.getApi() == ris::RenderingBackend::OpenGLES);
+        // OpenGL ES is detected from the GL strings, the API below it (ANGLE's) is not reported through GL.
+        const bool es = std::string(window.gl_info(ris::GlInfo::Version)).find("OpenGL ES") != std::string::npos ||
+                        std::string(window.gl_info(ris::GlInfo::Renderer)).find("OpenGL ES") != std::string::npos;
+        CHECK(info.getUnderlyingBackend() == (es ? ris::RenderingBackend::OpenGLES : ris::RenderingBackend::Default));
+        CHECK(info.getName() == window.gl_info(ris::GlInfo::Renderer));
+        CHECK(info.getApiVersion() == window.gl_info(ris::GlInfo::Version));
     }
 
     SECTION("features agree with the extensions and the compressed format list") {
@@ -60,7 +66,7 @@ TEST_CASE("graphics device initialize, GPU info and features") {
         CHECK(features.supportsTextureCompressionASTC() == window.has_gl_extension("GL_KHR_texture_compression_astc_ldr"));
         if (features.supportsTextureCompressionBC()) CHECK(features.supportsTextureCompressionS3TC());
 
-        const auto& formats = device.getGpuInfo().supportedCompressedTextureFormats;
+        const auto& formats = device.getGpuInfo().getSupportedCompressedTextureFormats();
         const auto has = [&](ris::TextureFormat f) { return std::find(formats.begin(), formats.end(), f) != formats.end(); };
         CHECK(has(ris::TextureFormat::Etc2Rgba8Unorm) == features.supportsTextureCompressionETC2());
         CHECK(has(ris::TextureFormat::Astc4x4Rgba) == features.supportsTextureCompressionASTC());

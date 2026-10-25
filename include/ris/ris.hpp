@@ -8,7 +8,8 @@
 ///    rendering/default_buffer_factory.hpp, rendering/default_texture_factory.hpp, sprite_batch.hpp
 ///    (windows, buffers, shaders, textures), rendering/a_graphics_device.hpp (AGraphicsDevice, the GPU entry point:
 ///    GPU info and features, samplers, blend / primitive states, render passes, swap chains; get it from
-///    Framework::graphicsDevice() or rendering/default_graphics_device.hpp)
+///    Framework::graphicsDevice() or rendering/default_graphics_device.hpp), rendering/texture/a_texture2D.hpp
+///    (ATexture2D and ATextureView, what the texture factory creates)
 ///  - OpenGL ES backend, like the `webgl` folder of ris-framework-ts: gles/gles.hpp (the Gles buffer classes
 ///    derived from the abstract buffers, GlesGraphicsDevice, converters and utilities for shaders, textures, framebuffers, ...).
 ///    Other rendering APIs will get their own folder next to it.
@@ -33,7 +34,9 @@
 #include "rendering/default_graphics_device.hpp"
 #include "rendering/default_texture_factory.hpp"
 #include "rendering/graphics_device_descriptor.hpp"
+#include "rendering/texture/a_texture2D.hpp"
 #include "rendering/texture/a_texture_factory.hpp"
+#include "rendering/texture/a_texture_view.hpp"
 #include "scene.hpp"
 #include "sprite_batch.hpp"
 #include "time.hpp"

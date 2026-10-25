@@ -37,7 +37,7 @@ struct ris_render_target : ris::RenderTarget {
 struct ris_sprite_batch : ris::SpriteBatch {
     using ris::SpriteBatch::SpriteBatch;
 };
-// ris::Texture has a private constructor (factories only), so the handle is the object itself.
+// ris::Texture is created by its static functions and the factories only, so the handle is the object itself.
 struct ris_texture {
     ris::Texture value;
 };

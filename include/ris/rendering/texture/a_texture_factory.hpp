@@ -8,6 +8,7 @@
 
 #include "ris/core.hpp"
 #include "ris/data.hpp"
+#include "ris/rendering/texture/a_texture2D.hpp"
 #include "ris/rendering/texture/texture_descriptor.hpp"
 #include "ris/rendering/texture/texture_format.hpp"
 #include "ris/rendering/texture/texture_usage.hpp"
@@ -17,16 +18,14 @@ struct ktxTexture2;
 
 namespace ris {
 
-class Texture;   // see ris/graphics.hpp
-
 /// Creates textures, like `ITextureFactory` of ris-framework-ts. Abstract and graphics API neutral: every
 /// rendering backend provides one implementation (GlesTextureFactory for OpenGL ES). Get the factory of the
 /// default backend with create_default_texture_factory() (ris/rendering/default_texture_factory.hpp) or from
 /// `Framework::textureFactory()`.
 ///
-/// The factory is stateless and cheap. The textures it creates are owned by the caller (the pointers are never null, free them with `delete`), do not
-/// refer to the factory and may outlive it, but not the window / graphics device. Textures are returned as
-/// ris::Texture until the texture classes get their own API neutral base class.
+/// The factory is stateless and cheap. The textures it creates are ATexture2D objects, initialized (see
+/// ATexture2D::initialize()), owned by the caller (the pointers are never null, free them with `delete`), do not
+/// refer to the factory and may outlive it, but not the window / graphics device.
 class RIS_API ATextureFactory {
 public:
     virtual ~ATextureFactory() = default;
@@ -42,7 +41,7 @@ public:
     /// @param label          optional debug label.
     /// @throws std::invalid_argument for a bad size, std::domain_error for a format or usage the backend cannot
     ///         honour, std::logic_error without a device, std::runtime_error if the backend fails.
-    virtual Texture* createEmpty(
+    virtual ATexture2D* createEmpty(
         int32_t width, int32_t height, std::optional<Color> defaultColor = std::nullopt,
         TextureUsage textureUsage = TextureUsage::CopyDst | TextureUsage::TextureBinding,
         TextureFormat textureFormat = TextureFormat::Undefined, std::string label = {}) const = 0;
@@ -62,7 +61,7 @@ public:
     /// @throws std::invalid_argument for bad arguments (empty data, size, channels = 0, data size mismatch),
     ///         std::domain_error for a format, channel count or usage the backend cannot honour,
     ///         std::logic_error without a device, std::runtime_error if the backend fails.
-    virtual Texture* create(
+    virtual ATexture2D* create(
         int32_t width, int32_t height, std::span<const uint8_t> data, int32_t channels = 4, std::string label = {},
         TextureUsage usage = TextureUsage::CopyDst | TextureUsage::TextureBinding,
         TextureFormat textureFormat = TextureFormat::Undefined, bool generateMipMaps = false) const = 0;
@@ -77,8 +76,8 @@ public:
     /// @throws std::invalid_argument for null, std::domain_error for cube maps, arrays, 3D textures and formats
     ///         the GPU or the backend cannot use, std::runtime_error for transcoding / data problems,
     ///         std::logic_error without a device, std::runtime_error if the backend fails.
-    virtual Texture* createFromKtx2(ktxTexture2* ktxTexture,
-                                                    const TextureDescriptor& descriptor = {}) const = 0;
+    virtual ATexture2D* createFromKtx2(ktxTexture2* ktxTexture,
+                                       const TextureDescriptor& descriptor = {}) const = 0;
 
     ATextureFactory(const ATextureFactory&) = delete;
     ATextureFactory& operator=(const ATextureFactory&) = delete;

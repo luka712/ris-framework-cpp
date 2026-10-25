@@ -21,8 +21,8 @@ namespace fu = ris::gles::framebuffer_utilities;
 namespace {
 
 /// Reads the pixel (x, y) of the texture through a temporary framebuffer.
-ris_test::Pixel texel(const ris::Texture& texture, int x, int y) {
-    gles::GlUint fb = fu::create(texture.gl_handle());
+ris_test::Pixel texel(const ris::ATexture2D& texture, int x, int y) {
+    gles::GlUint fb = fu::create(static_cast<gles::GlUint>(texture.getHandle()));
     fu::bind(fb);
     const ris_test::Pixel px = ris_test::read_pixel(x, y);
     fu::bind(0);
@@ -147,20 +147,20 @@ TEST_CASE("texture factory createFromKtx2") {
     SECTION("a Basis Universal file is transcoded to the best GPU format") {
         KtxFile file(path);
         const uint32_t width = file.tex->baseWidth, height = file.tex->baseHeight, levels = file.tex->numLevels;
-        const std::unique_ptr<ris::Texture> tex(factory->createFromKtx2(file.tex));
+        const std::unique_ptr<ris::ATexture2D> tex(factory->createFromKtx2(file.tex));
         REQUIRE(tex != nullptr);
-        REQUIRE(tex->width() == static_cast<int32_t>(width));
-        REQUIRE(tex->height() == static_cast<int32_t>(height));
-        REQUIRE(tex->mip_levels() == levels);
-        REQUIRE(tex->gl_handle() != 0);
+        REQUIRE(tex->getWidth() == static_cast<int32_t>(width));
+        REQUIRE(tex->getHeight() == static_cast<int32_t>(height));
+        REQUIRE(tex->getMipLevels() == levels);
+        REQUIRE(tex->getHandle() != 0);
     }
     SECTION("an explicit RGBA8 target gives readable pixels") {
         KtxFile file(path);
         ris::TextureDescriptor descriptor;
         descriptor.textureFormat = ris::TextureFormat::Rgba8Unorm;
         descriptor.label = "ktx rgba8";
-        const std::unique_ptr<ris::Texture> tex(factory->createFromKtx2(file.tex, descriptor));
-        const ris_test::Pixel px = texel(*tex, tex->width() / 2, tex->height() / 2);
+        const std::unique_ptr<ris::ATexture2D> tex(factory->createFromKtx2(file.tex, descriptor));
+        const ris_test::Pixel px = texel(*tex, tex->getWidth() / 2, tex->getHeight() / 2);
         REQUIRE(px[3] == 255);
         REQUIRE_NOTHROW(gles::error_utilities::check_error("ktx2 rgba8"));
     }
@@ -169,10 +169,10 @@ TEST_CASE("texture factory createFromKtx2") {
         ris::TextureDescriptor descriptor;
         descriptor.textureFormat = ris::TextureFormat::Rgba8Unorm;
         descriptor.generateMipmaps = true;
-        const std::unique_ptr<ris::Texture> tex(factory->createFromKtx2(file.tex, descriptor));
-        const uint32_t full = gles::texture_utilities::full_mip_count(tex->width(), tex->height());
+        const std::unique_ptr<ris::ATexture2D> tex(factory->createFromKtx2(file.tex, descriptor));
+        const uint32_t full = gles::texture_utilities::full_mip_count(tex->getWidth(), tex->getHeight());
         // levels stored in the file are used as they are, mip maps are only generated for a single level
-        REQUIRE(tex->mip_levels() == (file.tex->numLevels == 1 ? full : file.tex->numLevels));
+        REQUIRE(tex->getMipLevels() == (file.tex->numLevels == 1 ? full : file.tex->numLevels));
     }
     SECTION("bad arguments") {
         KtxFile file(path);
@@ -192,6 +192,6 @@ TEST_CASE("Framework::textureFactory is the OpenGL ES factory") {
     config.hidden = true;
     ris::Framework framework(config);
     REQUIRE(dynamic_cast<gles::GlesTextureFactory*>(&framework.textureFactory()) != nullptr);
-    const std::unique_ptr<ris::Texture> tex(framework.textureFactory().createEmpty(2, 2, ris::Color::red()));
-    REQUIRE(tex->width() == 2);
+    const std::unique_ptr<ris::ATexture2D> tex(framework.textureFactory().createEmpty(2, 2, ris::Color::red()));
+    REQUIRE(tex->getWidth() == 2);
 }

@@ -229,7 +229,9 @@ namespace ris {
             ktxDescriptor.label = path;
             ktxDescriptor.generateMipmaps = textureDescriptor.generate_mipmaps;
             try {
-                texture = m_framework.textureFactory().createFromKtx2(ktxTexture, ktxDescriptor);
+                // The only factory there is creates GlesTexture2D objects, which is what Texture is. ContentManager
+                // needs the concrete type for set_sampler, so it takes the base pointer back.
+                texture = static_cast<Texture*>(m_framework.textureFactory().createFromKtx2(ktxTexture, ktxDescriptor));
             } catch (...) {
                 ris_ktxTexture2_Destroy(ktxTexture);
                 throw;

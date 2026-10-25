@@ -12,24 +12,28 @@ namespace ris {
 /// The features of this graphics device.
 class RIS_API AGraphicsDeviceFeatures {
     public:
+    // TODO: doc comment
         virtual ~AGraphicsDeviceFeatures() = default;
 
-        /// Supports S3TC / DXT (BC1–BC3) texture compression.
+    // TODO: doc comment
         [[nodiscard]] virtual bool supportsTextureCompressionS3TC() const = 0;
 
-        /// Supports full Block Compression (BC1–BC7) textures. Includes S3TC (BC1–BC3) plus BC4–BC7.
+    // TODO: doc comment
         [[nodiscard]] virtual bool supportsTextureCompressionBC() const = 0;
 
-        /// Supports ETC2 / EAC texture compression (OpenGL/ES and Vulkan standard).
+    // TODO: doc comment
         [[nodiscard]] virtual bool supportsTextureCompressionETC2() const = 0;
 
-        /// Supports ASTC (Adaptive Scalable Texture Compression) — LDR and HDR profiles.
+    // TODO: doc comment
         [[nodiscard]] virtual bool supportsTextureCompressionASTC() const = 0;
 
-        /// Supports PVRTC (PowerVR Texture Compression) 1 and 2.
+    // TODO: doc comment
         [[nodiscard]] virtual bool supportsTextureCompressionPVRTC() const = 0;
 
+        // TODO: doc comment
         AGraphicsDeviceFeatures(const AGraphicsDeviceFeatures&) = delete;
+
+    // TODO: doc comment
         AGraphicsDeviceFeatures& operator=(const AGraphicsDeviceFeatures&) = delete;
 
     protected:

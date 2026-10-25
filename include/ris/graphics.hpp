@@ -9,6 +9,7 @@
 
 #include "core.hpp"
 #include "math.hpp"
+#include "ris/gles/texture/gles_texture2d.hpp"
 #include "ris/rendering/primitive/cull_mode.hpp"
 
 // OpenGL ES 3 graphics objects. A ris::Window must exist (its context is current) while any of
@@ -16,8 +17,6 @@
 // All objects are RAII, move-only, and throw standard exceptions (std::invalid_argument, std::runtime_error, ...) on failure.
 
 namespace ris {
-
-namespace gles { class GlesTextureFactory; }
 
 // ---- state ----------------------------------------------------------------------------------
 
@@ -189,43 +188,11 @@ struct SamplerDesc {
     Wrap wrap_v = Wrap::Clamp;
 };
 
-class RIS_API Texture {
-public:
-    /// `pixels`: width*height RGBA8, may be null (uninitialised). `srgb`: data is sRGB encoded.
-    static Texture from_rgba8(int32_t width, int32_t height, const void* pixels, bool generate_mipmaps = true,
-                              bool srgb = false);
-    /// Loads PNG / JPG / BMP / TGA ... (stb_image through ris-ktx2) as an RGBA8 texture.
-    static Texture from_image_file(const std::string& path, bool generate_mipmaps = true, bool srgb = true,
-                                   bool flip_vertically = false);
-
-    static Texture from_ktx2_memory(const void* data, size_t size);
-
-    ~Texture();
-    Texture(Texture&& other) noexcept;
-    Texture& operator=(Texture&& other) noexcept;
-    Texture(const Texture&) = delete;
-    Texture& operator=(const Texture&) = delete;
-
-    void set_sampler(const SamplerDesc& sampler);
-    void bind(uint32_t unit = 0) const;
-
-    int32_t width() const noexcept { return width_; }
-    int32_t height() const noexcept { return height_; }
-    uint32_t mip_levels() const noexcept { return mip_levels_; }
-    /// The OpenGL texture name, for interop with native code.
-    uint32_t gl_handle() const noexcept { return id_; }
-
-private:
-    friend class RenderTarget;
-    friend class gles::GlesTextureFactory;
-    Texture() = default;
-    static Texture adopt(uint32_t id, int32_t width, int32_t height, uint32_t mip_levels);
-
-    uint32_t id_ = 0;
-    int32_t width_ = 0;
-    int32_t height_ = 0;
-    uint32_t mip_levels_ = 1;
-};
+/// The texture of the default (and only) rendering backend: another name for gles::GlesTexture2D, the OpenGL ES
+/// implementation of ATexture2D (ris/rendering/texture/a_texture2D.hpp). `from_rgba8`, `from_image_file`,
+/// `from_ktx2_memory`, `set_sampler`, `bind`, `width()`, `height()`, `mip_levels()` and `gl_handle()` are its original
+/// API, the ATexture2D getters (`getWidth()`, ...) are available as well.
+using Texture = gles::GlesTexture2D;
 
 // ---- render targets -------------------------------------------------------------------------
 

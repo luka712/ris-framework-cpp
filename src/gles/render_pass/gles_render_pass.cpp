@@ -31,14 +31,14 @@ GlesRenderPass::GlesRenderPass(const RenderPassDescriptor& descriptor) : label_(
             }
             swapChain_ = attachment.swapChain;
         } else {
-            if (attachment.texture->width() <= 0 || attachment.texture->height() <= 0 || attachment.texture->gl_handle() == 0) {
+            if (attachment.texture->getWidth() <= 0 || attachment.texture->getHeight() <= 0 || attachment.texture->getHandle() == 0) {
                 throw std::invalid_argument("GlesRenderPass: a color attachment texture is empty (moved from?)");
             }
             if (textures.empty()) {
-                width_ = attachment.texture->width();
-                height_ = attachment.texture->height();
+                width_ = attachment.texture->getWidth();
+                height_ = attachment.texture->getHeight();
             }
-            textures.push_back(attachment.texture->gl_handle());
+            textures.push_back(static_cast<GlUint>(attachment.texture->getHandle()));
         }
         colorTargets_.push_back({attachment.loadAction, attachment.storeAction, attachment.clearColor});
     }

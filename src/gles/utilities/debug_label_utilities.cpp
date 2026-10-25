@@ -3,7 +3,7 @@
 #include <EGL/egl.h>
 
 #include "internal.hpp"
-#include "ris/gles/utilities/extension_utilities.hpp"
+#include "ris/gles/utilities/gles_utilities.hpp"
 
 using namespace ris::detail;
 
@@ -49,7 +49,7 @@ ObjectLabelFn object_label_function() {
 
 bool is_supported() {
     require_context();
-    return extension_utilities::has_extension("GL_KHR_debug") && object_label_function() != nullptr;
+    return GlesUtilities::context().isExtensionSupported("GL_KHR_debug") && object_label_function() != nullptr;
 }
 
 void set_label(ObjectKind kind, GlUint object, std::string_view label) {

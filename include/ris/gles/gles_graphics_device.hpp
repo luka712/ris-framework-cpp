@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "ris/gles/gles_gpu_info.hpp"
 #include "ris/gles/blending/gles_blend_state.hpp"
 #include "ris/gles/gles_graphics_device_features.hpp"
 #include "ris/gles/primitive/gles_primitive_state.hpp"
@@ -19,7 +20,7 @@ namespace ris::gles {
 /// See AGraphicsDevice for the ownership rules and the exceptions.
 ///
 /// Details:
-///  - GpuInfo comes from `GL_RENDERER`, `GL_VENDOR`, `GL_VERSION` and `GL_SHADING_LANGUAGE_VERSION`.
+///  - The GPU info is a GlesGpuInfo, it comes from `GL_RENDERER`, `GL_VENDOR` and `GL_VERSION`.
 ///  - The features come from the extensions, see GlesGraphicsDeviceFeatures.
 ///  - `setupDebugCallback()` uses `GL_KHR_debug`: the driver messages go to ris' log (`[gl] ...`, like the window's
 ///    `WindowDesc::debug` does). `pushDebugGroup` / `popDebugGroup` use it too and do nothing without it.
@@ -33,7 +34,7 @@ public:
     explicit GlesGraphicsDevice(const GraphicsDeviceDescriptor& descriptor = {});
     ~GlesGraphicsDevice() override;
 
-    const GpuInfo& getGpuInfo() const override;
+    const AGpuInfo& getGpuInfo() const override;
     const AGraphicsDeviceFeatures& getFeatures() const override;
     const ASampler& getDefaultTextureSampler() const override;
     const ABlendState& getDefaultBlendState() const override;
@@ -58,8 +59,8 @@ private:
     GraphicsDeviceDescriptor descriptor_;
     bool initialized_ = false;
     int32_t debugGroupDepth_ = 0;
-    GpuInfo gpuInfo_;
-    std::unique_ptr<GlesGraphicsDeviceFeatures> features_;
+    std::unique_ptr<GlesGraphicsDeviceFeatures> m_features;   // created by initialize()
+    std::unique_ptr<GlesGpuInfo> m_gpuInfo;                   // created by initialize(), after the features
     std::unique_ptr<GlesSampler> defaultTextureSampler_;
     std::unique_ptr<GlesBlendState> defaultBlendState_;
     std::unique_ptr<GlesPrimitiveState> defaultPrimitiveState_;

@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #include "internal.hpp"
-#include "ris/gles/utilities/extension_utilities.hpp"
+#include "ris/gles/utilities/gles_utilities.hpp"
 
 using namespace ris::detail;
 
@@ -16,7 +16,7 @@ constexpr GLenum kMaxTextureMaxAnisotropy = 0x84FF;
 constexpr const char* kExtension = "GL_EXT_texture_filter_anisotropic";
 } // namespace
 
-bool is_supported() { return extension_utilities::has_extension(kExtension); }
+bool is_supported() { return GlesUtilities::context().isExtensionSupported(kExtension); }
 
 float get_max_anisotropy() {
     if (!is_supported()) return 0.0f;

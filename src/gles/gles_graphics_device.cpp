@@ -10,18 +10,13 @@
 
 #include "ris/gles/render_pass/gles_render_pass.hpp"
 #include "ris/gles/swap_chain/gles_swap_chain.hpp"
-#include "ris/gles/utilities/extension_utilities.hpp"
+#include "ris/gles/utilities/gles_utilities.hpp"
 
 using namespace ris::detail;
 
 namespace ris::gles {
 
 namespace {
-
-std::string glString(GLenum name) {
-    const GLubyte* s = glGetString(name);
-    return s ? reinterpret_cast<const char*>(s) : "";
-}
 
 // The GL_KHR_debug entry points. Extension functions are looked up through EGL, the core name is used by OpenGL ES 3.2
 // contexts, the KHR suffix by GL_KHR_debug on older ones (like debug_label_utilities).
@@ -30,7 +25,7 @@ void (*findFunction(const char* khrName, const char* coreName))() {
     return p ? p : eglGetProcAddress(coreName);
 }
 
-bool hasDebug() { return extension_utilities::has_extension("GL_KHR_debug"); }
+bool hasDebug() { return GlesUtilities::context().isExtensionSupported("GL_KHR_debug"); }
 
 void GL_APIENTRY debugCallback(GLenum, GLenum type, GLuint, GLenum severity, GLsizei, const GLchar* message, const void*) {
     const LogLevel level = (type == GL_DEBUG_TYPE_ERROR_KHR || severity == GL_DEBUG_SEVERITY_HIGH_KHR)
@@ -69,14 +64,12 @@ void GlesGraphicsDevice::requireInitialized(const char* what) const {
     }
 }
 
-const GpuInfo& GlesGraphicsDevice::getGpuInfo() const {
-    requireInitialized("getGpuInfo");
-    return gpuInfo_;
+const AGpuInfo& GlesGraphicsDevice::getGpuInfo() const {
+    return *m_gpuInfo;
 }
 
 const AGraphicsDeviceFeatures& GlesGraphicsDevice::getFeatures() const {
-    requireInitialized("getFeatures");
-    return *features_;
+    return *m_features;
 }
 
 const ASampler& GlesGraphicsDevice::getDefaultTextureSampler() const {
@@ -98,19 +91,8 @@ void GlesGraphicsDevice::initialize() {
     require_context();
     if (initialized_) throw std::invalid_argument("GlesGraphicsDevice::initialize: the graphics device is already initialized");
 
-    gpuInfo_ = {};
-    gpuInfo_.name = glString(GL_RENDERER);
-    gpuInfo_.vendor = glString(GL_VENDOR);
-    gpuInfo_.apiVersion = glString(GL_VERSION);
-    gpuInfo_.shadingLanguageVersion = glString(GL_SHADING_LANGUAGE_VERSION);
-    gpuInfo_.api = RenderingBackend::OpenGLES;
-    gpuInfo_.underlyingBackend = RenderingBackend::Default; // not reported through GL
-
-    features_ = std::make_unique<GlesGraphicsDeviceFeatures>();
-    if (features_->supportsTextureCompressionASTC()) gpuInfo_.supportedCompressedTextureFormats.push_back(TextureFormat::Astc4x4Rgba);
-    if (features_->supportsTextureCompressionS3TC()) gpuInfo_.supportedCompressedTextureFormats.push_back(TextureFormat::Bc3RgbaUnorm);
-    if (features_->supportsTextureCompressionETC2()) gpuInfo_.supportedCompressedTextureFormats.push_back(TextureFormat::Etc2Rgba8Unorm);
-    if (features_->supportsTextureCompressionBC()) gpuInfo_.supportedCompressedTextureFormats.push_back(TextureFormat::Bc7RgbaUnorm);
+    m_features = std::make_unique<GlesGraphicsDeviceFeatures>();
+    m_gpuInfo = std::make_unique<GlesGpuInfo>(*m_features);
 
     defaultTextureSampler_ = std::make_unique<GlesSampler>(defaultSamplerDescriptor(descriptor_.samplerFilteringPreset), "ris default texture sampler");
     defaultBlendState_ = std::make_unique<GlesBlendState>();

@@ -20,7 +20,7 @@ TEST_CASE("error utilities name the GL errors") {
 TEST_CASE("utilities need a window") {
     // No Window exists here: every call that talks to GL throws instead of crashing.
     REQUIRE_THROWS_AS(gles::error_utilities::check_error("test"), std::logic_error);
-    REQUIRE_THROWS_AS(gles::extension_utilities::has_extension("GL_KHR_debug"), std::logic_error);
+    REQUIRE_THROWS_AS(GlesUtilities::context().isExtensionSupported("GL_KHR_debug"), std::logic_error);
     REQUIRE_THROWS_AS(gles::buffer_utilities::create_vertex_buffer(16, ris::BufferUsageFlags::Vertex), std::logic_error);
     REQUIRE_THROWS_AS(gles::texture_utilities::create_texture_2d(4, 4, static_cast<const void*>(nullptr)), std::logic_error);
     REQUIRE_THROWS_AS(gles::shader_utilities::create_vertex_shader("x"), std::logic_error);
@@ -39,10 +39,10 @@ TEST_CASE("error, extension and debug label utilities on a real context") {
         REQUIRE_NOTHROW(gles::error_utilities::clear_errors());
     }
     SECTION("extensions") {
-        REQUIRE_FALSE(gles::extension_utilities::has_extension(""));
-        REQUIRE_FALSE(gles::extension_utilities::has_extension("GL_RIS_no_such_extension"));
+        REQUIRE_FALSE(GlesUtilities::context().isExtensionSupported(""));
+        REQUIRE_FALSE(GlesUtilities::context().isExtensionSupported("GL_RIS_no_such_extension"));
         // a prefix of a real extension name must not match
-        REQUIRE_FALSE(gles::extension_utilities::has_extension("GL_KHR_debu"));
+        REQUIRE_FALSE(GlesUtilities::context().isExtensionSupported("GL_KHR_debu"));
     }
     SECTION("debug labels never fail") {
         gles::GlUint buffer = gles::buffer_utilities::create_vertex_buffer(16, ris::BufferUsageFlags::Vertex, "labelled");
