@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "core.hpp"
-#include "input/input.hpp"
+#include "input.hpp"
 #include "math.hpp"
 #include "ris/time/game_time.hpp"
 
@@ -86,7 +86,7 @@ private:
 /// like `OrbitCamera` of ris-framework-ts (mouse input only, no touch in 0.1.0).
 class RIS_API OrbitCamera : public Camera {
 public:
-    OrbitCamera(std::shared_ptr<PerspectiveCamera> core, const AInputManager& input);
+    OrbitCamera(std::shared_ptr<PerspectiveCamera> core, const InputManager& input);
 
     float sensitivity = 0.005f;   ///< radians per pixel of mouse movement
     float scroll_speed = 1.0f;
@@ -109,7 +109,7 @@ public:
 
 private:
     std::shared_ptr<PerspectiveCamera> core_;
-    const AInputManager& input_;
+    const InputManager& input_;
     float yaw_ = 0, pitch_ = 0;
 };
 

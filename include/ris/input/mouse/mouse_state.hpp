@@ -7,12 +7,12 @@
 
 namespace ris {
 
-class InputManagerBase;
+class InputManager;
 
 /// Snapshot of the mouse for one frame, like `MouseState` of ris-framework-ts.
 ///
 /// Positions are in window coordinates (the unit the windowing system reports, y pointing down, origin at the top
-/// left of the window). The input manager publishes a new snapshot in `AInputManager::update()`; the reference
+/// left of the window). The input manager publishes a new snapshot in `InputManager::update()`; the reference
 /// returned by `mouse_state()` stays valid for the lifetime of the manager.
 ///
 /// Differences from TS: the wheel is reported as the movement of the frame and as a running total instead of a
@@ -38,7 +38,7 @@ struct MouseState {
     bool is_button_released(MouseButton button) const noexcept { return (released_ & bit(button)) != 0; }
 
 private:
-    friend class InputManagerBase;
+    friend class InputManager;
     /// The bit of a button, 0 for `None` and for values outside the known buttons.
     static constexpr uint32_t bit(MouseButton button) noexcept {
         const auto i = static_cast<int32_t>(button);

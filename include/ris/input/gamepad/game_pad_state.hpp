@@ -7,14 +7,14 @@
 
 namespace ris {
 
-class InputManagerBase;
+class InputManager;
 
 /// Number of gamepads an input manager tracks (indices 0 to max_game_pad_count - 1).
 inline constexpr int32_t max_game_pad_count = 4;
 
 /// Snapshot of one gamepad for one frame, like `GamePadState` of ris-framework-ts.
 ///
-/// Obtained from `AInputManager::game_pad_state(index)`. The reference stays valid for the lifetime of the manager
+/// Obtained from `InputManager::game_pad_state(index)`. The reference stays valid for the lifetime of the manager
 /// and always shows the latest published snapshot. A gamepad that is not connected (or an index that is out of
 /// range) reports `is_connected() == false`, all buttons up and the sticks and triggers at zero, so code does not
 /// have to check for devices first.
@@ -39,7 +39,7 @@ public:
     bool is_button_released(GamePadButton button) const noexcept { return (released_ & bit(button)) != 0; }
 
 private:
-    friend class InputManagerBase;
+    friend class InputManager;
     static constexpr uint32_t bit(GamePadButton button) noexcept {
         const auto i = static_cast<int32_t>(button);
         return (i > 0 && i < game_pad_button_count) ? (1u << static_cast<uint32_t>(i)) : 0u;

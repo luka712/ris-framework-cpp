@@ -10,8 +10,9 @@
 ///  - OpenGL ES backend, like the `webgl` folder of ris-framework-ts: gles/gles.hpp (the Gles buffer classes
 ///    derived from the abstract buffers, converters and utilities for shaders, textures, framebuffers, ...).
 ///    Other rendering APIs will get their own folder next to it.
-///  - input: input/input.hpp (windowing API neutral input manager, keyboard, mouse, gamepad and touch state) and the
-///    SDL3 implementation sdl3/input/input.hpp (ris::sdl3::Sdl3InputManager).
+///  - input: input.hpp (the SDL3 based ris::InputManager, keyboard, mouse, gamepad and touch state) and time:
+///    time.hpp (ris::TimeManager, GameTime, Stopwatch, Timer, ...). SDL3 is an integral part of the engine, so
+///    these are concrete classes; only the rendering API is pluggable.
 #include "camera.hpp"
 #include "content.hpp"
 #include "core.hpp"
@@ -27,7 +28,6 @@
 #include "rendering/buffers/buffers.hpp"
 #include "rendering/default_buffer_factory.hpp"
 #include "scene.hpp"
-#include "sdl3/sdl3.hpp"
 #include "sprite_batch.hpp"
 #include "time.hpp"
 #include "window.hpp"

@@ -1,28 +1,29 @@
-// State tracking of the neutral input layer (keyboard, mouse, gamepad) through a fake backend: no SDL, no window.
+// State tracking of the input manager (keyboard, mouse, gamepad), driven through its public `report_*` functions and
+// `handle_event`: no SDL event, no window, no device.
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <memory>
 
-#include "fake_input_manager.hpp"
+#include <ris/input.hpp>
 
 using ris::GamePadButton;
 using ris::Key;
 using ris::MouseButton;
-using ris_test::FakeInputManager;
+using ris::InputManager;
 
-TEST_CASE("the fake backend plugs in through the abstract interface") {
-    std::unique_ptr<ris::AInputManager> input = std::make_unique<FakeInputManager>();
-    input->initialize();
-    REQUIRE(static_cast<FakeInputManager&>(*input).initialized);
-    REQUIRE_NOTHROW(input->update());
-    REQUIRE_NOTHROW(input->after_update());
-    input->dispose();
-    REQUIRE_FALSE(static_cast<FakeInputManager&>(*input).initialized);
+TEST_CASE("update, after_update and dispose are safe on a manager that was never initialized") {
+    InputManager input;
+    REQUIRE_NOTHROW(input.update());
+    REQUIRE_NOTHROW(input.after_update());
+    REQUIRE_NOTHROW(input.dispose());
+    REQUIRE_NOTHROW(input.dispose());
+    REQUIRE_FALSE(input.game_pad_state().is_connected());
+    REQUIRE_FALSE(input.touch_capabilities().is_connected());
 }
 
 TEST_CASE("keyboard state is published per frame") {
-    FakeInputManager input;
+    InputManager input;
     input.report_key(Key::W, true);
     REQUIRE_FALSE(input.keyboard_state().is_key_down(Key::W));   // collected, not published yet
     input.update();
@@ -47,7 +48,7 @@ TEST_CASE("keyboard state is published per frame") {
 }
 
 TEST_CASE("a key pressed and released within one frame is reported as pressed and released") {
-    FakeInputManager input;
+    InputManager input;
     input.report_key(Key::Space, true);
     input.report_key(Key::Space, false);
     input.update();
@@ -57,7 +58,7 @@ TEST_CASE("a key pressed and released within one frame is reported as pressed an
 }
 
 TEST_CASE("unknown keys are ignored") {
-    FakeInputManager input;
+    InputManager input;
     input.report_key(Key::None, true);
     input.report_key(static_cast<Key>(100000), true);
     input.report_key(static_cast<Key>(-4), true);
@@ -73,7 +74,7 @@ TEST_CASE("key from scancode keeps the HID values") {
 }
 
 TEST_CASE("mouse state accumulates motion and wheel per frame") {
-    FakeInputManager input;
+    InputManager input;
     input.report_mouse_move({5, 6}, {2, 3});
     input.report_mouse_move({7, 6}, {2, 0});
     input.report_mouse_wheel({0, 1});
@@ -93,7 +94,7 @@ TEST_CASE("mouse state accumulates motion and wheel per frame") {
 }
 
 TEST_CASE("mouse buttons are down, pressed and released") {
-    FakeInputManager input;
+    InputManager input;
     input.report_mouse_button(MouseButton::Left, true, {1, 2});
     input.update();
     REQUIRE(input.mouse_state().is_button_down(MouseButton::Left));
@@ -123,7 +124,7 @@ TEST_CASE("mouse button numbers of the event map to the TS buttons") {
 }
 
 TEST_CASE("losing focus drops held keys and buttons without reporting a release") {
-    FakeInputManager input;
+    InputManager input;
     input.report_key(Key::A, true);
     input.report_mouse_button(MouseButton::Right, true, {0, 0});
     input.update();
@@ -135,7 +136,7 @@ TEST_CASE("losing focus drops held keys and buttons without reporting a release"
 }
 
 TEST_CASE("handle_event feeds the neutral Event of the window") {
-    FakeInputManager input;
+    InputManager input;
     ris::Event ev;
     ev.type = ris::EventType::KeyDown;
     ev.scancode = static_cast<int32_t>(Key::W);
@@ -156,7 +157,7 @@ TEST_CASE("handle_event feeds the neutral Event of the window") {
 }
 
 TEST_CASE("gamepads: not connected by default, out of range indices are safe") {
-    FakeInputManager input;
+    InputManager input;
     input.update();
     REQUIRE_FALSE(input.game_pad_state().is_connected());
     REQUIRE_FALSE(input.game_pad_state(3).is_connected());
@@ -169,7 +170,7 @@ TEST_CASE("gamepads: not connected by default, out of range indices are safe") {
 }
 
 TEST_CASE("gamepad buttons, triggers and sticks") {
-    FakeInputManager input;
+    InputManager input;
     input.report_game_pad_connected(1, true);
     input.report_game_pad_button(1, GamePadButton::A, true);
     input.report_game_pad_axes(1, {0.0f, 1.0f}, {-1.0f, 0.0f}, 0.5f, 1.0f);
@@ -194,7 +195,7 @@ TEST_CASE("gamepad buttons, triggers and sticks") {
 }
 
 TEST_CASE("the thumb stick dead zone is radial and does not rescale the output") {
-    FakeInputManager input;
+    InputManager input;
     REQUIRE_THAT(input.thumbstick_dead_zone(), Catch::Matchers::WithinAbs(0.2, 1e-6));
     input.report_game_pad_connected(0, true);
 
@@ -215,7 +216,7 @@ TEST_CASE("the thumb stick dead zone is radial and does not rescale the output")
 }
 
 TEST_CASE("unplugging a gamepad releases what it held and centres it") {
-    FakeInputManager input;
+    InputManager input;
     input.report_game_pad_connected(0, true);
     input.report_game_pad_button(0, GamePadButton::X, true);
     input.report_game_pad_axes(0, {1, 0}, {0, 0}, 1, 0);

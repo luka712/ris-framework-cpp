@@ -15,7 +15,7 @@
 #include <string>
 
 #include "internal.hpp"
-#include "sdl3/sdl3_event_tap.hpp"
+#include "input/event_tap.hpp"
 
 using namespace ris::detail;
 
@@ -349,8 +349,8 @@ Window& Window::operator=(Window&& other) noexcept {
 bool Window::poll_event(Event& out) {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
-        // The SDL3 input manager sees every event, including the ones that have no `Event` (touch, gamepads).
-        sdl3::detail::dispatch_event_tap(e);
+        // The input manager sees every event, including the ones that have no `Event` (touch, gamepads).
+        detail::dispatch_event_tap(e);
         Event ev;
         ev.timestamp_ns = e.common.timestamp;
         switch (e.type) {

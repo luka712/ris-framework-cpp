@@ -7,11 +7,11 @@
 
 namespace ris {
 
-class InputManagerBase;
+class InputManager;
 
 /// Snapshot of the keyboard for one frame, like `KeyboardState` of ris-framework-ts.
 ///
-/// The input manager publishes a new snapshot in `AInputManager::update()`; the reference returned by
+/// The input manager publishes a new snapshot in `InputManager::update()`; the reference returned by
 /// `keyboard_state()` stays valid for the lifetime of the manager and always shows the latest snapshot, so it can
 /// be kept. Read it on the thread that runs the frame loop. A key that is outside [1, key_count) is never down.
 class KeyboardState {
@@ -27,7 +27,7 @@ public:
     bool is_key_released(Key key) const noexcept { return get(released_, key); }
 
 private:
-    friend class InputManagerBase;
+    friend class InputManager;
     using Flags = std::array<bool, static_cast<std::size_t>(key_count)>;
     static bool get(const Flags& flags, Key key) noexcept {
         const auto i = static_cast<int64_t>(static_cast<int32_t>(key));

@@ -18,7 +18,7 @@ ASTC > ETC2 > RGBA8 transcoding), render targets, sprite batch. Math is [glm](ht
 
 The OpenGL ES helpers (buffers, shaders, programs, textures, samplers, framebuffers, blending, culling, ...) live in `ris/gles/` and mirror `webgl/` of ris-framework-ts; `ris/gles/gles.hpp` includes all of them.
 
-Input layering (like `api/input` of ris-framework-ts): `ris/input/` holds the windowing API neutral part (the abstract `AInputManager`, the shared `InputManagerBase` that does the per frame state tracking, `KeyboardState`, `MouseState`, `GamePadState`, `TouchCollection` / `TouchLocation`, `Key`, `MouseButton`, `GamePadButton`, ... and no SDL types), and the SDL3 implementation `ris::sdl3::Sdl3InputManager` lives in `ris/sdl3/input/` (keyboard, mouse, gamepads and touch). `Framework::input_manager()` returns the `AInputManager` of `ris::create_default_input_manager()`; a new backend derives from `InputManagerBase` and calls its `report_*` functions. Per frame: `update()` publishes the state collected since the last frame, the update listeners read it, `after_update()` ages touch contacts.
+Input (like `api/input` of ris-framework-ts): `ris/input/` holds the concrete `ris::InputManager` (SDL3 is an integral part of the engine, so there is no abstract input manager or backend split; only the rendering API is pluggable) and the plain state types `KeyboardState`, `MouseState`, `GamePadState`, `TouchCollection` / `TouchLocation`, `Key`, `MouseButton`, `GamePadButton`, ... with no SDL types in any header. It covers keyboard, mouse, gamepads and touch. `Framework::input_manager()` returns it. Per frame: `update()` publishes the state collected since the last frame, the update listeners read it, `after_update()` ages touch contacts. Its public `report_*` functions let tests and custom event sources feed it without SDL events.
 
 Time (like `api/time` of ris-framework-ts): SDL3 is an integral part of the engine, so there is one concrete `ris::TimeManager` in `ris/time/` (no abstract class, no backend folder; only the rendering API is pluggable). It does the per frame logic (time scale, pause, a fixed time step with `Framework::add_on_fixed_update_listener`, frame limiting with `FrameworkConfiguration::target_frames_per_second`, delta smoothing, an FPS counter, a deterministic mode) on the SDL3 time API (`SDL_GetPerformanceCounter`, `SDL_DelayPrecise`, `SDL_GetCurrentTime`, ...), next to `GameTime`, `DateTime`, `FrameRateCounter`, `Stopwatch`, `Timer` and the `ris::system_clock` functions (counter, delays, wall clock, date conversion). No SDL types appear in the headers. `Framework::time_manager()` returns the `TimeManager&`. Unit tests drive it without sleeping by giving it a `ris::ClockSource` (a counter function, its frequency and an optional delay function).
 
@@ -43,7 +43,7 @@ ris-ktx2 is always linked statically into `libris_framework`, so a shared build 
 ## Using it
 
 The high level API mirrors [ris-framework-ts](https://github.com/luka712/ris-framework-ts): `Framework`, `Scene`, cameras,
-lights, materials, `ContentManager`, `AInputManager`, `SpriteBatch::draw(texture, rect, color)`.
+lights, materials, `ContentManager`, `InputManager`, `SpriteBatch::draw(texture, rect, color)`.
 
 ```cpp
 #include <ris/ris.hpp>

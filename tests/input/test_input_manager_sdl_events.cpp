@@ -1,4 +1,4 @@
-// The SDL3 input manager fed with synthetic SDL events (no display, no devices needed). The tests only use the SDL
+// The input manager fed with synthetic SDL events (no display, no devices needed). The tests only use the SDL
 // headers for the event structs: the library links SDL privately, so the test executable has no SDL functions.
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -6,6 +6,7 @@
 #include <SDL3/SDL.h>
 
 #include <memory>
+#include <type_traits>
 
 #include <ris/ris.hpp>
 
@@ -13,7 +14,7 @@ using ris::GamePadButton;
 using ris::Key;
 using ris::MouseButton;
 using ris::TouchLocationState;
-using ris::sdl3::Sdl3InputManager;
+using ris::InputManager;
 
 namespace {
 
@@ -59,14 +60,16 @@ SDL_Event pad_axis(SDL_JoystickID id, SDL_GamepadAxis axis, Sint16 value) {
 
 } // namespace
 
-TEST_CASE("sdl3 input manager is the default backend of the abstract manager") {
-    const std::unique_ptr<ris::AInputManager> input = ris::create_default_input_manager();
-    REQUIRE(dynamic_cast<Sdl3InputManager*>(input.get()) != nullptr);
-    REQUIRE(dynamic_cast<ris::InputManagerBase*>(input.get()) != nullptr);
+TEST_CASE("input manager is one concrete class that is neither copyable nor movable") {
+    STATIC_REQUIRE_FALSE(std::is_abstract_v<InputManager>);
+    STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<InputManager>);
+    STATIC_REQUIRE_FALSE(std::is_move_constructible_v<InputManager>);
+    const auto input = std::make_unique<InputManager>();
+    REQUIRE_FALSE(input->touch_capabilities().is_connected());
 }
 
-TEST_CASE("sdl3 input manager ignores events that are not input") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: ignores events that are not input") {
+    InputManager input;
     SDL_Event quit = make_event(SDL_EVENT_QUIT);
     REQUIRE_FALSE(input.handle_native_event(&quit));
     SDL_Event resized = make_event(SDL_EVENT_WINDOW_RESIZED);
@@ -74,8 +77,8 @@ TEST_CASE("sdl3 input manager ignores events that are not input") {
     REQUIRE_FALSE(input.handle_native_event(nullptr));
 }
 
-TEST_CASE("sdl3 keyboard events become keyboard state") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: keyboard events become keyboard state") {
+    InputManager input;
     SDL_Event down = key_event(SDL_SCANCODE_W, true);
     REQUIRE(input.handle_native_event(&down));
     input.update();
@@ -97,8 +100,8 @@ TEST_CASE("sdl3 keyboard events become keyboard state") {
     REQUIRE(input.keyboard_state().is_key_down(Key::Left));
 }
 
-TEST_CASE("sdl3 mouse events become mouse state") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: mouse events become mouse state") {
+    InputManager input;
     SDL_Event move = make_event(SDL_EVENT_MOUSE_MOTION);
     move.motion.x = 30;
     move.motion.y = 40;
@@ -137,8 +140,8 @@ TEST_CASE("sdl3 mouse events become mouse state") {
     REQUIRE(input.mouse_state().is_button_released(MouseButton::Right));
 }
 
-TEST_CASE("sdl3 mouse button numbers map to the TS buttons") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: mouse button numbers map to the TS buttons") {
+    InputManager input;
     const Uint8 sdl_buttons[] = {SDL_BUTTON_LEFT, SDL_BUTTON_MIDDLE, SDL_BUTTON_RIGHT, SDL_BUTTON_X1, SDL_BUTTON_X2};
     const MouseButton buttons[] = {MouseButton::Left, MouseButton::Middle, MouseButton::Right, MouseButton::X1, MouseButton::X2};
     for (int i = 0; i < 5; ++i) {
@@ -153,8 +156,8 @@ TEST_CASE("sdl3 mouse button numbers map to the TS buttons") {
     }
 }
 
-TEST_CASE("sdl3 focus lost clears held keys") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: focus lost clears held keys") {
+    InputManager input;
     SDL_Event down = key_event(SDL_SCANCODE_A, true);
     input.handle_native_event(&down);
     input.update();
@@ -164,8 +167,8 @@ TEST_CASE("sdl3 focus lost clears held keys") {
     REQUIRE(input.keyboard_state().is_key_up(Key::A));
 }
 
-TEST_CASE("sdl3 finger events become touch locations") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: finger events become touch locations") {
+    InputManager input;
     input.set_touch_surface_size({200, 100});   // no window in a synthetic event
 
     SDL_Event down = finger_event(SDL_EVENT_FINGER_DOWN, 77, 0.5f, 0.25f, 0.8f);
@@ -205,8 +208,8 @@ TEST_CASE("sdl3 finger events become touch locations") {
     REQUIRE(input.touch_collection().count() == 0);
 }
 
-TEST_CASE("sdl3 two fingers get different contact ids and a cancel is not a lift") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: two fingers get different contact ids and a cancel is not a lift") {
+    InputManager input;
     SDL_Event a = finger_event(SDL_EVENT_FINGER_DOWN, 1, 0.1f, 0.1f);
     SDL_Event b = finger_event(SDL_EVENT_FINGER_DOWN, 2, 0.9f, 0.9f);
     input.handle_native_event(&a);
@@ -226,8 +229,8 @@ TEST_CASE("sdl3 two fingers get different contact ids and a cancel is not a lift
     REQUIRE(input.touch_collection().is_down(id_b));
 }
 
-TEST_CASE("sdl3 gamepad events use lazily assigned slots") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: gamepad events use lazily assigned slots") {
+    InputManager input;
     input.update();
     REQUIRE_FALSE(input.game_pad_state(0).is_connected());   // no pad: everything reports not connected
 
@@ -248,8 +251,8 @@ TEST_CASE("sdl3 gamepad events use lazily assigned slots") {
     REQUIRE(input.game_pad_state(0).is_button_released(GamePadButton::A));
 }
 
-TEST_CASE("sdl3 gamepad buttons map to the Xbox layout") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: gamepad buttons map to the Xbox layout") {
+    InputManager input;
     const struct { SDL_GamepadButton sdl; GamePadButton ours; } map[] = {
         {SDL_GAMEPAD_BUTTON_SOUTH, GamePadButton::A},        {SDL_GAMEPAD_BUTTON_EAST, GamePadButton::B},
         {SDL_GAMEPAD_BUTTON_WEST, GamePadButton::X},         {SDL_GAMEPAD_BUTTON_NORTH, GamePadButton::Y},
@@ -274,8 +277,8 @@ TEST_CASE("sdl3 gamepad buttons map to the Xbox layout") {
     }
 }
 
-TEST_CASE("sdl3 gamepad axes: y is flipped, triggers are 0 to 1, the dead zone applies") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: gamepad axes: y is flipped, triggers are 0 to 1, the dead zone applies") {
+    InputManager input;
     SDL_Event lx = pad_axis(5, SDL_GAMEPAD_AXIS_LEFTX, 32767);
     SDL_Event ly = pad_axis(5, SDL_GAMEPAD_AXIS_LEFTY, -32768);   // SDL: up is negative
     SDL_Event rx = pad_axis(5, SDL_GAMEPAD_AXIS_RIGHTX, 1000);   // inside the dead zone
@@ -294,8 +297,8 @@ TEST_CASE("sdl3 gamepad axes: y is flipped, triggers are 0 to 1, the dead zone a
     REQUIRE(pad.right_trigger() == 0.0f);
 }
 
-TEST_CASE("sdl3 gamepad removal frees the slot") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: gamepad removal frees the slot") {
+    InputManager input;
     SDL_Event button = pad_button(8, SDL_GAMEPAD_BUTTON_EAST, true);
     input.handle_native_event(&button);
     input.update();
@@ -314,8 +317,8 @@ TEST_CASE("sdl3 gamepad removal frees the slot") {
     REQUIRE(input.game_pad_state(0).is_connected());
 }
 
-TEST_CASE("sdl3 gamepad added for a device that cannot be opened does not connect") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: gamepad added for a device that cannot be opened does not connect") {
+    InputManager input;
     input.initialize();
     SDL_Event added = make_event(SDL_EVENT_GAMEPAD_ADDED);
     added.gdevice.which = 123456;   // no such joystick
@@ -326,8 +329,8 @@ TEST_CASE("sdl3 gamepad added for a device that cannot be opened does not connec
     input.dispose();   // safe twice
 }
 
-TEST_CASE("sdl3 initialize and dispose are safe to repeat") {
-    Sdl3InputManager input;
+TEST_CASE("input manager sdl: initialize and dispose are safe to repeat") {
+    InputManager input;
     REQUIRE_NOTHROW(input.initialize());
     REQUIRE_NOTHROW(input.initialize());
     REQUIRE_NOTHROW(input.update());

@@ -89,12 +89,10 @@ add_library(${TARGET_NAME}
         src/mesh_scene.cpp
         src/content.cpp
         src/framework.cpp
-        src/input/default_input_manager.cpp
-        src/input/input_manager_base.cpp
+        src/input/event_tap.cpp
+        src/input/input_manager.cpp
         src/input/touch_collection.cpp
         src/input/touch_location.cpp
-        src/sdl3/input/sdl3_input_manager.cpp
-        src/sdl3/sdl3_event_tap.cpp
         src/time/clock_source.cpp
         src/time/frame_rate_counter.cpp
         src/time/stopwatch.cpp
@@ -211,15 +209,15 @@ if(RIS_FRAMEWORK_BUILD_TESTS)
     file(GLOB_RECURSE TEST_SRC_FILES CONFIGURE_DEPENDS tests/*.cpp)
     add_executable(${TARGET_NAME}_tests ${TEST_SRC_FILES})
     target_link_libraries(${TARGET_NAME}_tests PRIVATE ${TARGET_NAME} Catch2::Catch2 Catch2::Catch2WithMain)
-    # The SDL3 input tests build synthetic SDL_Event structs: they need the SDL headers (the library itself keeps
+    # The input manager tests build synthetic SDL_Event structs: they need the SDL headers (the library itself keeps
     # SDL private and never exposes it in its own headers).
     target_include_directories(${TARGET_NAME}_tests PRIVATE $<TARGET_PROPERTY:${_ris_sdl3_target},INTERFACE_INCLUDE_DIRECTORIES>)
     target_compile_definitions(${TARGET_NAME}_tests PRIVATE RIS_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
     add_test(NAME ${TARGET_NAME}_tests COMMAND ${TARGET_NAME}_tests)
 
-    # The headers of ris/rendering/ and ris/input/ are API neutral, and the ones of ris/time/ never expose SDL: each
-    # must compile on its own, with only the public usage requirements of ris_framework (no OpenGL ES / ANGLE / SDL
-    # include path), and must not include a backend header (ris/gles/..., ris/sdl3/...), a GL or SDL header, or the
+    # The headers of ris/rendering/ are graphics API neutral, and the ones of ris/input/ and ris/time/ never expose
+    # SDL: each must compile on its own, with only the public usage requirements of ris_framework (no OpenGL ES /
+    # ANGLE / SDL include path), and must not include a backend header (ris/gles/...), a GL or SDL header, or the
     # OpenGL ES based graphics.hpp.
     file(GLOB_RECURSE _ris_neutral_headers CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include"
          include/ris/rendering/*.hpp include/ris/input/*.hpp include/ris/time/*.hpp)

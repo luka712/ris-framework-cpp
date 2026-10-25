@@ -7,7 +7,7 @@
 namespace ris {
 
 /// Capabilities of the touch panel, like `TouchPanelCapabilities` of ris-framework-ts. The input manager owns one
-/// instance (`AInputManager::touch_capabilities()`) and updates it in place when a device appears, so a reference
+/// instance (`InputManager::touch_capabilities()`) and updates it in place when a device appears, so a reference
 /// to it stays current.
 class RIS_API TouchPanelCapabilities {
 public:

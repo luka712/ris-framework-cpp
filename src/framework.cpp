@@ -93,8 +93,7 @@ Framework::Framework(const FrameworkConfiguration& config)
     window_ = std::make_unique<Window>(make_window_desc(config_));
     window_manager_ = std::make_unique<WindowManager>(*window_);
     renderer_ = std::make_unique<Renderer>(*window_);
-    input_ = create_default_input_manager();
-    input_->initialize();
+    input_.initialize();
     sprite_batch_ = std::make_unique<SpriteBatch>();
     RIS_LOG_I("ris-framework %s | %s | %s", version_string(), renderer_->device_name(), renderer_->backend_name());
 }
@@ -134,13 +133,13 @@ void Framework::initialize() {
         if (quit_ || (config_.max_frames >= 0 && frame >= config_.max_frames)) break;
 
         time_.frame_start();
-        input_->update();
+        input_.update();
         if (!fixed_update_.empty()) {
             GameTime step;
             while (time_.consume_fixed_step(step)) { auto copy = fixed_update_; for (auto& [id, l] : copy) l(step); }
         }
         { auto copy = update_; for (auto& [id, l] : copy) l(time_.time()); }
-        input_->after_update();
+        input_.after_update();
 
         const Vec2 size = renderer_->back_buffer_size();
         gfx::viewport(0, 0, static_cast<int32_t>(size.x), static_cast<int32_t>(size.y));

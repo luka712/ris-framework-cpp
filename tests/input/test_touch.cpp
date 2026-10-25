@@ -1,14 +1,15 @@
-// Touch tracking of the neutral input layer (the TS touch contact pool) and TouchCollection, no SDL.
+// Touch tracking of the input manager (the TS touch contact pool) and TouchCollection, driven through `report_touch`:
+// no SDL event, no device.
 #include <catch2/catch_test_macros.hpp>
 
-#include "fake_input_manager.hpp"
+#include <ris/input.hpp>
 
 using ris::TouchLocationState;
 using ris::TouchPhase;
-using ris_test::FakeInputManager;
+using ris::InputManager;
 
 TEST_CASE("touch capabilities start disconnected and follow the first contact") {
-    FakeInputManager input;
+    InputManager input;
     REQUIRE_FALSE(input.touch_capabilities().is_connected());
     REQUIRE(input.touch_collection().count() == 0);
     input.report_touch(TouchPhase::Begin, 1, {10, 20}, 0.0f);
@@ -17,7 +18,7 @@ TEST_CASE("touch capabilities start disconnected and follow the first contact") 
 }
 
 TEST_CASE("no touch device: the collection stays empty") {
-    FakeInputManager input;
+    InputManager input;
     input.update();
     input.after_update();
     input.update();
@@ -27,7 +28,7 @@ TEST_CASE("no touch device: the collection stays empty") {
 }
 
 TEST_CASE("a touch is pressed, then moved, then released, then gone") {
-    FakeInputManager input;
+    InputManager input;
     input.report_touch(TouchPhase::Begin, 7, {10, 20}, 0.5f);
     input.update();
     {
@@ -81,7 +82,7 @@ TEST_CASE("a touch is pressed, then moved, then released, then gone") {
 }
 
 TEST_CASE("the published touches stay readable until the next update") {
-    FakeInputManager input;
+    InputManager input;
     input.report_touch(TouchPhase::Begin, 1, {1, 1}, 0);
     input.update();
     input.report_touch(TouchPhase::Move, 1, {9, 9}, 0);   // collected after the publish
@@ -93,7 +94,7 @@ TEST_CASE("the published touches stay readable until the next update") {
 }
 
 TEST_CASE("a press that ends in the same frame is pressed once, then released") {
-    FakeInputManager input;
+    InputManager input;
     input.report_touch(TouchPhase::Begin, 3, {4, 4}, 0);
     input.report_touch(TouchPhase::End, 3, {4, 4}, 0);
     input.update();
@@ -107,7 +108,7 @@ TEST_CASE("a press that ends in the same frame is pressed once, then released") 
 }
 
 TEST_CASE("a cancelled touch is not a lift") {
-    FakeInputManager input;
+    InputManager input;
     input.report_touch(TouchPhase::Begin, 5, {2, 2}, 0);
     input.update();
     input.after_update();
@@ -125,7 +126,7 @@ TEST_CASE("a cancelled touch is not a lift") {
 }
 
 TEST_CASE("several touches get their own contacts and ids can be reused after the release") {
-    FakeInputManager input;
+    InputManager input;
     input.report_touch(TouchPhase::Begin, 1, {1, 0}, 0);
     input.report_touch(TouchPhase::Begin, 2, {2, 0}, 0);
     input.update();
@@ -149,7 +150,7 @@ TEST_CASE("several touches get their own contacts and ids can be reused after th
 }
 
 TEST_CASE("more contacts than the pool holds are ignored") {
-    FakeInputManager input;
+    InputManager input;
     for (int32_t id = 1; id <= ris::TouchCollection::default_max_touch_count + 4; ++id) {
         input.report_touch(TouchPhase::Begin, id, {static_cast<float>(id), 0}, 0);
     }
@@ -159,7 +160,7 @@ TEST_CASE("more contacts than the pool holds are ignored") {
 }
 
 TEST_CASE("moves and ends of unknown touches are ignored") {
-    FakeInputManager input;
+    InputManager input;
     input.report_touch(TouchPhase::Move, 42, {1, 1}, 0);
     input.report_touch(TouchPhase::End, 42, {1, 1}, 0);
     input.report_touch(TouchPhase::Cancel, 42, {1, 1}, 0);

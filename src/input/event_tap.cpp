@@ -1,9 +1,9 @@
-#include "sdl3/sdl3_event_tap.hpp"
+#include "input/event_tap.hpp"
 
 #include <list>
 #include <utility>
 
-namespace ris::sdl3::detail {
+namespace ris::detail {
 
 namespace {
 struct Entry {
@@ -65,4 +65,4 @@ void dispatch_event_tap(const SDL_Event& event) {
     }
 }
 
-} // namespace ris::sdl3::detail
+} // namespace ris::detail
