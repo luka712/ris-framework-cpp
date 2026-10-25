@@ -76,29 +76,29 @@ Mesh::Mesh(const Geometry& g, std::vector<SubMesh> sub_meshes) : sub_meshes_(std
         if (!g.normals.empty()) std::memcpy(v.normal, &g.normals[i * 3], sizeof(v.normal)); else { v.normal[0] = v.normal[1] = 0; v.normal[2] = 1; }
         if (!g.colors.empty()) std::memcpy(v.color, &g.colors[i * 4], sizeof(v.color)); else v.color[0] = v.color[1] = v.color[2] = v.color[3] = 1;
     }
-    vertex_buffer_ = std::make_unique<Buffer>(BufferType::Vertex, BufferUsage::Static, vertices.data(),
-                                              vertices.size() * sizeof(PackedVertex));
-    VertexArrayDesc desc;
-    desc.attribs = {
-        {0, 3, AttribType::Float, false, offsetof(PackedVertex, position), 0, 0, false},
-        {1, 2, AttribType::Float, false, offsetof(PackedVertex, uv), 0, 0, false},
-        {2, 3, AttribType::Float, false, offsetof(PackedVertex, normal), 0, 0, false},
-        {3, 4, AttribType::Float, false, offsetof(PackedVertex, color), 0, 0, false},
+    vertex_buffer_ = std::make_unique<VertexBuffer>(
+        std::span<const float>(reinterpret_cast<const float*>(vertices.data()), vertices.size() * sizeof(PackedVertex) / sizeof(float)),
+        sizeof(PackedVertex));
+    // position (vec3), uv (vec2), normal (vec3), colour (vec4): the locations of the built-in materials
+    VertexBufferLayout layout;
+    layout.array_stride = sizeof(PackedVertex);
+    layout.attributes = {
+        {VertexFormat::Float32x3, offsetof(PackedVertex, position), 0},
+        {VertexFormat::Float32x2, offsetof(PackedVertex, uv), 1},
+        {VertexFormat::Float32x3, offsetof(PackedVertex, normal), 2},
+        {VertexFormat::Float32x4, offsetof(PackedVertex, color), 3},
     };
-    desc.vertex_buffers[0] = {vertex_buffer_.get(), sizeof(PackedVertex)};
     if (!g.indices.empty()) {
         for (uint32_t index : g.indices) {
             if (index >= n) throw_error(Result::InvalidArgument, "Mesh: index %u is out of range (%zu vertices)", index, n);
         }
-        index_buffer_ = std::make_unique<Buffer>(BufferType::Index, BufferUsage::Static, g.indices.data(),
-                                                 g.indices.size() * sizeof(uint32_t));
-        desc.index_buffer = index_buffer_.get();
-        desc.index_type = IndexType::UInt32;
+        index_buffer_ = std::make_unique<IndexBuffer>(std::span<const uint32_t>(g.indices));
         indexed_ = true;
         draw_count_ = static_cast<uint32_t>(g.indices.size());
     } else {
         draw_count_ = static_cast<uint32_t>(n);
     }
+    const VertexArrayDesc desc = make_vertex_array_desc(*vertex_buffer_, layout, index_buffer_.get());
     vertex_array_ = std::make_unique<VertexArray>(desc);
     for (const SubMesh& s : sub_meshes_) {
         if (static_cast<uint64_t>(s.index_start) + s.index_count > draw_count_) {

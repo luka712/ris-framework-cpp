@@ -90,6 +90,7 @@ add_library(${TARGET_NAME}
         src/mesh_scene.cpp
         src/content.cpp
         src/framework.cpp
+        src/buffers.cpp
         src/c_api.cpp
 )
 add_library(ris_framework::ris_framework ALIAS ${TARGET_NAME})

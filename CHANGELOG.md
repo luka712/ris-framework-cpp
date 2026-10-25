@@ -15,3 +15,4 @@ First release.
 - Samples: sprite_batch, unlit_mesh and blinn_phong_mesh, ported from the TypeScript and C# demos.
 - Samples: ktx2_quad and ktx2_compare (KTX2 textures as ASTC, ETC2 and RGBA8).
 - PNG/JPEG/etc. loading through the stb image functions in ris-ktx2.
+- Typed buffers like ris-framework-ts (`ris/buffers.hpp`): `VertexBuffer`, `IndexBuffer` (16 or 32 bit, chosen from the data), `UniformBuffer` (padded to 16 bytes, `update`, `bind_base`), `BufferFactory`, `BufferUsageFlags`, `VertexBufferLayout` / `VertexAttribute` / `VertexFormat` / `VertexStepMode` and `make_vertex_array_desc`. They wrap the low level `ris::Buffer`; no C API changes. `ris::Mesh` uses them.
