@@ -105,7 +105,7 @@ RIS_API GlEnum convertToPixelFormat(TextureFormat format);
 /// `TextureFormat` to the pixel type of an upload (`GL_UNSIGNED_BYTE`, `GL_FLOAT`, `GL_UNSIGNED_INT_24_8`).
 /// `convertToTextureType` of ris-framework-ts.
 /// @throws std::domain_error like convert_to_pixel_format.
-RIS_API GlEnum convert_to_texture_type(TextureFormat format);
+RIS_API GlEnum convertToTextureType(TextureFormat format);
 
 /// True for BC3, BC7, ETC2 and ASTC formats.
 RIS_API bool is_compressed_format(TextureFormat format) noexcept;

@@ -60,7 +60,7 @@ GlUint GlesTextureUtilities::createTexture2D(int32_t width, int32_t height, std:
     }
     const GLenum internal_format = converter::convertToInternalFormat(format);
     const GLenum pixel_format = converter::convertToPixelFormat(format);
-    const GLenum pixel_type = converter::convert_to_texture_type(format);
+    const GLenum pixel_type = converter::convertToTextureType(format);
 
     const uint32_t max_levels = fullMipCount(width, height);
     if (data.size() > max_levels) {

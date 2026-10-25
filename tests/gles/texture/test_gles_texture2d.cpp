@@ -102,8 +102,8 @@ TEST_CASE("ATexture2D mip levels") {
 TEST_CASE("ATexture2D createEmpty size") {
     if (!ris_test::display_available()) SKIP("no display available");
     ris::Window window = ris_test::make_hidden_window();
-    const std::unique_ptr<ris::ATextureFactory> factory = ris::create_default_texture_factory();
-    const std::unique_ptr<ris::ATexture2D> tex(factory->createEmpty(16, 8, std::nullopt, ris::TextureUsage::CopyDst, ris::TextureFormat::Rgba8Unorm, "empty"));
+    const gles::GlesTextureFactory factory;
+    const std::unique_ptr<ris::ATexture2D> tex(factory.createEmpty(16, 8, std::nullopt, ris::TextureUsage::CopyDst, ris::TextureFormat::Rgba8Unorm, "empty"));
     CHECK(tex->getSize() == 16 * 8 * 4);
     CHECK(tex->getLabel() == "empty");
     CHECK(tex->getTextureUsage() == ris::TextureUsage::CopyDst);
@@ -299,7 +299,7 @@ TEST_CASE("ATexture2D ids are unique and increasing") {
 TEST_CASE("ATexture2D from a KTX2 file") {
     if (!ris_test::display_available()) SKIP("no display available");
     ris::Window window = ris_test::make_hidden_window();
-    const std::unique_ptr<ris::ATextureFactory> factory = ris::create_default_texture_factory();
+    const gles::GlesTextureFactory factory;
     ktxTexture2* ktx = nullptr;
     REQUIRE(ris_ktxTexture2_CreateFromNamedFile(RIS_TEST_DATA_DIR "/test_basis_uastc.ktx2", KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktx) == KTX_SUCCESS);
     const uint32_t levels = ktx->numLevels;
@@ -310,7 +310,7 @@ TEST_CASE("ATexture2D from a KTX2 file") {
         descriptor.textureFormat = ris::TextureFormat::Rgba8Unorm;
         descriptor.textureUsage = ris::TextureUsage::TextureBinding;
         descriptor.label = "ktx";
-        const std::unique_ptr<ris::ATexture2D> tex(factory->createFromKtx2(ktx, descriptor));
+        const std::unique_ptr<ris::ATexture2D> tex(factory.createFromKtx2(ktx, descriptor));
         CHECK(tex->getTextureFormat() == ris::TextureFormat::Rgba8Unorm);
         CHECK(tex->getTextureViewFormat() == ris::TextureFormat::Rgba8Unorm);
         CHECK(tex->getTextureUsage() == ris::TextureUsage::TextureBinding);
@@ -326,14 +326,15 @@ TEST_CASE("ATexture2D from a KTX2 file") {
         ris::TextureDescriptor descriptor;
         descriptor.textureFormat = ris::TextureFormat::Rgba8Unorm;
         descriptor.generateMipmaps = true;
-        const std::unique_ptr<ris::ATexture2D> tex(factory->createFromKtx2(ktx, descriptor));
+        const std::unique_ptr<ris::ATexture2D> tex(factory.createFromKtx2(ktx, descriptor));
         CHECK(tex->getMipLevels() == (levels == 1 ? GlesUtilities::texture().fullMipCount(width, height) : levels));
     }
     SECTION("the default target is a format the GPU supports") {
-        const std::unique_ptr<ris::ATexture2D> tex(factory->createFromKtx2(ktx));
+        const std::unique_ptr<ris::ATexture2D> tex(factory.createFromKtx2(ktx));
         const ris::TextureFormat format = tex->getTextureFormat();
         CHECK((format == ris::TextureFormat::Rgba8Unorm || format == ris::TextureFormat::Astc4x4Rgba ||
-               format == ris::TextureFormat::Etc2Rgba8Unorm || format == ris::TextureFormat::Bc3RgbaUnorm));
+               format == ris::TextureFormat::Etc2Rgba8Unorm || format == ris::TextureFormat::Bc3RgbaUnorm ||
+               format == ris::TextureFormat::Bc7RgbaUnorm));
         CHECK(tex->getMipLevels() == levels);
         CHECK(tex->getSize() > 0);
     }

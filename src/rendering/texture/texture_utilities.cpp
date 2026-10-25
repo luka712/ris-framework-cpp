@@ -1,6 +1,15 @@
 #include "ris/rendering/texture/texture_utilities.hpp"
 
 #include <algorithm>
+#include <stdexcept>
+#include <string>
+
+// ris-ktx2 installs its headers to <prefix>/include/ris_ktx2/, a source build exposes them directly.
+#if __has_include(<ris_ktx2/ris_ktx.hpp>)
+#include <ris_ktx2/ris_ktx.hpp>
+#else
+#include <ris_ktx.hpp>
+#endif
 
 namespace ris {
 
@@ -39,6 +48,55 @@ uint64_t TextureUtilities::getVRamSize(TextureFormat format, int32_t width, int3
         case TextureFormat::Red32Float:
         case TextureFormat::Red32Typeless: return w * h * 4;
         default: return 0;
+    }
+}
+
+int32_t TextureUtilities::getBlockWidth(TextureFormat format) noexcept {
+    return isCompressedTextureFormat(format) ? 4 : 1;
+}
+
+int32_t TextureUtilities::getBlockHeight(TextureFormat format) noexcept {
+    return isCompressedTextureFormat(format) ? 4 : 1;
+}
+
+uint32_t TextureUtilities::convertTextureFormatToKtxTranscodeFormat(TextureFormat format) {
+    switch (format) {
+        case TextureFormat::Bc7RgbaUnorm: return KTX_TTF_BC7_RGBA;
+        case TextureFormat::Bc3RgbaUnorm: return KTX_TTF_BC3_RGBA;
+        case TextureFormat::Etc2Rgba8Unorm: return KTX_TTF_ETC2_RGBA;
+        case TextureFormat::Astc4x4Rgba: return KTX_TTF_ASTC_4x4_RGBA;
+        case TextureFormat::Rgba8Unorm:
+        case TextureFormat::Rgba8UnormSrgb: return KTX_TTF_RGBA32;
+        default:
+            throw std::domain_error(std::string("texture format ") + std::to_string(static_cast<unsigned>(format))
+                                    + " has no KTX2 transcode format");
+    }
+}
+
+uint32_t TextureUtilities::convertKtxTranscodeFormatToVkFormat(uint32_t transcodeFormat) {
+    switch (static_cast<ktx_transcode_fmt_e>(transcodeFormat)) {
+        case KTX_TTF_BC7_RGBA: return VK_FORMAT_BC7_UNORM_BLOCK;
+        case KTX_TTF_BC3_RGBA: return VK_FORMAT_BC3_UNORM_BLOCK;
+        case KTX_TTF_ETC2_RGBA: return VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK;
+        case KTX_TTF_ASTC_4x4_RGBA: return VK_FORMAT_ASTC_4x4_UNORM_BLOCK;
+        case KTX_TTF_RGBA32: return VK_FORMAT_R8G8B8A8_UNORM;
+        default:
+            throw std::domain_error(std::string("KTX2 transcode format ") + std::to_string(transcodeFormat)
+                                    + " is not supported");
+    }
+}
+
+TextureFormat TextureUtilities::convertVkFormatToTextureFormat(uint32_t vkFormat) {
+    switch (static_cast<VkFormat>(vkFormat)) {
+        case VK_FORMAT_R8G8B8A8_UNORM: return TextureFormat::Rgba8Unorm;
+        case VK_FORMAT_R8G8B8A8_SRGB: return TextureFormat::Rgba8UnormSrgb;
+        case VK_FORMAT_BC7_UNORM_BLOCK: return TextureFormat::Bc7RgbaUnorm;
+        case VK_FORMAT_BC3_UNORM_BLOCK: return TextureFormat::Bc3RgbaUnorm;
+        case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK: return TextureFormat::Etc2Rgba8Unorm;
+        case VK_FORMAT_ASTC_4x4_UNORM_BLOCK: return TextureFormat::Astc4x4Rgba;
+        default:
+            throw std::domain_error(std::string("VkFormat ") + std::to_string(vkFormat)
+                                    + " has no matching TextureFormat");
     }
 }
 
