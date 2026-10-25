@@ -110,3 +110,41 @@ TEST_CASE("framework runs a frame loop and listeners") {
     REQUIRE(removed_calls == 0);
     REQUIRE(last_delta == Approx(1000.0 / 60.0));
 }
+
+TEST_CASE("framework drives the time manager: deterministic frames and fixed update steps") {
+    if (!display_available()) SKIP("no display available");
+    ris::FrameworkConfiguration config;
+    config.hidden = true;
+    config.back_buffer_size = {64, 64};
+    config.max_frames = 6;
+    config.fixed_time_step_ms = 1000.0 / 120.0;   // two fixed steps per deterministic 60 Hz frame
+    config.target_frames_per_second = 30;         // ignored in deterministic mode
+
+    ris::Framework framework(config);
+    REQUIRE(framework.time_manager().deterministic_step_ms() == Approx(1000.0 / 60.0));
+    REQUIRE(framework.time_manager().fixed_time_step_ms() == Approx(1000.0 / 120.0));
+    REQUIRE(framework.time_manager().target_frames_per_second() == 30);
+
+    int fixed = 0, updates = 0;
+    double last_fixed_elapsed = 0, last_elapsed = 0;
+    framework.add_on_fixed_update_listener([&](const ris::GameTime& t) {
+        ++fixed;
+        REQUIRE(t.delta_time_ms == Approx(1000.0 / 120.0));
+        last_fixed_elapsed = t.elapsed_time_ms;
+    });
+    const auto removed = framework.add_on_fixed_update_listener([&](const ris::GameTime&) { FAIL("removed"); });
+    REQUIRE(framework.remove_on_fixed_update_listener(removed));
+    REQUIRE_FALSE(framework.remove_on_fixed_update_listener(removed));
+    framework.add_on_update_listener([&](const ris::GameTime& t) {
+        ++updates;
+        REQUIRE(t.frame_number == static_cast<uint64_t>(updates));
+        last_elapsed = t.elapsed_time_ms;
+    });
+    framework.initialize();
+
+    REQUIRE(updates == 6);
+    REQUIRE(fixed >= 11);   // 2 per frame, one may be lost to rounding of the accumulator
+    REQUIRE(fixed <= 12);
+    REQUIRE(last_fixed_elapsed == Approx(1000.0 / 120.0 * fixed));
+    REQUIRE(last_elapsed == Approx(5 * 1000.0 / 60.0));
+}

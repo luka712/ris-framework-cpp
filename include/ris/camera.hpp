@@ -5,7 +5,7 @@
 #include "core.hpp"
 #include "input/input.hpp"
 #include "math.hpp"
-#include "time.hpp"
+#include "ris/time/game_time.hpp"
 
 namespace ris {
 
