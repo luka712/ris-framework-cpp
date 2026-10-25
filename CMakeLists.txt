@@ -90,14 +90,16 @@ add_library(${TARGET_NAME}
         src/mesh_scene.cpp
         src/content.cpp
         src/framework.cpp
-        src/rendering/buffers/buffer.cpp
-        src/rendering/buffers/buffer_factory.cpp
-        src/rendering/buffers/index_buffer.cpp
-        src/rendering/buffers/make_vertex_array_desc.cpp
-        src/rendering/buffers/uniform_buffer.cpp
-        src/rendering/buffers/vertex_buffer.cpp
+        src/rendering/default_buffer_factory.cpp
+        src/rendering/buffers/buffer_validation.cpp
         src/rendering/buffers/vertex_buffer_layout.cpp
         src/rendering/buffers/vertex_format.cpp
+        src/gles/buffers/gles_buffer_factory.cpp
+        src/gles/buffers/gles_buffer_object.cpp
+        src/gles/buffers/gles_index_buffer.cpp
+        src/gles/buffers/gles_uniform_buffer.cpp
+        src/gles/buffers/gles_vertex_buffer.cpp
+        src/gles/buffers/make_vertex_array_desc.cpp
         src/gles/rendering/vertex_attribute.cpp
         src/gles/rendering/vertex_buffer_layout.cpp
         src/gles/utilities/anisotropic_filter_utilities.cpp
@@ -200,6 +202,24 @@ if(RIS_FRAMEWORK_BUILD_TESTS)
     target_link_libraries(${TARGET_NAME}_tests PRIVATE ${TARGET_NAME} Catch2::Catch2 Catch2::Catch2WithMain)
     target_compile_definitions(${TARGET_NAME}_tests PRIVATE RIS_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
     add_test(NAME ${TARGET_NAME}_tests COMMAND ${TARGET_NAME}_tests)
+
+    # The headers of ris/rendering/ are graphics API neutral: each must compile on its own, with only the
+    # public usage requirements of ris_framework (no OpenGL ES / ANGLE include path), and must not include a
+    # backend header (ris/gles/...), a GL header, or the OpenGL ES based graphics.hpp.
+    file(GLOB_RECURSE _ris_neutral_headers CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include"
+         include/ris/rendering/*.hpp)
+    set(_ris_neutral_sources "")
+    foreach(_header IN LISTS _ris_neutral_headers)
+        string(MAKE_C_IDENTIFIER "${_header}" _id)
+        set(_source "${CMAKE_CURRENT_BINARY_DIR}/neutral_headers/${_id}.cpp")
+        file(GENERATE OUTPUT "${_source}" CONTENT "#include \"${_header}\"\n")
+        list(APPEND _ris_neutral_sources "${_source}")
+    endforeach()
+    add_library(${TARGET_NAME}_neutral_headers_check OBJECT ${_ris_neutral_sources})
+    target_link_libraries(${TARGET_NAME}_neutral_headers_check PRIVATE ${TARGET_NAME})
+    add_test(NAME ${TARGET_NAME}_neutral_headers_have_no_backend_includes
+             COMMAND ${CMAKE_COMMAND} -DRIS_INCLUDE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/include
+                     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_neutral_headers.cmake)
 endif()
 
 # ---------------------------------------------------------------------------

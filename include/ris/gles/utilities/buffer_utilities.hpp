@@ -10,8 +10,8 @@
 #include "ris/graphics.hpp"
 #include "ris/rendering/buffers/buffer_usage.hpp"
 
-/// Creating and updating raw GL buffer objects, like `WebGlBufferUtilities` of ris-framework-ts. The typed
-/// buffers (VertexBuffer, IndexBuffer, UniformBuffer) and the low level ris::Buffer are built on these.
+/// Creating and updating raw GL buffer objects, like `WebGlBufferUtilities` of ris-framework-ts. The
+/// Gles buffers (GlesVertexBuffer, GlesIndexBuffer, GlesUniformBuffer) and the low level ris::Buffer are built on these.
 ///
 /// The functions return the plain GL buffer name, which you own and must delete with delete_buffer().
 /// They need the window's GL context and throw Error(NotInitialized) without one.
@@ -50,7 +50,7 @@ RIS_API GlUint create_index_buffer(std::span<const uint32_t> indices, BufferUsag
                                    std::string_view label = {});
 
 /// `createUniformBuffer` of ris-framework-ts: a `GL_UNIFORM_BUFFER` with the given floats. The data is not
-/// padded here (UniformBuffer does that).
+/// padded here (GlesUniformBuffer does that).
 RIS_API GlUint create_uniform_buffer(std::span<const float> data, BufferUsageFlags usage,
                                      std::string_view label = {});
 /// A `GL_UNIFORM_BUFFER` of `byte_size` uninitialised bytes.

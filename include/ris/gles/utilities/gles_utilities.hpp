@@ -5,7 +5,7 @@
 // all of them. In TypeScript they are static members of `WebGlUtilities` (`WebGlUtilities.buffer.…`), here
 // they are namespaces under ris::gles (`ris::gles::buffer_utilities::…`).
 //
-// All of them need a ris::Window, see the rules in rendering/buffers/buffer.hpp. Except for the converter
+// All of them need a ris::Window, see the rules in rendering/buffers/a_buffer.hpp. Except for the converter
 // they throw Error(NotInitialized) without one.
 
 #include "ris/gles/utilities/anisotropic_filter_utilities.hpp"

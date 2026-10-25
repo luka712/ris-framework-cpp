@@ -7,8 +7,8 @@
 #include "data.hpp"
 #include "graphics.hpp"
 #include "material.hpp"
-#include "rendering/buffers/index_buffer.hpp"
-#include "rendering/buffers/vertex_buffer.hpp"
+#include "rendering/buffers/a_index_buffer.hpp"
+#include "rendering/buffers/a_vertex_buffer.hpp"
 
 namespace ris {
 
@@ -62,8 +62,8 @@ public:
     void render(const RenderContext& context) const;
 
 private:
-    std::unique_ptr<VertexBuffer> vertex_buffer_;
-    std::unique_ptr<IndexBuffer> index_buffer_;
+    std::unique_ptr<AVertexBuffer> vertex_buffer_;
+    std::unique_ptr<AIndexBuffer> index_buffer_;
     std::unique_ptr<VertexArray> vertex_array_;
     std::vector<SubMesh> sub_meshes_;
     uint32_t draw_count_ = 0;

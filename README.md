@@ -18,6 +18,8 @@ ASTC > ETC2 > RGBA8 transcoding), render targets, sprite batch. Math is [glm](ht
 
 The OpenGL ES helpers (buffers, shaders, programs, textures, samplers, framebuffers, blending, culling, ...) live in `ris/gles/` and mirror `webgl/` of ris-framework-ts; `ris/gles/gles.hpp` includes all of them.
 
+Rendering API layering: `ris/rendering/` holds the graphics API neutral interfaces (for buffers `ABuffer`, `AVertexBuffer`, `AIndexBuffer`, `AUniformBuffer`, `ABufferFactory`), and each backend implements them in its own folder; the OpenGL ES one is `ris/gles/buffers/` (`GlesVertexBuffer`, ...). `ris::create_default_buffer_factory()` returns the factory of the current backend, so code written against the `A*` classes does not change when other rendering APIs are added.
+
 ## Building
 
 Needs CMake 3.30+, a C++20 compiler and [vcpkg](https://github.com/microsoft/vcpkg).

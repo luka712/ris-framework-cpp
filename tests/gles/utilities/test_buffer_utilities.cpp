@@ -60,12 +60,12 @@ TEST_CASE("buffer utilities create, update and delete buffers") {
         // a target that does not detach the index buffer of the current vertex array.
         const std::vector<uint16_t> idx = {0, 1, 2};
         const std::vector<float> vertices = {-1, -1, 3, -1, -1, 3};
-        ris::VertexBuffer vb(vertices, 8);
-        ris::IndexBuffer index(std::vector<uint16_t>{0, 1, 2});
+        ris::gles::GlesVertexBuffer vb(vertices, 8);
+        ris::gles::GlesIndexBuffer index(std::vector<uint16_t>{0, 1, 2});
         ris::VertexBufferLayout layout;
         layout.array_stride = 8;
         layout.attributes = {{ris::VertexFormat::Float32x2, 0, 0}};
-        ris::VertexArray vao(ris::make_vertex_array_desc(vb, layout, &index));
+        ris::VertexArray vao(ris::gles::make_vertex_array_desc(vb, layout, &index));
         ris::Shader shader(R"(#version 300 es
             layout(location = 0) in vec2 p;
             void main() { gl_Position = vec4(p, 0.0, 1.0); }

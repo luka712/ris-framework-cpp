@@ -1,11 +1,11 @@
-// Tests of IndexBuffer on a real context (needs a display).
+// Tests of GlesIndexBuffer on a real context (needs a display).
 #include <catch2/catch_test_macros.hpp>
 
 #include <vector>
 
 #include <ris/ris.hpp>
 
-#include "buffer_test_utils.hpp"
+#include "../../rendering/buffers/buffer_test_utils.hpp"
 
 TEST_CASE("index buffer on a real context") {
     if (!ris_test::display_available()) SKIP("no display available");
@@ -14,7 +14,7 @@ TEST_CASE("index buffer on a real context") {
 
     SECTION("index buffer picks the smallest type") {
         const std::vector<uint32_t> small = {0, 1, 2, 2, 1, 65535};
-        ris::IndexBuffer a(small);
+        ris::gles::GlesIndexBuffer a(small);
         REQUIRE(a.type() == ris::IndexBufferType::UInt16);
         REQUIRE(a.element_byte_size() == 2);
         REQUIRE(a.indices_count() == 6);
@@ -23,17 +23,17 @@ TEST_CASE("index buffer on a real context") {
         REQUIRE(ris::has_flag(a.usage(), F::Index));
 
         const std::vector<uint32_t> big = {0, 1, 65536};
-        ris::IndexBuffer b(big, "big");
+        ris::gles::GlesIndexBuffer b(big, "big");
         REQUIRE(b.type() == ris::IndexBufferType::UInt32);
         REQUIRE(b.element_byte_size() == 4);
         REQUIRE(b.indices_count() == 3);
         REQUIRE(b.label() == "big");
 
-        auto forced = ris::IndexBuffer::create_uint32(small);
+        auto forced = ris::gles::GlesIndexBuffer::create_uint32(small);
         REQUIRE(forced.type() == ris::IndexBufferType::UInt32);
         REQUIRE(forced.byte_size() == 24);
 
         const std::vector<uint16_t> u16 = {0, 1, 2};
-        REQUIRE(ris::IndexBuffer(u16).type() == ris::IndexBufferType::UInt16);
+        REQUIRE(ris::gles::GlesIndexBuffer(u16).type() == ris::IndexBufferType::UInt16);
     }
 }

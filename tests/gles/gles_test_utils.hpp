@@ -27,7 +27,7 @@ class FullscreenTriangle {
 public:
     FullscreenTriangle()
         : vertices_(std::vector<float>{-1, -1, 3, -1, -1, 3}, 8),
-          vao_(ris::make_vertex_array_desc(vertices_, layout())),
+          vao_(ris::gles::make_vertex_array_desc(vertices_, layout())),
           shader_(R"(#version 300 es
                 layout(location = 0) in vec2 a_position;
                 void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
@@ -53,7 +53,7 @@ private:
         return l;
     }
 
-    ris::VertexBuffer vertices_;
+    ris::gles::GlesVertexBuffer vertices_;
     ris::VertexArray vao_;
     ris::Shader shader_;
     int32_t color_location_;

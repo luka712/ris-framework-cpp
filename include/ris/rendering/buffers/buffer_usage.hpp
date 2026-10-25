@@ -6,16 +6,17 @@ namespace ris {
 
 /// Usage flags of a buffer, like `BufferUsage` of ris-framework-ts. Combine with operator|.
 ///
-/// (The low level `ris::BufferUsage` of graphics.hpp is the GL update frequency hint, a different thing.)
-/// Only `Vertex`, `Index`, `Uniform` and `CopyDst` can be honoured with OpenGL ES 3.0.
+/// (The low level `ris::BufferUsage` of graphics.hpp is the update frequency hint of the OpenGL ES layer, a
+/// different thing.) Which flags a backend can honour is up to the backend: OpenGL ES 3.0 only supports
+/// `Vertex`, `Index`, `Uniform` and `CopyDst` and rejects the others with Result::Unsupported.
 enum class BufferUsageFlags : uint32_t {
     None = 0,       ///< No usage defined.
-    Vertex = 1,     ///< Vertex buffer of a draw operation (GL_ARRAY_BUFFER).
-    Index = 2,      ///< Index buffer of a draw operation (GL_ELEMENT_ARRAY_BUFFER).
-    Uniform = 4,    ///< Uniform buffer of a draw operation (GL_UNIFORM_BUFFER).
-    Storage = 8,    ///< Storage buffer. Not available in OpenGL ES 3.0: creating one throws Result::Unsupported.
-    MapRead = 16,   ///< Buffer can be read back by the CPU. Not available in OpenGL ES 3.0: throws Result::Unsupported.
-    CopyDst = 32    ///< Buffer is written after creation (update()). Selects GL_DYNAMIC_DRAW, otherwise GL_STATIC_DRAW.
+    Vertex = 1,     ///< Vertex buffer of a draw operation.
+    Index = 2,      ///< Index buffer of a draw operation.
+    Uniform = 4,    ///< Uniform buffer of a draw operation.
+    Storage = 8,    ///< Storage buffer. Backends without storage buffers (OpenGL ES 3.0) throw Result::Unsupported.
+    MapRead = 16,   ///< Buffer can be read back by the CPU. Backends without it (OpenGL ES 3.0) throw Result::Unsupported.
+    CopyDst = 32    ///< Buffer is written after creation (update()). Backends may choose a dynamic memory hint for it.
 };
 
 constexpr BufferUsageFlags operator|(BufferUsageFlags a, BufferUsageFlags b) noexcept {

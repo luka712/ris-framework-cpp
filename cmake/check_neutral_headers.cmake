@@ -1,0 +1,17 @@
+# Fails if a header of ris/rendering/ (the graphics API neutral layer) includes a backend or OpenGL header.
+# Usage: cmake -DRIS_INCLUDE_DIR=<path to include/> -P check_neutral_headers.cmake
+file(GLOB_RECURSE _headers "${RIS_INCLUDE_DIR}/ris/rendering/*.hpp")
+set(_bad "")
+foreach(_header IN LISTS _headers)
+    file(STRINGS "${_header}" _includes REGEX "^[ \t]*#[ \t]*include")
+    foreach(_line IN LISTS _includes)
+        if(_line MATCHES "ris/gles/|GLES|EGL|GL/|opengl|angle|graphics\\.hpp")
+            string(APPEND _bad "  ${_header}: ${_line}\n")
+        endif()
+    endforeach()
+endforeach()
+if(_bad)
+    message(FATAL_ERROR "graphics API neutral headers include a backend header:\n${_bad}")
+endif()
+list(LENGTH _headers _count)
+message(STATUS "checked ${_count} headers of ris/rendering/")

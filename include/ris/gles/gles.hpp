@@ -6,8 +6,9 @@
 // shaders, programs, textures, samplers, render buffers and framebuffers.
 //
 // The GL objects are plain `GlUint` names owned by the caller; the RAII wrappers (Buffer, Shader, Texture,
-// RenderTarget, the typed buffers) are built on these utilities. No GL header is needed to use them.
+// RenderTarget, the Gles buffers) are built on these utilities. No GL header is needed to use them.
 
+#include "ris/gles/buffers/buffers.hpp"
 #include "ris/gles/gles_types.hpp"
 #include "ris/gles/rendering/vertex_attribute.hpp"
 #include "ris/gles/rendering/vertex_buffer_layout.hpp"

@@ -1,6 +1,7 @@
 #include "ris/mesh.hpp"
-#include "ris/rendering/buffers/make_vertex_array_desc.hpp"
+#include "ris/gles/buffers/make_vertex_array_desc.hpp"
 #include "ris/rendering/buffers/vertex_buffer_layout.hpp"
+#include "ris/rendering/default_buffer_factory.hpp"
 #include "ris/scene.hpp"
 
 #include <algorithm>
@@ -78,7 +79,8 @@ Mesh::Mesh(const Geometry& g, std::vector<SubMesh> sub_meshes) : sub_meshes_(std
         if (!g.normals.empty()) std::memcpy(v.normal, &g.normals[i * 3], sizeof(v.normal)); else { v.normal[0] = v.normal[1] = 0; v.normal[2] = 1; }
         if (!g.colors.empty()) std::memcpy(v.color, &g.colors[i * 4], sizeof(v.color)); else v.color[0] = v.color[1] = v.color[2] = v.color[3] = 1;
     }
-    vertex_buffer_ = std::make_unique<VertexBuffer>(
+    const std::unique_ptr<ABufferFactory> factory = create_default_buffer_factory();
+    vertex_buffer_ = factory->create_vertex_buffer(
         std::span<const float>(reinterpret_cast<const float*>(vertices.data()), vertices.size() * sizeof(PackedVertex) / sizeof(float)),
         sizeof(PackedVertex));
     // position (vec3), uv (vec2), normal (vec3), colour (vec4): the locations of the built-in materials
@@ -94,13 +96,13 @@ Mesh::Mesh(const Geometry& g, std::vector<SubMesh> sub_meshes) : sub_meshes_(std
         for (uint32_t index : g.indices) {
             if (index >= n) throw_error(Result::InvalidArgument, "Mesh: index %u is out of range (%zu vertices)", index, n);
         }
-        index_buffer_ = std::make_unique<IndexBuffer>(std::span<const uint32_t>(g.indices));
+        index_buffer_ = factory->create_index_buffer(std::span<const uint32_t>(g.indices));
         indexed_ = true;
         draw_count_ = static_cast<uint32_t>(g.indices.size());
     } else {
         draw_count_ = static_cast<uint32_t>(n);
     }
-    const VertexArrayDesc desc = make_vertex_array_desc(*vertex_buffer_, layout, index_buffer_.get());
+    const VertexArrayDesc desc = gles::make_vertex_array_desc(*vertex_buffer_, layout, index_buffer_.get());
     vertex_array_ = std::make_unique<VertexArray>(desc);
     for (const SubMesh& s : sub_meshes_) {
         if (static_cast<uint64_t>(s.index_start) + s.index_count > draw_count_) {

@@ -6,15 +6,15 @@
 
 #include <ris/ris.hpp>
 
-#include "buffer_test_utils.hpp"
+#include "../../rendering/buffers/buffer_test_utils.hpp"
 
 TEST_CASE("vertex array description checks the stride") {
     if (!ris_test::display_available()) SKIP("no display available");
     ris::Window window = ris_test::make_hidden_window();
 
     const std::vector<float> data(10, 0.0f);
-    ris::VertexBuffer vb(data, 20);
-    REQUIRE_THROWS_AS(ris::make_vertex_array_desc(vb, ris::VertexBufferLayout::create_float3_float4_float2()),
+    ris::gles::GlesVertexBuffer vb(data, 20);
+    REQUIRE_THROWS_AS(ris::gles::make_vertex_array_desc(vb, ris::VertexBufferLayout::create_float3_float4_float2()),
                       ris::Error);
 }
 
@@ -32,10 +32,10 @@ TEST_CASE("typed buffers draw a quad with a uniform block") {
     const std::vector<uint32_t> indices = {0, 1, 2, 0, 2, 3};
     const auto layout = ris::VertexBufferLayout::create_float3_float2();
 
-    ris::VertexBuffer vb(vertices, layout.array_stride);
-    ris::IndexBuffer ib(indices);
-    ris::UniformBuffer color(std::span<const float>(std::vector<float>{1, 0, 0, 1}));
-    ris::VertexArray vao(ris::make_vertex_array_desc(vb, layout, &ib));
+    ris::gles::GlesVertexBuffer vb(vertices, layout.array_stride);
+    ris::gles::GlesIndexBuffer ib(indices);
+    ris::gles::GlesUniformBuffer color(std::span<const float>(std::vector<float>{1, 0, 0, 1}));
+    ris::VertexArray vao(ris::gles::make_vertex_array_desc(vb, layout, &ib));
 
     ris::Shader shader(R"(#version 300 es
         layout(location = 0) in vec3 a_position;
