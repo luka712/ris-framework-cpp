@@ -48,6 +48,9 @@ static_assert(offsetof(ris::Event, x) == offsetof(ris_event, x), "");
 static_assert(offsetof(ris::Event, width) == offsetof(ris_event, width), "");
 static_assert(offsetof(ris::Event, text) == offsetof(ris_event, text), "");
 static_assert(sizeof(ris_event) == 96, "ris_event is 96 bytes: the C# bindings depend on it");
+static_assert(sizeof(ris_sprite) == 72, "ris_sprite is 72 bytes with explicit tail padding");
+static_assert(sizeof(ris_mesh_desc) == 88, "ris_mesh_desc is 88 bytes with explicit padding");
+static_assert(sizeof(ris_sampler_desc) == 20, "ris_sampler_desc is 20 bytes");
 
 static_assert(sizeof(ris::Sprite) == sizeof(ris_sprite), "ris::Sprite and ris_sprite must match");
 static_assert(offsetof(ris::Sprite, x) == offsetof(ris_sprite, x), "");
@@ -123,11 +126,11 @@ void RIS_CALL ris_set_log_callback(ris_log_fn callback, void* user_data) {
         return;
     }
     ris::set_log_callback([callback, user_data](ris::LogLevel level, const char* message) {
-        callback(static_cast<int32_t>(level), message, user_data);
+        callback(static_cast<uint32_t>(level), message, user_data);
     });
 }
 
-void RIS_CALL ris_set_log_level(int32_t level) { ris::set_log_level(static_cast<ris::LogLevel>(level)); }
+void RIS_CALL ris_set_log_level(uint32_t level) { ris::set_log_level(static_cast<ris::LogLevel>(level)); }
 double RIS_CALL ris_get_time_seconds(void) { return ris::time_seconds(); }
 void RIS_CALL ris_sleep_ms(uint32_t milliseconds) { ris::sleep_ms(milliseconds); }
 
@@ -247,8 +250,12 @@ void RIS_CALL ris_gfx_set_depth_state(uint32_t test_enabled, uint32_t write_enab
 void RIS_CALL ris_gfx_set_cull_mode(uint32_t cull_mode) {
     guard([&] { ris::gfx::set_cull_mode(static_cast<ris::CullMode>(cull_mode)); });
 }
-ris_result RIS_CALL ris_gfx_read_pixels(int32_t x, int32_t y, int32_t width, int32_t height, void* out_rgba8) {
+ris_result RIS_CALL ris_gfx_read_pixels(int32_t x, int32_t y, int32_t width, int32_t height, void* out_rgba8, size_t out_size) {
     if (!out_rgba8) return invalid("ris_gfx_read_pixels: out_rgba8 is null");
+    if (width <= 0 || height <= 0) return invalid("ris_gfx_read_pixels: width and height must be positive");
+    if (static_cast<uint64_t>(width) * static_cast<uint64_t>(height) * 4u > out_size) {
+        return invalid("ris_gfx_read_pixels: out_size is smaller than width * height * 4");
+    }
     return guard([&] {
         const std::vector<uint8_t> pixels = ris::gfx::read_pixels(x, y, width, height);
         std::memcpy(out_rgba8, pixels.data(), pixels.size());
@@ -320,7 +327,17 @@ void RIS_CALL ris_shader_destroy(ris_shader* shader) { delete shader; }
 
 // ---- meshes ---------------------------------------------------------------------------------
 
+void RIS_CALL ris_mesh_desc_default(ris_mesh_desc* desc) {
+    if (!desc) return;
+    std::memset(desc, 0, sizeof(*desc));
+    desc->struct_size = sizeof(ris_mesh_desc);
+}
+
 ris_mesh* RIS_CALL ris_mesh_create(const ris_mesh_desc* desc) {
+    if (desc && desc->struct_size < sizeof(ris_mesh_desc)) {
+        invalid("ris_mesh_create: struct_size is too small (call ris_mesh_desc_default)");
+        return nullptr;
+    }
     if (!desc || !desc->attribs || desc->attrib_count == 0 || desc->attrib_count > RIS_MAX_VERTEX_ATTRIBS ||
         desc->vertex_buffer_count > RIS_MAX_VERTEX_BUFFERS) {
         invalid("ris_mesh_create: invalid mesh description");
@@ -380,8 +397,21 @@ ris_texture* RIS_CALL ris_texture_load_ktx2_file(const char* path) {
 ris_texture* RIS_CALL ris_texture_load_ktx2_memory(const void* data, size_t size) {
     return guard_ptr<ris_texture>([&] { return new ris_texture{ris::Texture::from_ktx2_memory(data, size)}; });
 }
+void RIS_CALL ris_sampler_desc_default(ris_sampler_desc* desc) {
+    if (!desc) return;
+    desc->struct_size = sizeof(ris_sampler_desc);
+    desc->min_filter = RIS_FILTER_LINEAR_MIPMAP_LINEAR;
+    desc->mag_filter = RIS_FILTER_LINEAR;
+    desc->wrap_u = RIS_WRAP_CLAMP;
+    desc->wrap_v = RIS_WRAP_CLAMP;
+}
+
 void RIS_CALL ris_texture_set_sampler(ris_texture* texture, const ris_sampler_desc* sampler) {
     if (!texture || !sampler) return;
+    if (sampler->struct_size < sizeof(ris_sampler_desc)) {
+        invalid("ris_texture_set_sampler: struct_size is too small (call ris_sampler_desc_default)");
+        return;
+    }
     guard([&] {
         ris::SamplerDesc s;
         s.min_filter = static_cast<ris::Filter>(sampler->min_filter);

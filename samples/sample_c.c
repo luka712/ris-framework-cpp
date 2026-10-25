@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
         {1, 3, RIS_ATTRIB_FLOAT, 0, 2 * sizeof(float), 0, 0, 0},
     };
     ris_mesh_desc mesh_desc;
-    memset(&mesh_desc, 0, sizeof(mesh_desc));
+    ris_mesh_desc_default(&mesh_desc);
     mesh_desc.attribs = attribs;
     mesh_desc.attrib_count = 2;
     mesh_desc.vertex_buffer_count = 1;
@@ -98,7 +98,12 @@ int main(int argc, char** argv) {
         }
     ris_texture* tex = ris_texture_create_rgba8(8, 8, checker, 0, 0);
     if (!tex) fail("ris_texture_create_rgba8");
-    ris_sampler_desc sampler = {RIS_FILTER_NEAREST, RIS_FILTER_NEAREST, RIS_WRAP_REPEAT, RIS_WRAP_REPEAT};
+    ris_sampler_desc sampler;
+    ris_sampler_desc_default(&sampler);
+    sampler.min_filter = RIS_FILTER_NEAREST;
+    sampler.mag_filter = RIS_FILTER_NEAREST;
+    sampler.wrap_u = RIS_WRAP_REPEAT;
+    sampler.wrap_v = RIS_WRAP_REPEAT;
     ris_texture_set_sampler(tex, &sampler);
 
     ris_sprite_batch* batch = ris_sprite_batch_create(1024);
@@ -147,7 +152,7 @@ int main(int argc, char** argv) {
     }
 
     uint8_t pixel[4] = {0};
-    if (ris_gfx_read_pixels(0, 0, 1, 1, pixel) == RIS_OK)
+    if (ris_gfx_read_pixels(0, 0, 1, 1, pixel, sizeof(pixel)) == RIS_OK)
         printf("rendered %d frames, pixel(0,0) = %u %u %u %u\n", frame, pixel[0], pixel[1], pixel[2], pixel[3]);
 
     ris_sprite_batch_destroy(batch);

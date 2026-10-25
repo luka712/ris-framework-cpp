@@ -239,7 +239,7 @@ public:
 
     /// Binds the target and sets the viewport to its size.
     void bind() const;
-    /// Binds the window back buffer again (viewport is left unchanged).
+    /// Binds the window back buffer again and restores the viewport that was active before the first bind().
     static void unbind();
 
     /// The colour attachment (RGBA8, linear filtering, clamped). Owned by the render target.

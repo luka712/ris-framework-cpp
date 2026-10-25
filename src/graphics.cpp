@@ -514,8 +514,20 @@ RenderTarget& RenderTarget::operator=(RenderTarget&& other) noexcept {
     return *this;
 }
 
+namespace {
+// Viewport of the window back buffer, saved when the first render target is bound.
+thread_local GLint t_saved_viewport[4] = {0, 0, 0, 0};
+thread_local bool t_has_saved_viewport = false;
+} // namespace
+
 void RenderTarget::bind() const {
     require_context();
+    GLint current_fbo = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fbo);
+    if (current_fbo == 0) {
+        glGetIntegerv(GL_VIEWPORT, t_saved_viewport);
+        t_has_saved_viewport = true;
+    }
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
     glViewport(0, 0, color_.width(), color_.height());
 }
@@ -523,6 +535,10 @@ void RenderTarget::bind() const {
 void RenderTarget::unbind() {
     require_context();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if (t_has_saved_viewport) {
+        glViewport(t_saved_viewport[0], t_saved_viewport[1], t_saved_viewport[2], t_saved_viewport[3]);
+        t_has_saved_viewport = false;
+    }
 }
 
 } // namespace ris

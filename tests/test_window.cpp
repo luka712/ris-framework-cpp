@@ -64,7 +64,9 @@ TEST_CASE("window with a hidden window and a context") {
         ris_render_target_bind(rt);
         ris_gfx_clear(1.0f, 0.0f, 0.0f, 1.0f, RIS_CLEAR_COLOR);
         uint8_t px[4] = {};
-        REQUIRE(ris_gfx_read_pixels(0, 0, 1, 1, px) == RIS_OK);
+        REQUIRE(ris_gfx_read_pixels(0, 0, 1, 1, px, sizeof(px)) == RIS_OK);
+        uint8_t tiny[2] = {};
+        REQUIRE(ris_gfx_read_pixels(0, 0, 1, 1, tiny, sizeof(tiny)) == RIS_ERROR_INVALID_ARGUMENT);
         REQUIRE(px[0] == 255);
         REQUIRE(px[1] == 0);
         ris_render_target_bind(nullptr);

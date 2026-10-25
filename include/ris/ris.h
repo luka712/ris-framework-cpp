@@ -58,7 +58,14 @@ RIS_API uint32_t RIS_CALL ris_get_version_patch(void);
 /** "major.minor.patch", static storage. */
 RIS_API const char* RIS_CALL ris_get_version_string(void);
 
-/** Message of the last failed call on this thread; empty string if none. */
+/**
+ * Message of the last failed call on this thread; empty string if none.
+ *
+ * Lifetime of returned strings: the pointer returned by ris_get_last_error and by
+ * ris_window_get_gl_info points into thread local storage that is overwritten by the next call
+ * of either function on the same thread. Copy the string if you need it longer. Strings returned
+ * by ris_get_version_string are static.
+ */
 RIS_API const char* RIS_CALL ris_get_last_error(void);
 RIS_API void RIS_CALL ris_clear_last_error(void);
 
@@ -72,11 +79,12 @@ typedef enum ris_log_level {
 } ris_log_level;
 
 /** The message pointer is only valid during the callback. May be called from any thread. */
-typedef void(RIS_CALL* ris_log_fn)(int32_t level, const char* message, void* user_data);
+typedef void(RIS_CALL* ris_log_fn)(uint32_t level, const char* message, void* user_data);
 
 /** Pass NULL to restore the default (stderr). */
 RIS_API void RIS_CALL ris_set_log_callback(ris_log_fn callback, void* user_data);
-RIS_API void RIS_CALL ris_set_log_level(int32_t level);
+/** `level` is a ris_log_level. */
+RIS_API void RIS_CALL ris_set_log_level(uint32_t level);
 
 /** Monotonic seconds since the first call to any time function. */
 RIS_API double RIS_CALL ris_get_time_seconds(void);
@@ -119,7 +127,7 @@ typedef struct ris_window_desc {
     uint32_t depth_bits;    /* 0, 16, 24                                                     */
     uint32_t stencil_bits;  /* 0 or 8                                                        */
     uint32_t debug;         /* 0 / 1: request a debug context and log GL debug messages      */
-    const char* title;      /* UTF-8, NULL = "ris-framework"                                 */
+    const char* title;      /* UTF-8, NULL = "ris-framework". Copied by ris_window_create, may be freed afterwards. */
 } ris_window_desc;
 
 /** Fills 1280x720, resizable, vsync on, 24 bit depth, 8 bit stencil, backend AUTO. */
@@ -156,6 +164,7 @@ typedef enum ris_gl_info {
     RIS_GL_INFO_ANGLE_BACKEND = 5   /* "OpenGL", "D3D11", "Metal", ...                     */
 } ris_gl_info;
 
+/** `which` is a ris_gl_info. The string is valid until the next ris_window_get_gl_info / ris_get_last_error call on this thread. */
 RIS_API const char* RIS_CALL ris_window_get_gl_info(const ris_window* window, uint32_t which);
 /** 1 if the OpenGL ES extension (e.g. "GL_KHR_texture_compression_astc_ldr") is available. */
 RIS_API uint32_t RIS_CALL ris_window_has_gl_extension(const ris_window* window, const char* name);
@@ -274,8 +283,12 @@ RIS_API void RIS_CALL ris_gfx_set_blend_mode(uint32_t blend_mode);
 RIS_API void RIS_CALL ris_gfx_set_depth_state(uint32_t test_enabled, uint32_t write_enabled, uint32_t compare_func);
 /** Counter clockwise triangles are front facing. */
 RIS_API void RIS_CALL ris_gfx_set_cull_mode(uint32_t cull_mode);
-/** Reads RGBA8 pixels from the current framebuffer (origin bottom left). Buffer: w*h*4 bytes. */
-RIS_API ris_result RIS_CALL ris_gfx_read_pixels(int32_t x, int32_t y, int32_t width, int32_t height, void* out_rgba8);
+/**
+ * Reads RGBA8 pixels from the current framebuffer (origin bottom left). The buffer needs
+ * width * height * 4 bytes; `out_size` is its size in bytes. Returns RIS_ERROR_INVALID_ARGUMENT
+ * and writes nothing if it is too small.
+ */
+RIS_API ris_result RIS_CALL ris_gfx_read_pixels(int32_t x, int32_t y, int32_t width, int32_t height, void* out_rgba8, size_t out_size);
 
 /* ---- buffers ----------------------------------------------------------------------------- */
 
@@ -368,6 +381,8 @@ typedef struct ris_vertex_attrib {
 } ris_vertex_attrib;
 
 typedef struct ris_mesh_desc {
+    uint32_t struct_size;       /* sizeof(ris_mesh_desc), set by ris_mesh_desc_default     */
+    uint32_t _reserved0;        /* explicit padding, set to 0                              */
     const ris_vertex_attrib* attribs;
     uint32_t attrib_count;
     uint32_t vertex_buffer_count;
@@ -375,7 +390,11 @@ typedef struct ris_mesh_desc {
     uint32_t vertex_strides[RIS_MAX_VERTEX_BUFFERS];
     ris_buffer* index_buffer;   /* may be NULL                                             */
     uint32_t index_type;        /* ris_index_type                                          */
+    uint32_t _reserved1;        /* explicit tail padding, set to 0                         */
 } ris_mesh_desc;
+
+/** Zeroes `desc` and sets struct_size. */
+RIS_API void RIS_CALL ris_mesh_desc_default(ris_mesh_desc* desc);
 
 RIS_API ris_mesh* RIS_CALL ris_mesh_create(const ris_mesh_desc* desc);
 /** `first` is the first vertex, or the first index when the mesh is indexed. instance_count 0 => 1. */
@@ -402,11 +421,15 @@ typedef enum ris_wrap {
 } ris_wrap;
 
 typedef struct ris_sampler_desc {
+    uint32_t struct_size;   /* sizeof(ris_sampler_desc), set by ris_sampler_desc_default  */
     uint32_t min_filter;    /* ris_filter, mipmap filters need mip levels                  */
     uint32_t mag_filter;    /* RIS_FILTER_NEAREST or RIS_FILTER_LINEAR                     */
     uint32_t wrap_u;
     uint32_t wrap_v;
 } ris_sampler_desc;
+
+/** Linear mipmap min filter, linear mag filter, clamp: the same defaults as ris::SamplerDesc. */
+RIS_API void RIS_CALL ris_sampler_desc_default(ris_sampler_desc* desc);
 
 /** `pixels`: width*height RGBA8, may be NULL (uninitialised). `srgb`: treat data as sRGB. */
 RIS_API ris_texture* RIS_CALL ris_texture_create_rgba8(int32_t width, int32_t height, const void* pixels, uint32_t generate_mipmaps, uint32_t srgb);
@@ -414,7 +437,7 @@ RIS_API ris_texture* RIS_CALL ris_texture_create_rgba8(int32_t width, int32_t he
 RIS_API ris_texture* RIS_CALL ris_texture_load_image_file(const char* path, uint32_t generate_mipmaps, uint32_t srgb, uint32_t flip_vertically);
 /**
  * Loads a KTX2 file (ris-ktx2 / libktx). Basis Universal (ETC1S / UASTC) textures are
- * transcoded to the best format the GPU supports: ASTC, BC7, ETC2, or RGBA8 as the fallback.
+ * transcoded to the best format the GPU supports: ASTC, then ETC2, with RGBA8 as the fallback.
  * All stored mip levels are uploaded. Only 2D textures are supported in 0.1.0.
  */
 RIS_API ris_texture* RIS_CALL ris_texture_load_ktx2_file(const char* path);
@@ -433,7 +456,10 @@ RIS_API void RIS_CALL ris_texture_destroy(ris_texture* texture);
 typedef struct ris_render_target ris_render_target;
 
 RIS_API ris_render_target* RIS_CALL ris_render_target_create(int32_t width, int32_t height, uint32_t with_depth_stencil);
-/** Binds the target and sets the viewport to its size. NULL binds the window back buffer. */
+/**
+ * Binds the target and sets the viewport to its size. NULL binds the window back buffer and
+ * restores the viewport that was active before the first target was bound.
+ */
 RIS_API void RIS_CALL ris_render_target_bind(const ris_render_target* target);
 /** The colour attachment. Owned by the render target: do not destroy it. */
 RIS_API ris_texture* RIS_CALL ris_render_target_get_texture(const ris_render_target* target);
@@ -453,6 +479,7 @@ typedef struct ris_sprite {
     float r, g, b, a;       /* tint                                                        */
     float rotation;         /* radians, counter clockwise on screen                        */
     float origin_x, origin_y; /* pivot, in pixels relative to the sprite's top left corner */
+    uint32_t _reserved;     /* explicit tail padding (the struct is 72 bytes), set to 0   */
 } ris_sprite;
 
 RIS_API ris_sprite_batch* RIS_CALL ris_sprite_batch_create(uint32_t max_sprites_per_flush);
