@@ -35,7 +35,9 @@ extern "C" {
  * which must be set to sizeof(the struct), ideally by calling the matching *_default function.
  * A `struct_size` smaller than the library's struct is rejected: the function returns NULL (create
  * functions) or RIS_ERROR_INVALID_ARGUMENT and sets ris_get_last_error(). A larger one is accepted
- * (a caller built against a newer header); the extra bytes are ignored.
+ * (a caller built against a newer header); the extra bytes are ignored. A NULL descriptor is an
+ * invalid argument (RIS_ERROR_INVALID_ARGUMENT / NULL) with a specific last error message.
+ * ris_sprite, ris_event and ris_vertex_attrib are fixed layout and have no `struct_size`.
  */
 
 #define RIS_VERSION_MAJOR 0

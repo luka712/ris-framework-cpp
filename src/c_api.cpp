@@ -334,7 +334,11 @@ void RIS_CALL ris_mesh_desc_default(ris_mesh_desc* desc) {
 }
 
 ris_mesh* RIS_CALL ris_mesh_create(const ris_mesh_desc* desc) {
-    if (desc && desc->struct_size < sizeof(ris_mesh_desc)) {
+    if (!desc) {
+        invalid("ris_mesh_create: desc is NULL");
+        return nullptr;
+    }
+    if (desc->struct_size < sizeof(ris_mesh_desc)) {
         invalid("ris_mesh_create: struct_size is too small (call ris_mesh_desc_default)");
         return nullptr;
     }
