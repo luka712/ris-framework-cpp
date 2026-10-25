@@ -30,6 +30,14 @@
 extern "C" {
 #endif
 
+/*
+ * Descriptor structs (ris_window_desc, ris_mesh_desc, ris_sampler_desc) start with `struct_size`,
+ * which must be set to sizeof(the struct), ideally by calling the matching *_default function.
+ * A `struct_size` smaller than the library's struct is rejected: the function returns NULL (create
+ * functions) or RIS_ERROR_INVALID_ARGUMENT and sets ris_get_last_error(). A larger one is accepted
+ * (a caller built against a newer header); the extra bytes are ignored.
+ */
+
 #define RIS_VERSION_MAJOR 0
 #define RIS_VERSION_MINOR 1
 #define RIS_VERSION_PATCH 0
@@ -83,8 +91,7 @@ typedef void(RIS_CALL* ris_log_fn)(uint32_t level, const char* message, void* us
 
 /** Pass NULL to restore the default (stderr). */
 RIS_API void RIS_CALL ris_set_log_callback(ris_log_fn callback, void* user_data);
-/** `level` is a ris_log_level. */
-RIS_API void RIS_CALL ris_set_log_level(uint32_t level);
+RIS_API void RIS_CALL ris_set_log_level(ris_log_level level);
 
 /** Monotonic seconds since the first call to any time function. */
 RIS_API double RIS_CALL ris_get_time_seconds(void);
@@ -164,8 +171,8 @@ typedef enum ris_gl_info {
     RIS_GL_INFO_ANGLE_BACKEND = 5   /* "OpenGL", "D3D11", "Metal", ...                     */
 } ris_gl_info;
 
-/** `which` is a ris_gl_info. The string is valid until the next ris_window_get_gl_info / ris_get_last_error call on this thread. */
-RIS_API const char* RIS_CALL ris_window_get_gl_info(const ris_window* window, uint32_t which);
+/** The string is valid until the next ris_window_get_gl_info / ris_get_last_error call on this thread. */
+RIS_API const char* RIS_CALL ris_window_get_gl_info(const ris_window* window, ris_gl_info which);
 /** 1 if the OpenGL ES extension (e.g. "GL_KHR_texture_compression_astc_ldr") is available. */
 RIS_API uint32_t RIS_CALL ris_window_has_gl_extension(const ris_window* window, const char* name);
 
@@ -442,7 +449,8 @@ RIS_API ris_texture* RIS_CALL ris_texture_load_image_file(const char* path, uint
  */
 RIS_API ris_texture* RIS_CALL ris_texture_load_ktx2_file(const char* path);
 RIS_API ris_texture* RIS_CALL ris_texture_load_ktx2_memory(const void* data, size_t size);
-RIS_API void RIS_CALL ris_texture_set_sampler(ris_texture* texture, const ris_sampler_desc* sampler);
+/** Returns RIS_OK, or RIS_ERROR_INVALID_ARGUMENT (null argument, or `struct_size` smaller than sizeof(ris_sampler_desc)) with the last error set. */
+RIS_API ris_result RIS_CALL ris_texture_set_sampler(ris_texture* texture, const ris_sampler_desc* sampler);
 RIS_API void RIS_CALL ris_texture_bind(const ris_texture* texture, uint32_t unit);
 RIS_API int32_t RIS_CALL ris_texture_get_width(const ris_texture* texture);
 RIS_API int32_t RIS_CALL ris_texture_get_height(const ris_texture* texture);

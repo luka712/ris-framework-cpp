@@ -340,7 +340,7 @@ void Shader::bind_uniform_block(const char* block_name, uint32_t binding) const 
     glUniformBlockBinding(program_, index, binding);
 }
 
-// ---- Mesh -----------------------------------------------------------------------------------
+// ---- VertexArray -----------------------------------------------------------------------------------
 
 namespace {
 
@@ -371,18 +371,18 @@ GLenum topology_gl(Topology t) {
 
 } // namespace
 
-Mesh::Mesh(const MeshDesc& desc) : index_type_(desc.index_type) {
+VertexArray::VertexArray(const VertexArrayDesc& desc) : index_type_(desc.index_type) {
     require_context();
     if (desc.attribs.empty() || desc.attribs.size() > 16) {
-        throw_error(Result::InvalidArgument, "Mesh: attribute count must be 1..16 (got %zu)", desc.attribs.size());
+        throw_error(Result::InvalidArgument, "VertexArray: attribute count must be 1..16 (got %zu)", desc.attribs.size());
     }
     if (desc.index_type != IndexType::None && !desc.index_buffer) {
-        throw_error(Result::InvalidArgument, "Mesh: index_type is set but index_buffer is null");
+        throw_error(Result::InvalidArgument, "VertexArray: index_type is set but index_buffer is null");
     }
     for (const VertexAttrib& a : desc.attribs) {
         if (a.components < 1 || a.components > 4 || a.buffer_slot >= max_vertex_buffers ||
             !desc.vertex_buffers[a.buffer_slot].buffer) {
-            throw_error(Result::InvalidArgument, "Mesh: invalid vertex attribute for location %u", a.location);
+            throw_error(Result::InvalidArgument, "VertexArray: invalid vertex attribute for location %u", a.location);
         }
     }
 
@@ -409,7 +409,7 @@ Mesh::Mesh(const MeshDesc& desc) : index_type_(desc.index_type) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     try {
-        check_gl("Mesh::Mesh");
+        check_gl("VertexArray::VertexArray");
     } catch (...) {
         glDeleteVertexArrays(1, &vao_);
         vao_ = 0;
@@ -417,15 +417,15 @@ Mesh::Mesh(const MeshDesc& desc) : index_type_(desc.index_type) {
     }
 }
 
-Mesh::~Mesh() {
+VertexArray::~VertexArray() {
     if (vao_ != 0 && has_context()) {
         glDeleteVertexArrays(1, &vao_);
     }
 }
 
-Mesh::Mesh(Mesh&& other) noexcept : vao_(std::exchange(other.vao_, 0)), index_type_(other.index_type_) {}
+VertexArray::VertexArray(VertexArray&& other) noexcept : vao_(std::exchange(other.vao_, 0)), index_type_(other.index_type_) {}
 
-Mesh& Mesh::operator=(Mesh&& other) noexcept {
+VertexArray& VertexArray::operator=(VertexArray&& other) noexcept {
     if (this != &other) {
         if (vao_ != 0 && has_context()) glDeleteVertexArrays(1, &vao_);
         vao_ = std::exchange(other.vao_, 0);
@@ -434,7 +434,7 @@ Mesh& Mesh::operator=(Mesh&& other) noexcept {
     return *this;
 }
 
-void Mesh::draw(Topology topology, uint32_t first, uint32_t count, uint32_t instance_count) const {
+void VertexArray::draw(Topology topology, uint32_t first, uint32_t count, uint32_t instance_count) const {
     require_context();
     if (count == 0) return;
     if (instance_count == 0) instance_count = 1;

@@ -22,7 +22,7 @@ static const char* kFs =
     "out vec4 o_color;\n"
     "void main() { o_color = vec4(v_color, 1.0); }\n";
 
-static void on_log(int32_t level, const char* message, void* user) {
+static void on_log(uint32_t level, const char* message, void* user) {
     (void)user;
     fprintf(stderr, "[ris:%d] %s\n", (int)level, message);
 }

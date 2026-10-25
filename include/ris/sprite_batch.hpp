@@ -2,7 +2,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 
+#include "data.hpp"
 #include "graphics.hpp"
 
 namespace ris {
@@ -38,6 +40,14 @@ public:
     /// Textured, tinted, axis aligned quad covering the whole texture.
     void draw_quad(const Texture* texture, float x, float y, float width, float height, float r = 1, float g = 1,
                    float b = 1, float a = 1);
+    /// TS style helpers. `rotation` is in radians around `origin` (pixels relative to the top left of
+    /// `dest`, default the top left corner). `layer_depth` is accepted for API parity and ignored in 0.1.0.
+    void draw_rect(const Rect& dest, const Color& color, float rotation = 0.0f, std::optional<Vec2> origin = {},
+                   float layer_depth = 0.0f);
+    /// `source` is in texture pixels, default the whole texture.
+    void draw(const Texture& texture, const Rect& dest, const Color& color = Color::white(),
+              std::optional<Rect> source = {}, float rotation = 0.0f, std::optional<Vec2> origin = {},
+              float layer_depth = 0.0f);
     void end();
 
 private:

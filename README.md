@@ -34,6 +34,36 @@ ris-ktx2 is always linked statically into `libris_framework`, so a shared build 
 
 ## Using it
 
+The high level API mirrors [ris-framework-ts](https://github.com/luka712/ris-framework-ts): `Framework`, `Scene`, cameras,
+lights, materials, `ContentManager`, `InputManager`, `SpriteBatch::draw(texture, rect, color)`.
+
+```cpp
+#include <ris/ris.hpp>
+
+int main() {
+    ris::Framework framework({.title = "hello"});
+    ris::Scene scene;   // declared after the framework: destroy scenes and textures before it
+    framework.add_on_load_content_listener([&] {
+        framework.camera_factory().create_perspective_camera({.aspect_ratio = 16.0f / 9.0f}, &scene);
+        scene.create_directional_light({.direction = {-0.4f, -0.6f, 1}});
+        framework.content().load_blinn_phong_mesh("cube.obj", scene);
+    });
+    framework.add_on_update_listener([&](const ris::GameTime& t) {
+        scene.meshes()[0]->rotation.y += t.delta_time_sec();
+        scene.camera()->update(t);
+    });
+    framework.add_on_render_listener([&] { scene.render(); });
+    framework.renderer().clear_color = ris::Color::corner_flower_blue();
+    framework.initialize();   // runs the loop until the window closes
+}
+```
+
+Differences to the TS API: calls are synchronous (no `async` content loading), lights are created with
+`scene.create_point_light(...)` instead of `new PointLight(..., scene)`, and the camera keeps the TS convention that the
+look-at negates `eye.z`. Not ported in 0.1.0: touch and gamepad input, WebGPU specific buffer and pipeline factories.
+
+The low level API (windows, buffers, shaders, vertex arrays, textures) stays available:
+
 ```cpp
 #include <ris/ris.hpp>
 
@@ -54,9 +84,9 @@ RisFramework.Demo:
 
 | Target | What it shows |
 | --- | --- |
-| `ris_sample_sprite_batch` | texture loading, one sprite with `SpriteBatch` |
-| `ris_sample_unlit_mesh` | OBJ/MTL cube, vertex colours, perspective camera, depth test |
-| `ris_sample_blinn_phong_mesh` | Blinn-Phong materials, ambient, directional and two orbiting point lights |
+| `ris_sample_sprite_batch` | `Framework`, `ContentManager::load_texture_2d`, `SpriteBatch::draw` |
+| `ris_sample_unlit_mesh` | `Scene`, perspective camera, OBJ/MTL cube with `UnlitMaterial` per face |
+| `ris_sample_blinn_phong_mesh` | `BlinnPhongMaterial`, ambient, directional and two orbiting point lights |
 | `ris_sample_ktx2_quad` | loads a Basis Universal `.ktx2` (transcoded to ASTC or ETC2) and shows it as a textured quad |
 | `ris_sample_ktx2_compare` | the same image as ASTC 4x4, ETC2 and RGBA8 `.ktx2` files side by side, skips formats the GPU lacks |
 

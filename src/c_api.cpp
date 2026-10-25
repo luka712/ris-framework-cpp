@@ -23,8 +23,8 @@ struct ris_buffer : ris::Buffer {
 struct ris_shader : ris::Shader {
     using ris::Shader::Shader;
 };
-struct ris_mesh : ris::Mesh {
-    using ris::Mesh::Mesh;
+struct ris_mesh : ris::VertexArray {
+    using ris::VertexArray::VertexArray;
 };
 struct ris_render_target : ris::RenderTarget {
     using ris::RenderTarget::RenderTarget;
@@ -130,7 +130,7 @@ void RIS_CALL ris_set_log_callback(ris_log_fn callback, void* user_data) {
     });
 }
 
-void RIS_CALL ris_set_log_level(uint32_t level) { ris::set_log_level(static_cast<ris::LogLevel>(level)); }
+void RIS_CALL ris_set_log_level(ris_log_level level) { ris::set_log_level(static_cast<ris::LogLevel>(level)); }
 double RIS_CALL ris_get_time_seconds(void) { return ris::time_seconds(); }
 void RIS_CALL ris_sleep_ms(uint32_t milliseconds) { ris::sleep_ms(milliseconds); }
 
@@ -208,7 +208,7 @@ void RIS_CALL ris_window_request_quit(ris_window* window) {
     if (window) guard([&] { window->request_quit(); });
 }
 
-const char* RIS_CALL ris_window_get_gl_info(const ris_window* window, uint32_t which) {
+const char* RIS_CALL ris_window_get_gl_info(const ris_window* window, ris_gl_info which) {
     return window ? window->gl_info(static_cast<ris::GlInfo>(which)) : "";
 }
 uint32_t RIS_CALL ris_window_has_gl_extension(const ris_window* window, const char* name) {
@@ -344,7 +344,7 @@ ris_mesh* RIS_CALL ris_mesh_create(const ris_mesh_desc* desc) {
         return nullptr;
     }
     return guard_ptr<ris_mesh>([&] {
-        ris::MeshDesc d;
+        ris::VertexArrayDesc d;
         for (uint32_t i = 0; i < desc->attrib_count; ++i) {
             const ris_vertex_attrib& a = desc->attribs[i];
             ris::VertexAttrib va;
@@ -406,13 +406,12 @@ void RIS_CALL ris_sampler_desc_default(ris_sampler_desc* desc) {
     desc->wrap_v = RIS_WRAP_CLAMP;
 }
 
-void RIS_CALL ris_texture_set_sampler(ris_texture* texture, const ris_sampler_desc* sampler) {
-    if (!texture || !sampler) return;
+ris_result RIS_CALL ris_texture_set_sampler(ris_texture* texture, const ris_sampler_desc* sampler) {
+    if (!texture || !sampler) return invalid("ris_texture_set_sampler: texture or sampler is null");
     if (sampler->struct_size < sizeof(ris_sampler_desc)) {
-        invalid("ris_texture_set_sampler: struct_size is too small (call ris_sampler_desc_default)");
-        return;
+        return invalid("ris_texture_set_sampler: struct_size is too small (call ris_sampler_desc_default)");
     }
-    guard([&] {
+    return guard([&] {
         ris::SamplerDesc s;
         s.min_filter = static_cast<ris::Filter>(sampler->min_filter);
         s.mag_filter = static_cast<ris::Filter>(sampler->mag_filter);
@@ -465,7 +464,7 @@ void RIS_CALL ris_sprite_batch_draw(ris_sprite_batch* batch, const ris_sprite* s
     if (!batch || !sprite) return;
     guard([&] {
         ris::Sprite s;
-        std::memcpy(&s, sprite, sizeof(ris::Sprite));
+        std::memcpy(static_cast<void*>(&s), sprite, sizeof(ris::Sprite));
         // `texture` is a ris_texture*, which wraps a ris::Texture as its first member.
         s.texture = sprite->texture ? &sprite->texture->value : nullptr;
         batch->draw(s);

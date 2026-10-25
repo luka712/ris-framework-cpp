@@ -58,7 +58,7 @@ struct SpriteBatch::Impl {
     Shader shader;
     Buffer vertex_buffer;
     Buffer index_buffer;
-    Mesh mesh;
+    VertexArray mesh;
     Texture white;
     int32_t u_view_projection;
     int32_t u_texture;
@@ -67,8 +67,8 @@ struct SpriteBatch::Impl {
     const Texture* current = nullptr;
     bool active = false;
 
-    static MeshDesc make_mesh_desc(const Buffer& vb, const Buffer& ib) {
-        MeshDesc desc;
+    static VertexArrayDesc make_mesh_desc(const Buffer& vb, const Buffer& ib) {
+        VertexArrayDesc desc;
         desc.attribs = {
             {0, 2, AttribType::Float, false, offsetof(Vertex, x), 0, 0, false},
             {1, 2, AttribType::Float, false, offsetof(Vertex, u), 0, 0, false},
@@ -206,6 +206,57 @@ void SpriteBatch::end() {
     }
     impl_->flush();
     impl_->active = false;
+}
+
+} // namespace ris
+
+namespace ris {
+
+void SpriteBatch::draw(const Texture& texture, const Rect& dest, const Color& color, std::optional<Rect> source,
+                       float rotation, std::optional<Vec2> origin, float layer_depth) {
+    (void)layer_depth;
+    Sprite s;
+    s.texture = &texture;
+    const Vec2 o = origin.value_or(Vec2(0, 0));
+    s.x = dest.x + o.x;
+    s.y = dest.y + o.y;
+    s.width = dest.width;
+    s.height = dest.height;
+    if (source) {
+        const float tw = static_cast<float>(std::max(1, texture.width()));
+        const float th = static_cast<float>(std::max(1, texture.height()));
+        s.u0 = source->x / tw;
+        s.v0 = source->y / th;
+        s.u1 = (source->x + source->width) / tw;
+        s.v1 = (source->y + source->height) / th;
+    }
+    s.r = color.r;
+    s.g = color.g;
+    s.b = color.b;
+    s.a = color.a;
+    s.rotation = rotation;
+    s.origin_x = o.x;
+    s.origin_y = o.y;
+    draw(s);
+}
+
+void SpriteBatch::draw_rect(const Rect& dest, const Color& color, float rotation, std::optional<Vec2> origin,
+                            float layer_depth) {
+    (void)layer_depth;
+    Sprite s;   // null texture = 1x1 white
+    const Vec2 o = origin.value_or(Vec2(0, 0));
+    s.x = dest.x + o.x;
+    s.y = dest.y + o.y;
+    s.width = dest.width;
+    s.height = dest.height;
+    s.r = color.r;
+    s.g = color.g;
+    s.b = color.b;
+    s.a = color.a;
+    s.rotation = rotation;
+    s.origin_x = o.x;
+    s.origin_y = o.y;
+    draw(s);
 }
 
 } // namespace ris

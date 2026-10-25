@@ -131,7 +131,7 @@ struct VertexAttrib {
     AttribType type = AttribType::Float;
     bool normalized = false;    ///< integer types only: converted to float in [0,1] / [-1,1]
     uint32_t offset = 0;        ///< byte offset inside the vertex
-    uint32_t buffer_slot = 0;   ///< index into MeshDesc::vertex_buffers
+    uint32_t buffer_slot = 0;   ///< index into VertexArrayDesc::vertex_buffers
     uint32_t divisor = 0;       ///< 0 = per vertex, N = per N instances
     bool as_integer = false;    ///< feed an `ivec` / `uvec` input (integer types only)
 };
@@ -141,7 +141,7 @@ struct VertexBufferBinding {
     uint32_t stride = 0;
 };
 
-struct MeshDesc {
+struct VertexArrayDesc {
     std::vector<VertexAttrib> attribs;
     std::array<VertexBufferBinding, max_vertex_buffers> vertex_buffers{};
     const Buffer* index_buffer = nullptr;   ///< optional
@@ -149,14 +149,14 @@ struct MeshDesc {
 };
 
 /// A vertex array object. The referenced buffers must outlive the mesh.
-class RIS_API Mesh {
+class RIS_API VertexArray {
 public:
-    explicit Mesh(const MeshDesc& desc);
-    ~Mesh();
-    Mesh(Mesh&& other) noexcept;
-    Mesh& operator=(Mesh&& other) noexcept;
-    Mesh(const Mesh&) = delete;
-    Mesh& operator=(const Mesh&) = delete;
+    explicit VertexArray(const VertexArrayDesc& desc);
+    ~VertexArray();
+    VertexArray(VertexArray&& other) noexcept;
+    VertexArray& operator=(VertexArray&& other) noexcept;
+    VertexArray(const VertexArray&) = delete;
+    VertexArray& operator=(const VertexArray&) = delete;
 
     /// `first` is the first vertex, or the first index when the mesh is indexed.
     /// `instance_count` 0 is treated as 1.

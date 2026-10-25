@@ -84,6 +84,12 @@ add_library(${TARGET_NAME}
         src/graphics.cpp
         src/texture.cpp
         src/sprite_batch.cpp
+        src/time_input.cpp
+        src/lights_camera.cpp
+        src/material.cpp
+        src/mesh_scene.cpp
+        src/content.cpp
+        src/framework.cpp
         src/c_api.cpp
 )
 add_library(ris_framework::ris_framework ALIAS ${TARGET_NAME})

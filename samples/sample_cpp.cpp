@@ -44,11 +44,11 @@ int main(int argc, char** argv) {
         const float vertices[] = {0.0f, 0.6f, 1.0f, 0.2f, 0.2f, -0.6f, -0.6f, 0.2f, 1.0f, 0.2f, 0.6f, -0.6f, 0.2f, 0.4f, 1.0f};
         ris::Buffer vb(ris::BufferType::Vertex, ris::BufferUsage::Static, vertices, sizeof(vertices));
 
-        ris::MeshDesc md;
+        ris::VertexArrayDesc md;
         md.attribs = {{0, 2, ris::AttribType::Float, false, 0, 0, 0, false},
                       {1, 3, ris::AttribType::Float, false, 2 * sizeof(float), 0, 0, false}};
         md.vertex_buffers[0] = {&vb, 5 * sizeof(float)};
-        ris::Mesh mesh(md);
+        ris::VertexArray mesh(md);
 
         ris::SpriteBatch batch;
 
