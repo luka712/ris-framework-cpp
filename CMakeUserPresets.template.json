@@ -1,0 +1,19 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "debug-local",
+      "displayName": "Debug (local vcpkg)",
+      "inherits": "debug",
+      "binaryDir": "${sourceDir}/cmake-build-debug",
+      "environment": { "VCPKG_ROOT": "/path/to/vcpkg" }
+    },
+    {
+      "name": "release-local",
+      "displayName": "Release (local vcpkg)",
+      "inherits": "release",
+      "binaryDir": "${sourceDir}/cmake-build-release",
+      "environment": { "VCPKG_ROOT": "/path/to/vcpkg" }
+    }
+  ]
+}

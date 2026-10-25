@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "ris-framework",
+  "version": "0.1.0",
+  "description": "C++ game framework with a flat C ABI (P/Invoke friendly). SDL3 windowing and input, OpenGL ES 3 rendered through ANGLE, KTX2 textures via ris-ktx2.",
+  "homepage": "https://github.com/luka712/ris-framework-cpp",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "sdl3",
+      "default-features": false,
+      "platform": "!linux"
+    },
+    {
+      "name": "sdl3",
+      "default-features": false,
+      "features": [
+        "x11"
+      ],
+      "platform": "linux"
+    },
+    {
+      "name": "dbus",
+      "default-features": false,
+      "platform": "linux"
+    },
+    {
+      "name": "angle",
+      "platform": "!osx"
+    },
+    {
+      "name": "angle",
+      "features": [
+        "metal"
+      ],
+      "platform": "osx"
+    },
+    {
+      "name": "ktx",
+      "version>=": "4.4.2"
+    },
+    "spdlog",
+    "vulkan-headers"
+  ],
+  "default-features": [
+    "tests"
+  ],
+  "features": {
+    "tests": {
+      "description": "Dependencies for building the test executable (development only)",
+      "dependencies": [
+        "catch2"
+      ]
+    }
+  }
+}
