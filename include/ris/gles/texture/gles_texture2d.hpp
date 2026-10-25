@@ -5,13 +5,17 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <span>
 #include <string>
+#include <vector>
 
 #include "ris/gles/gles_types.hpp"
 #include "ris/gles/texture/gles_texture_view.hpp"
 #include "ris/rendering/texture/a_texture2D.hpp"
+#include "ris/rendering/texture/texture_descriptor.hpp"
 
 namespace ris {
+class Framework;      // see ris/framework.hpp
 struct SamplerDesc;   // see ris/graphics.hpp
 class RenderTarget;   // see ris/graphics.hpp
 } // namespace ris
@@ -24,6 +28,12 @@ class GlesTextureFactory;   // see ris/gles/texture/gles_texture_factory.hpp
 /// object. Needs the window's GL context for its whole life (create, bind, destroy). Usually created by
 /// GlesTextureFactory (`Framework::textureFactory()`), which returns it as ATexture2D. `ris::Texture`
 /// (ris/graphics.hpp) is another name for this class.
+///
+/// Two ways to get one: construct it from a TextureDescriptor (size, pixels, format, ...), which only stores the
+/// description (state Created), then call `initialize()`, which creates the GL texture, the size and mip level
+/// numbers and the default texture view (state Initialized), like `WebGlTexture2D`; or use the factory / `from_*`
+/// functions, which do both. `dispose()` deletes the GL texture and raises the disposed event; the destructor
+/// calls it.
 ///
 /// Move-only: the moved-from texture is empty (state Disposed, no GL object, no listeners, no event) and must
 /// not be used again; the default view and the listeners move to the new texture.
@@ -38,6 +48,25 @@ class GlesTextureFactory;   // see ris/gles/texture/gles_texture_factory.hpp
 /// API, sprite batch, materials, content manager) does not change.
 class RIS_API GlesTexture2D : public ATexture2D {
 public:
+    /// Describes a texture; nothing is created on the GPU until initialize().
+    /// @param descriptor `width` and `height` (greater than zero), `data` (the mip levels, may be empty), the
+    ///        format (`Undefined` is Rgba8Unorm, the preferred format of OpenGL ES), `blockWidth` / `blockHeight`
+    ///        for compressed formats, usage, label and `generateMipmaps`. The `data` views are only read by
+    ///        initialize(), the bytes must stay valid until then.
+    /// @throws std::invalid_argument for a width or height that is not greater than zero.
+    explicit GlesTexture2D(const TextureDescriptor& descriptor);
+
+    /// The texture of a framework that is used where a texture is expected but none is given: 1x1, white
+    /// (255, 255, 255, 255), label "RisDefaultFilledTexture". One per framework, so a new framework (and GL context)
+    /// never gets the texture of an old one; it is created on first use and again if it was disposed.
+    /// @return the texture, owned by this class (do not delete it, it is disposed by disposeDefault() at the latest
+    ///         when the framework is destroyed). Never null.
+    static GlesTexture2D* getOrCreateDefault(Framework& framework);
+
+    /// Disposes and forgets the default texture of a framework. Called from the destructor of Framework. Does
+    /// nothing if there is none.
+    static void disposeDefault(Framework& framework);
+
     /// Creates an RGBA8 texture from pixels.
     /// @param pixels        width*height RGBA8, may be null (uninitialised).
     /// @param srgb          the data is sRGB encoded (format Rgba8UnormSrgb instead of Rgba8Unorm).
@@ -85,9 +114,13 @@ public:
     bool removeOnDisposedListener(uint32_t id) override;
     GlesTextureView* createView(const TextureViewDescriptor& descriptor = {}) override;
     void initialize() override;
+    void dispose() noexcept override;
 
     // ---- OpenGL ES ----
-    /// The GL texture name, for interop with native code. Owned by this object. 0 once disposed.
+    /// The GL texture name, `glTexture` of `WebGlTexture2D`, for interop with native code. Owned by this object. 0
+    /// before initialize() and once disposed.
+    GlUint getGlTexture() const noexcept { return glHandle_; }
+    /// The same as getGlTexture().
     GlUint getGlHandle() const noexcept { return glHandle_; }
 
     /// Binds the texture to a texture unit (`glActiveTexture` + `glBindTexture`).
@@ -110,8 +143,8 @@ private:
     GlesTexture2D(GlUint glHandle, int32_t width, int32_t height, uint32_t mipLevels, TextureFormat format,
                   TextureUsage usage, std::string label, uint64_t sizeBytes);
 
-    /// Deletes the GL texture and raises the disposed event, once. Does nothing for an empty texture.
-    void dispose() noexcept;
+    /// Creates the GL texture from the description (the part of initialize() for textures made from a descriptor).
+    void createGlTexture();
 
     static uint32_t s_ids;
     static uint32_t s_listenerIds;
@@ -126,6 +159,11 @@ private:
     std::string label_;
     uint64_t size_ = 0;
     State textureState_ = State::Disposed;
+    // The description of a texture made from a descriptor, used (and the data forgotten) by initialize().
+    std::vector<std::span<const uint8_t>> data_;
+    int32_t blockWidth_ = 4;
+    int32_t blockHeight_ = 4;
+    bool generateMipmaps_ = false;
     std::unique_ptr<GlesTextureView> defaultView_;
     std::map<uint32_t, std::function<void(ATexture2D&)>> onDisposedListeners_;
 };

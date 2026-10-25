@@ -15,7 +15,7 @@ GlUint create(TextureFormat format, int32_t width, int32_t height, std::string_v
         throw std::invalid_argument(std::string("renderbuffer_utilities::create: invalid size ")
                                     + std::to_string(width) + "x" + std::to_string(height));
     }
-    const GLenum internal_format = converter::convert_internal_format(format);
+    const GLenum internal_format = converter::convertToInternalFormat(format);
 
     GLuint rb = 0;
     glGenRenderbuffers(1, &rb);

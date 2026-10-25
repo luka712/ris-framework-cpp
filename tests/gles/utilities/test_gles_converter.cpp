@@ -92,27 +92,27 @@ TEST_CASE("converter: blending and depth") {
 
 TEST_CASE("converter: texture formats") {
     using ris::TextureFormat;
-    REQUIRE(conv::convert_internal_format(TextureFormat::Rgba8Unorm) == 0x8058);
-    REQUIRE(conv::convert_internal_format(TextureFormat::Rgba8UnormSrgb) == 0x8C43);
-    REQUIRE(conv::convert_internal_format(TextureFormat::Depth32Float) == 0x8CAC);
-    REQUIRE(conv::convert_internal_format(TextureFormat::Depth24Stencil8) == 0x88F0);
-    REQUIRE(conv::convert_internal_format(TextureFormat::Bc3RgbaUnorm) == 0x83F3);
-    REQUIRE(conv::convert_internal_format(TextureFormat::Bc7RgbaUnorm) == 0x8E8C);
-    REQUIRE(conv::convert_internal_format(TextureFormat::Etc2Rgba8Unorm) == 0x9278);
-    REQUIRE(conv::convert_internal_format(TextureFormat::Astc4x4Rgba) == 0x93B0);
-    REQUIRE_THROWS_AS(conv::convert_internal_format(TextureFormat::Undefined), std::domain_error);
-    REQUIRE_THROWS_AS(conv::convert_internal_format(TextureFormat::Red32Float), std::domain_error);
+    REQUIRE(conv::convertToInternalFormat(TextureFormat::Rgba8Unorm) == 0x8058);
+    REQUIRE(conv::convertToInternalFormat(TextureFormat::Rgba8UnormSrgb) == 0x8C43);
+    REQUIRE(conv::convertToInternalFormat(TextureFormat::Depth32Float) == 0x8CAC);
+    REQUIRE(conv::convertToInternalFormat(TextureFormat::Depth24Stencil8) == 0x88F0);
+    REQUIRE(conv::convertToInternalFormat(TextureFormat::Bc3RgbaUnorm) == 0x83F3);
+    REQUIRE(conv::convertToInternalFormat(TextureFormat::Bc7RgbaUnorm) == 0x8E8C);
+    REQUIRE(conv::convertToInternalFormat(TextureFormat::Etc2Rgba8Unorm) == 0x9278);
+    REQUIRE(conv::convertToInternalFormat(TextureFormat::Astc4x4Rgba) == 0x93B0);
+    REQUIRE_THROWS_AS(conv::convertToInternalFormat(TextureFormat::Undefined), std::domain_error);
+    REQUIRE_THROWS_AS(conv::convertToInternalFormat(TextureFormat::Red32Float), std::domain_error);
 
-    REQUIRE(conv::convert_to_pixel_format(TextureFormat::Rgba8Unorm) == 0x1908);
-    REQUIRE(conv::convert_to_pixel_format(TextureFormat::Rgba8UnormSrgb) == 0x1908);
-    REQUIRE(conv::convert_to_pixel_format(TextureFormat::Depth32Float) == 0x1902);
-    REQUIRE(conv::convert_to_pixel_format(TextureFormat::Depth24Stencil8) == 0x84F9);
-    REQUIRE_THROWS_AS(conv::convert_to_pixel_format(TextureFormat::Astc4x4Rgba), std::domain_error);
+    REQUIRE(conv::convertToPixelFormat(TextureFormat::Rgba8Unorm) == 0x1908);
+    REQUIRE(conv::convertToPixelFormat(TextureFormat::Rgba8UnormSrgb) == 0x1908);
+    REQUIRE(conv::convertToPixelFormat(TextureFormat::Depth32Float) == 0x1902);
+    REQUIRE(conv::convertToPixelFormat(TextureFormat::Depth24Stencil8) == 0x84F9);
+    REQUIRE_THROWS_AS(conv::convertToPixelFormat(TextureFormat::Astc4x4Rgba), std::domain_error);
 
-    REQUIRE(conv::convert_to_texture_type(TextureFormat::Rgba8Unorm) == 0x1401);
-    REQUIRE(conv::convert_to_texture_type(TextureFormat::Depth32Float) == 0x1406);
-    REQUIRE(conv::convert_to_texture_type(TextureFormat::Depth24Stencil8) == 0x84FA);
-    REQUIRE_THROWS_AS(conv::convert_to_texture_type(TextureFormat::Etc2Rgba8Unorm), std::domain_error);
+    REQUIRE(conv::convertToTextureType(TextureFormat::Rgba8Unorm) == 0x1401);
+    REQUIRE(conv::convertToTextureType(TextureFormat::Depth32Float) == 0x1406);
+    REQUIRE(conv::convertToTextureType(TextureFormat::Depth24Stencil8) == 0x84FA);
+    REQUIRE_THROWS_AS(conv::convertToTextureType(TextureFormat::Etc2Rgba8Unorm), std::domain_error);
 
     REQUIRE(conv::is_compressed_format(TextureFormat::Bc3RgbaUnorm));
     REQUIRE(conv::is_compressed_format(TextureFormat::Bc7RgbaUnorm));

@@ -195,7 +195,7 @@ GlesTexture2D* GlesTextureFactory::createFromKtx2(ktxTexture2* ktxTexture, const
 
     // Mip maps are only generated for a single level of uncompressed data.
     const bool generate = descriptor.generateMipmaps && levels == 1 && !fmt.compressed;
-    const uint32_t totalLevels = generate ? texture_utilities::full_mip_count(width, height) : levels;
+    const uint32_t totalLevels = generate ? GlesUtilities::texture().fullMipCount(width, height) : levels;
 
     GLuint id = 0;
     glGenTextures(1, &id);

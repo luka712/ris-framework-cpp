@@ -21,12 +21,12 @@ TEST_CASE("utilities need a window") {
     // No Window exists here: every call that talks to GL throws instead of crashing.
     REQUIRE_THROWS_AS(gles::error_utilities::check_error("test"), std::logic_error);
     REQUIRE_THROWS_AS(GlesUtilities::context().isExtensionSupported("GL_KHR_debug"), std::logic_error);
-    REQUIRE_THROWS_AS(gles::buffer_utilities::create_vertex_buffer(16, ris::BufferUsageFlags::Vertex), std::logic_error);
-    REQUIRE_THROWS_AS(gles::texture_utilities::create_texture_2d(4, 4, static_cast<const void*>(nullptr)), std::logic_error);
+    REQUIRE_THROWS_AS(GlesUtilities::buffer().createVertexBuffer(16, ris::BufferUsageFlags::Vertex), std::logic_error);
+    REQUIRE_THROWS_AS(GlesUtilities::texture().createTexture2D(4, 4, static_cast<const void*>(nullptr)), std::logic_error);
     REQUIRE_THROWS_AS(gles::shader_utilities::create_vertex_shader("x"), std::logic_error);
     // deleting needs no window
     gles::GlUint none = 7;
-    gles::buffer_utilities::delete_buffer(none);
+    GlesUtilities::buffer().deleteBuffer(none);
     REQUIRE(none == 0);
 }
 
@@ -45,12 +45,12 @@ TEST_CASE("error, extension and debug label utilities on a real context") {
         REQUIRE_FALSE(GlesUtilities::context().isExtensionSupported("GL_KHR_debu"));
     }
     SECTION("debug labels never fail") {
-        gles::GlUint buffer = gles::buffer_utilities::create_vertex_buffer(16, ris::BufferUsageFlags::Vertex, "labelled");
+        gles::GlUint buffer = GlesUtilities::buffer().createVertexBuffer(16, ris::BufferUsageFlags::Vertex, "labelled");
         REQUIRE_NOTHROW(gles::debug_label_utilities::is_supported());
         REQUIRE_NOTHROW(gles::debug_label_utilities::set_label(gles::debug_label_utilities::ObjectKind::Buffer, buffer, "again"));
         REQUIRE_NOTHROW(gles::debug_label_utilities::set_label(gles::debug_label_utilities::ObjectKind::Buffer, buffer, ""));
         REQUIRE_NOTHROW(gles::debug_label_utilities::set_label(gles::debug_label_utilities::ObjectKind::Buffer, 0, "none"));
         REQUIRE_NOTHROW(gles::error_utilities::check_error("labels"));
-        gles::buffer_utilities::delete_buffer(buffer);
+        GlesUtilities::buffer().deleteBuffer(buffer);
     }
 }

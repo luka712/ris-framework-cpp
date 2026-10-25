@@ -21,14 +21,15 @@ namespace ris {
 
 /// The texture 2D interface, like `ITexture2D` of ris-framework-ts. Abstract and graphics API neutral: every
 /// rendering backend provides one implementation (GlesTexture2D for OpenGL ES). Textures are created by
-/// ATextureFactory, which returns them initialized.
+/// ATextureFactory, which returns them initialized, or constructed from a TextureDescriptor and initialized with
+/// initialize().
 ///
 /// Rules every implementation follows:
 ///  - The texture is owned by the caller of the factory (free it with `delete`, before the window / graphics
 ///    device). The default texture view is owned by the texture, the views of createView() by the caller (free
 ///    them before the texture).
-///  - There is no `dispose()` as in TypeScript (`IContent` / `IDisposable`): the destructor releases the GPU
-///    resources and then raises the disposed event.
+///  - dispose() releases the GPU resources and then raises the disposed event, once; it can be called again
+///    without effect. The destructor calls it.
 ///  - Failures throw standard exceptions: std::logic_error for a texture in the wrong state (initializing it twice,
 ///    using it after it was disposed), std::invalid_argument for bad arguments, std::domain_error for values the
 ///    backend does not support.
@@ -79,7 +80,7 @@ public:
     /// The number of mipmap levels that the texture really has (1 without mip maps).
     virtual uint32_t getMipLevels() const noexcept = 0;
 
-    /// Adds a listener for the event that is raised when the texture is disposed, that is, from its destructor, after
+    /// Adds a listener for the event that is raised when the texture is disposed, that is, from dispose() (or the destructor), after
     /// the GPU resources were released (the state is Disposed and getHandle() is 0 then). The texture is only
     /// accessible for reading its properties, it is being destroyed. Deviation from the TypeScript interface (which
     /// returns void and removes the listener by function): the listener gets an id, plain `std::function`s cannot be
@@ -100,10 +101,15 @@ public:
     ///         backend cannot give a view of, std::logic_error if the texture is not initialized.
     virtual ATextureView* createView(const TextureViewDescriptor& descriptor = {}) = 0;
 
-    /// Initializes the texture: creates the default texture view. The factories of ATextureFactory return textures that
-    /// are initialized already (state Initialized), so there is normally no need to call this.
-    /// @throws std::logic_error if the texture is already initialized or disposed.
+    /// Initializes the texture: creates the GPU texture if it was not made yet (a texture constructed from a
+    /// TextureDescriptor) and the default texture view. The factories of ATextureFactory return textures that are
+    /// initialized already (state Initialized), so there is normally no need to call this for those.
+    /// @throws std::logic_error "Texture is already initialized." or "Texture is already disposed.".
     virtual void initialize() = 0;
+
+    /// Releases the GPU resources, sets the state to Disposed and raises the disposed event with every listener once.
+    /// Does nothing if the texture is being disposed or is disposed already. Listeners may remove themselves.
+    virtual void dispose() noexcept = 0;
 
 protected:
     ATexture2D() = default;

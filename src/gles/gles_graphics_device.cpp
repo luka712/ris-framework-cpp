@@ -65,10 +65,12 @@ void GlesGraphicsDevice::requireInitialized(const char* what) const {
 }
 
 const AGpuInfo& GlesGraphicsDevice::getGpuInfo() const {
+    requireInitialized("getGpuInfo");
     return *m_gpuInfo;
 }
 
 const AGraphicsDeviceFeatures& GlesGraphicsDevice::getFeatures() const {
+    requireInitialized("getFeatures");
     return *m_features;
 }
 

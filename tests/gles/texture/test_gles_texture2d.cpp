@@ -327,7 +327,7 @@ TEST_CASE("ATexture2D from a KTX2 file") {
         descriptor.textureFormat = ris::TextureFormat::Rgba8Unorm;
         descriptor.generateMipmaps = true;
         const std::unique_ptr<ris::ATexture2D> tex(factory->createFromKtx2(ktx, descriptor));
-        CHECK(tex->getMipLevels() == (levels == 1 ? gles::texture_utilities::full_mip_count(width, height) : levels));
+        CHECK(tex->getMipLevels() == (levels == 1 ? GlesUtilities::texture().fullMipCount(width, height) : levels));
     }
     SECTION("the default target is a format the GPU supports") {
         const std::unique_ptr<ris::ATexture2D> tex(factory->createFromKtx2(ktx));

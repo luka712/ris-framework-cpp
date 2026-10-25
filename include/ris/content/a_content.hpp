@@ -10,8 +10,8 @@
 namespace ris {
 
 /// The content base class, like `IContent` of ris-framework-ts: every piece of content (a texture, ...) derives from
-/// it. In TypeScript `IContent` only adds `IDisposable`; here this is the virtual destructor: there is no
-/// `dispose()`, content releases its resources when it is destroyed (RAII). Content cannot be copied.
+/// it. In TypeScript `IContent` only adds `IDisposable`; here this is the virtual destructor: content releases
+/// its resources when it is destroyed (RAII). The concrete content types also have a `dispose()` (see ATexture2D). Content cannot be copied.
 class RIS_API AContent {
 public:
     virtual ~AContent() = default;

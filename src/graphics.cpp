@@ -120,7 +120,7 @@ std::vector<uint8_t> read_pixels(int32_t x, int32_t y, int32_t width, int32_t he
 // ---- Buffer ---------------------------------------------------------------------------------
 
 Buffer::Buffer(BufferType type, BufferUsage usage, const void* data, size_t size) : type_(type), size_(size) {
-    id_ = gles::buffer_utilities::create_buffer(type, data, size, gles::converter::convert_buffer_usage(usage));
+    id_ = GlesUtilities::buffer().createBuffer(type, data, size, gles::converter::convert_buffer_usage(usage));
 }
 
 Buffer::~Buffer() {
@@ -150,7 +150,7 @@ void Buffer::update(size_t offset, const void* data, size_t size) {
                                 + std::to_string(size_) + ")");
     }
     if (size == 0) return;
-    gles::buffer_utilities::update_buffer(type_, id_, offset, data, size);
+    GlesUtilities::buffer().updateBuffer(type_, id_, offset, data, size);
 }
 
 void Buffer::bind_base(uint32_t binding) const {
@@ -342,7 +342,7 @@ RenderTarget::RenderTarget(int32_t width, int32_t height, bool with_depth_stenci
     }
 
     // The colour texture is owned by `color_` from here on, so it is released if anything below throws.
-    GLuint tex = texture_utilities::create_texture_2d(width, height, static_cast<const void*>(nullptr));
+    GLuint tex = GlesUtilities::texture().createTexture2D(width, height, static_cast<const void*>(nullptr));
     color_ = Texture::adopt(tex, width, height, 1);
     color_.set_sampler(SamplerDesc{Filter::Linear, Filter::Linear, Wrap::Clamp, Wrap::Clamp});
 

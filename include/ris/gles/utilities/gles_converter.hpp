@@ -95,12 +95,12 @@ RIS_API GlEnum convert_compare_function(SamplerCompareFunction func);
 /// `TextureFormat` to the sized internal format (`GL_RGBA8`, `GL_SRGB8_ALPHA8`, `GL_DEPTH_COMPONENT32F`,
 /// `GL_DEPTH24_STENCIL8`, or the compressed format). `convertInternalFormat` of ris-framework-ts.
 /// @throws std::domain_error for Undefined, Red32Float and Red32Typeless.
-RIS_API GlEnum convert_internal_format(TextureFormat format);
+RIS_API GlEnum convertToInternalFormat(TextureFormat format);
 
 /// `TextureFormat` to the pixel format of an upload (`GL_RGBA`, `GL_DEPTH_COMPONENT`, `GL_DEPTH_STENCIL`).
 /// `convertToPixelFormat` of ris-framework-ts.
 /// @throws std::domain_error for compressed and unmapped formats (they are uploaded without a pixel format).
-RIS_API GlEnum convert_to_pixel_format(TextureFormat format);
+RIS_API GlEnum convertToPixelFormat(TextureFormat format);
 
 /// `TextureFormat` to the pixel type of an upload (`GL_UNSIGNED_BYTE`, `GL_FLOAT`, `GL_UNSIGNED_INT_24_8`).
 /// `convertToTextureType` of ris-framework-ts.

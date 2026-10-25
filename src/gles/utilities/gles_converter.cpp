@@ -1,5 +1,6 @@
 #include "ris/gles/utilities/gles_converter.hpp"
 
+#include "ris/rendering/texture/texture_utilities.hpp"
 #include "internal.hpp"
 
 using namespace ris::detail;
@@ -183,7 +184,7 @@ GlEnum convert_compare_function(SamplerCompareFunction func) {
 
 // ---- textures, samplers -----------------------------------------------------------------------
 
-GlEnum convert_internal_format(TextureFormat format) {
+GlEnum convertToInternalFormat(TextureFormat format) {
     switch (format) {
         case TextureFormat::Rgba8Unorm: return GL_RGBA8;
         case TextureFormat::Rgba8UnormSrgb: return GL_SRGB8_ALPHA8;
@@ -200,7 +201,7 @@ GlEnum convert_internal_format(TextureFormat format) {
     unsupported("convert_internal_format", static_cast<uint32_t>(format));
 }
 
-GlEnum convert_to_pixel_format(TextureFormat format) {
+GlEnum convertToPixelFormat(TextureFormat format) {
     switch (format) {
         case TextureFormat::Rgba8Unorm:
         case TextureFormat::Rgba8UnormSrgb: return GL_RGBA;
@@ -211,7 +212,7 @@ GlEnum convert_to_pixel_format(TextureFormat format) {
     unsupported("convert_to_pixel_format", static_cast<uint32_t>(format));
 }
 
-GlEnum convert_to_texture_type(TextureFormat format) {
+GlEnum convertToTextureType(TextureFormat format) {
     switch (format) {
         case TextureFormat::Rgba8Unorm:
         case TextureFormat::Rgba8UnormSrgb: return GL_UNSIGNED_BYTE;
@@ -223,13 +224,7 @@ GlEnum convert_to_texture_type(TextureFormat format) {
 }
 
 bool is_compressed_format(TextureFormat format) noexcept {
-    switch (format) {
-        case TextureFormat::Bc3RgbaUnorm:
-        case TextureFormat::Bc7RgbaUnorm:
-        case TextureFormat::Etc2Rgba8Unorm:
-        case TextureFormat::Astc4x4Rgba: return true;
-        default: return false;
-    }
+    return TextureUtilities::isCompressedTextureFormat(format);
 }
 
 GlEnum convert_mag_filter(SamplerFilter filter) {

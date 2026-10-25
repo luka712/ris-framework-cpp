@@ -170,7 +170,7 @@ TEST_CASE("texture factory createFromKtx2") {
         descriptor.textureFormat = ris::TextureFormat::Rgba8Unorm;
         descriptor.generateMipmaps = true;
         const std::unique_ptr<ris::ATexture2D> tex(factory->createFromKtx2(file.tex, descriptor));
-        const uint32_t full = gles::texture_utilities::full_mip_count(tex->getWidth(), tex->getHeight());
+        const uint32_t full = GlesUtilities::texture().fullMipCount(tex->getWidth(), tex->getHeight());
         // levels stored in the file are used as they are, mip maps are only generated for a single level
         REQUIRE(tex->getMipLevels() == (file.tex->numLevels == 1 ? full : file.tex->numLevels));
     }

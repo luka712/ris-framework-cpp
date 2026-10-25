@@ -5,6 +5,7 @@
 #include <ios>
 
 #include "internal.hpp"
+#include "ris/gles/texture/gles_texture2d.hpp"
 #include "ris/rendering/default_graphics_device.hpp"
 #include "ris/rendering/default_texture_factory.hpp"
 
@@ -97,7 +98,10 @@ Framework::Framework(const FrameworkConfiguration& config)
     RIS_LOG_I("ris-framework %s | %s | %s", version_string(), renderer_->device_name(), renderer_->backend_name());
 }
 
-Framework::~Framework() = default;
+Framework::~Framework() {
+    // The default texture needs the GL context, which the window (a member) owns.
+    gles::GlesTexture2D::disposeDefault(*this);
+}
 
 void Framework::initialize() {
     quit_ = false;

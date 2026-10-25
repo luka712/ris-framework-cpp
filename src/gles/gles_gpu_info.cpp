@@ -40,11 +40,11 @@ namespace ris::gles {
             // TODO:
         } else if (m_name.find("Metal") != std::string_view::npos) {
             // TODO:
-        } else if (m_name.find("OpenGL") != std::string_view::npos) {
-            // TODO:
         } else if (m_name.find("OpenGL ES") != std::string_view::npos
                    || m_apiVersion.find("OpenGL ES") != std::string_view::npos) {
             m_renderingBackend = RenderingBackend::OpenGLES;
+        } else if (m_name.find("OpenGL") != std::string_view::npos) {
+            // TODO:
         }
     }
 } // namespace ris::gles
