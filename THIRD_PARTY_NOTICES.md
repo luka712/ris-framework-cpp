@@ -8,6 +8,7 @@ folder of every release archive (`share/ris_framework/third_party/`).
 | Library | License | Notes |
 | --- | --- | --- |
 | SDL3 | zlib | window, events, input |
+| glm | MIT (Happy Bunny / MIT) | math, header only, used in the public C++ headers |
 | ANGLE | BSD-3-Clause | OpenGL ES over D3D11 / Metal, Windows and macOS builds only |
 | Khronos KTX-Software (libktx) | Apache-2.0 | via ris-ktx2, includes Basis Universal, astc-encoder, dfdutils |
 | Ericsson ETC decoder (inside libktx) | Ericsson Texture Compression Software License Agreement | see the notice in ris-ktx2 |

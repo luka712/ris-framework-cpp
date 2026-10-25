@@ -39,6 +39,7 @@
       "name": "ktx",
       "version>=": "4.4.2"
     },
+    "glm",
     "spdlog",
     "vulkan-headers"
   ],

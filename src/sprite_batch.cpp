@@ -166,8 +166,8 @@ void SpriteBatch::begin(const float* view_projection, BlendMode blend) {
     if (!view_projection) {
         GLint vp[4] = {0, 0, 1, 1};
         glGetIntegerv(GL_VIEWPORT, vp);
-        pixel_projection = Mat4::ortho(0.0f, static_cast<float>(vp[2]), static_cast<float>(vp[3]), 0.0f, -1.0f, 1.0f);
-        view_projection = pixel_projection.data();
+        pixel_projection = glm::ortho(0.0f, static_cast<float>(vp[2]), static_cast<float>(vp[3]), 0.0f, -1.0f, 1.0f);
+        view_projection = glm::value_ptr(pixel_projection);
     }
 
     gfx::set_blend_mode(blend);

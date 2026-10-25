@@ -156,10 +156,11 @@ int main(int argc, char** argv) {
             }
             angle += kRotationSpeed * app.delta_time();
 
-            const ris::Mat4 projection = ris::Mat4::perspective(1.0471976f, app.aspect(), 0.1f, 100.0f);
-            const ris::Mat4 view = ris::Mat4::look_at(eye, {0, 0, 0}, {0, 1, 0});
+            const ris::Mat4 projection = glm::perspective(glm::radians(60.0f), app.aspect(), 0.1f, 100.0f);
+            const ris::Mat4 view = glm::lookAt(ris::Vec3(eye[0], eye[1], eye[2]), ris::Vec3(0, 0, 0), ris::Vec3(0, 1, 0));
             const ris::Mat4 view_projection = projection * view;
-            const ris::Mat4 model_matrix = ris::Mat4::rotation_x(angle * 0.7f) * ris::Mat4::rotation_y(angle);
+            const ris::Mat4 model_matrix = glm::rotate(ris::Mat4(1.0f), angle * 0.7f, ris::Vec3(1, 0, 0)) *
+                                           glm::rotate(ris::Mat4(1.0f), angle, ris::Vec3(0, 1, 0));
 
             ris::gfx::clear(0.392f, 0.584f, 0.929f, 1.0f);   // corn flower blue
             ris::gfx::set_depth_state(true, true);
@@ -167,8 +168,8 @@ int main(int argc, char** argv) {
             ris::gfx::set_blend_mode(ris::BlendMode::None);
 
             shader.use();
-            shader.set_mat4(u_model, model_matrix.data());
-            shader.set_mat4(u_view_projection, view_projection.data());
+            shader.set_mat4(u_model, model_matrix);
+            shader.set_mat4(u_view_projection, view_projection);
             shader.set_vec3(u_eye, eye[0], eye[1], eye[2]);
             shader.set_vec3(u_ambient_light, ambient_color[0] * ambient_intensity, ambient_color[1] * ambient_intensity,
                             ambient_color[2] * ambient_intensity);

@@ -31,6 +31,9 @@ public:
     /// `view_projection`: column-major mat4, or null for a pixel space projection of the current
     /// viewport with (0,0) at the top left and y pointing down.
     void begin(const float* view_projection = nullptr, BlendMode blend = BlendMode::Alpha);
+    void begin(const Mat4& view_projection, BlendMode blend = BlendMode::Alpha) {
+        begin(glm::value_ptr(view_projection), blend);
+    }
     void draw(const Sprite& sprite);
     /// Textured, tinted, axis aligned quad covering the whole texture.
     void draw_quad(const Texture* texture, float x, float y, float width, float height, float r = 1, float g = 1,

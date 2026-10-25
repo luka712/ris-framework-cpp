@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "core.hpp"
+#include "math.hpp"
 
 // OpenGL ES 3 graphics objects. A ris::Window must exist (its context is current) while any of
 // these are created, used or destroyed, and everything must run on the window's thread.
@@ -102,6 +103,11 @@ public:
     void set_vec3(int32_t location, float x, float y, float z) const;
     void set_vec4(int32_t location, float x, float y, float z, float w) const;
     void set_mat4(int32_t location, const float* column_major_16) const;
+    // glm overloads
+    void set_vec2(int32_t location, const Vec2& v) const { set_vec2(location, v.x, v.y); }
+    void set_vec3(int32_t location, const Vec3& v) const { set_vec3(location, v.x, v.y, v.z); }
+    void set_vec4(int32_t location, const Vec4& v) const { set_vec4(location, v.x, v.y, v.z, v.w); }
+    void set_mat4(int32_t location, const Mat4& m) const { set_mat4(location, glm::value_ptr(m)); }
     /// Assigns a named uniform block to a binding point, see Buffer::bind_base.
     void bind_uniform_block(const char* block_name, uint32_t binding) const;
 

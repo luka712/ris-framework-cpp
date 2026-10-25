@@ -14,7 +14,7 @@ There are two APIs:
 ## Features
 
 Window and GL context, events, buffers, shaders, meshes (instancing), textures (PNG/JPEG via stb, KTX2 with
-ASTC > ETC2 > RGBA8 transcoding), render targets, sprite batch, `Mat4`.
+ASTC > ETC2 > RGBA8 transcoding), render targets, sprite batch. Math is [glm](https://github.com/g-truc/glm) (`ris::Mat4` is `glm::mat4`).
 
 ## Building
 

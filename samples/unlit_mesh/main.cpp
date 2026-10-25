@@ -57,10 +57,11 @@ int main(int argc, char** argv) {
             angle += kRotationSpeed * app.delta_time();
 
             // Perspective camera at z = 3 looking at the origin, 60 degrees field of view.
-            const ris::Mat4 projection = ris::Mat4::perspective(1.0471976f, app.aspect(), 0.1f, 100.0f);
-            const ris::Mat4 view = ris::Mat4::look_at({0, 0, 3}, {0, 0, 0}, {0, 1, 0});
+            const ris::Mat4 projection = glm::perspective(glm::radians(60.0f), app.aspect(), 0.1f, 100.0f);
+            const ris::Mat4 view = glm::lookAt(ris::Vec3(0, 0, 3), ris::Vec3(0, 0, 0), ris::Vec3(0, 1, 0));
             // Euler radians (x, y), applied Y then X.
-            const ris::Mat4 model_matrix = ris::Mat4::rotation_x(angle * 0.7f) * ris::Mat4::rotation_y(angle);
+            const ris::Mat4 model_matrix = glm::rotate(ris::Mat4(1.0f), angle * 0.7f, ris::Vec3(1, 0, 0)) *
+                                           glm::rotate(ris::Mat4(1.0f), angle, ris::Vec3(0, 1, 0));
             const ris::Mat4 mvp = projection * view * model_matrix;
 
             ris::gfx::clear(1.0f, 0.714f, 0.757f, 1.0f);   // light pink
@@ -69,7 +70,7 @@ int main(int argc, char** argv) {
             ris::gfx::set_blend_mode(ris::BlendMode::None);
 
             shader.use();
-            shader.set_mat4(u_mvp, mvp.data());
+            shader.set_mat4(u_mvp, mvp);
             for (const sample::ObjSubMesh& sub : model.sub_meshes) {
                 cube.draw(ris::Topology::Triangles, sub.index_start, sub.index_count);
             }

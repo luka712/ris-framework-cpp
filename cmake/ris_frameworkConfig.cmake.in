@@ -3,6 +3,7 @@
 # SDL3, ANGLE and ris-ktx2 are linked into the library and are not needed by consumers.
 # A static build of ris_framework still needs them at link time.
 include(CMakeFindDependencyMacro)
+find_dependency(glm CONFIG)   # public: the C++ headers use glm types
 if(NOT "@BUILD_SHARED_LIBS@")
     find_dependency(SDL3 CONFIG)
     find_dependency(unofficial-angle CONFIG)

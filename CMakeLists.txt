@@ -34,6 +34,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Dependencies
 # ---------------------------------------------------------------------------
 find_package(SDL3 CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)  # math, header only, part of the public C++ API
 find_package(unofficial-angle CONFIG REQUIRED)  # headers everywhere, libraries on Windows / macOS
 if(UNIX AND NOT APPLE)
     # The vcpkg ANGLE port builds no rendering backend on Linux (no GL, Vulkan or Null display), so
@@ -79,7 +80,6 @@ set(TARGET_NAME ris_framework)
 
 add_library(${TARGET_NAME}
         src/core.cpp
-        src/math.cpp
         src/window.cpp
         src/graphics.cpp
         src/texture.cpp
@@ -109,6 +109,8 @@ else()
     set(_ris_sdl3_target SDL3::SDL3)
 endif()
 
+# glm is public: the C++ headers expose glm types (ris::Mat4 is glm::mat4).
+target_link_libraries(${TARGET_NAME} PUBLIC glm::glm)
 target_link_libraries(${TARGET_NAME} PRIVATE
         ${_ris_sdl3_target}
         ${_ris_gles_libs}

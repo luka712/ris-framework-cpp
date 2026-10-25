@@ -452,25 +452,25 @@ void RIS_CALL ris_sprite_batch_destroy(ris_sprite_batch* batch) { delete batch; 
 // ---- math -----------------------------------------------------------------------------------
 
 namespace {
-void store(float* out, const ris::Mat4& m) { std::memcpy(out, m.data(), 16 * sizeof(float)); }
+void store(float* out, const ris::Mat4& m) { std::memcpy(out, glm::value_ptr(m), 16 * sizeof(float)); }
 ris::Mat4 load(const float* in) {
     ris::Mat4 m;
-    std::memcpy(m.data(), in, 16 * sizeof(float));
+    std::memcpy(glm::value_ptr(m), in, 16 * sizeof(float));
     return m;
 }
 } // namespace
 
-void RIS_CALL ris_mat4_identity(float* out) { if (out) store(out, ris::Mat4::identity()); }
+void RIS_CALL ris_mat4_identity(float* out) { if (out) store(out, ris::Mat4(1.0f)); }
 void RIS_CALL ris_mat4_multiply(float* out, const float* a, const float* b) { if (out && a && b) store(out, load(a) * load(b)); }
-void RIS_CALL ris_mat4_translation(float* out, float x, float y, float z) { if (out) store(out, ris::Mat4::translation(x, y, z)); }
-void RIS_CALL ris_mat4_scale(float* out, float x, float y, float z) { if (out) store(out, ris::Mat4::scale(x, y, z)); }
-void RIS_CALL ris_mat4_rotation_x(float* out, float radians) { if (out) store(out, ris::Mat4::rotation_x(radians)); }
-void RIS_CALL ris_mat4_rotation_y(float* out, float radians) { if (out) store(out, ris::Mat4::rotation_y(radians)); }
-void RIS_CALL ris_mat4_rotation_z(float* out, float radians) { if (out) store(out, ris::Mat4::rotation_z(radians)); }
-void RIS_CALL ris_mat4_ortho(float* out, float l, float r, float b, float t, float n, float f) { if (out) store(out, ris::Mat4::ortho(l, r, b, t, n, f)); }
-void RIS_CALL ris_mat4_perspective(float* out, float fov, float aspect, float n, float f) { if (out) store(out, ris::Mat4::perspective(fov, aspect, n, f)); }
+void RIS_CALL ris_mat4_translation(float* out, float x, float y, float z) { if (out) store(out, glm::translate(ris::Mat4(1.0f), ris::Vec3(x, y, z))); }
+void RIS_CALL ris_mat4_scale(float* out, float x, float y, float z) { if (out) store(out, glm::scale(ris::Mat4(1.0f), ris::Vec3(x, y, z))); }
+void RIS_CALL ris_mat4_rotation_x(float* out, float radians) { if (out) store(out, glm::rotate(ris::Mat4(1.0f), radians, ris::Vec3(1, 0, 0))); }
+void RIS_CALL ris_mat4_rotation_y(float* out, float radians) { if (out) store(out, glm::rotate(ris::Mat4(1.0f), radians, ris::Vec3(0, 1, 0))); }
+void RIS_CALL ris_mat4_rotation_z(float* out, float radians) { if (out) store(out, glm::rotate(ris::Mat4(1.0f), radians, ris::Vec3(0, 0, 1))); }
+void RIS_CALL ris_mat4_ortho(float* out, float l, float r, float b, float t, float n, float f) { if (out) store(out, glm::ortho(l, r, b, t, n, f)); }
+void RIS_CALL ris_mat4_perspective(float* out, float fov, float aspect, float n, float f) { if (out) store(out, glm::perspective(fov, aspect, n, f)); }
 void RIS_CALL ris_mat4_look_at(float* out, float ex, float ey, float ez, float tx, float ty, float tz, float ux, float uy, float uz) {
-    if (out) store(out, ris::Mat4::look_at({ex, ey, ez}, {tx, ty, tz}, {ux, uy, uz}));
+    if (out) store(out, glm::lookAt(ris::Vec3(ex, ey, ez), ris::Vec3(tx, ty, tz), ris::Vec3(ux, uy, uz)));
 }
 
 } // extern "C"

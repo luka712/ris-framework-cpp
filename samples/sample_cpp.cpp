@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
             ris::gfx::clear(0.1f, 0.12f + 0.05f * std::sin(t), 0.18f, 1.0f);
 
             shader.use();
-            shader.set_mat4(u_mvp, ris::Mat4::rotation_z(t).data());
+            shader.set_mat4(u_mvp, glm::rotate(ris::Mat4(1.0f), t, ris::Vec3(0, 0, 1)));
             mesh.draw(ris::Topology::Triangles, 0, 3);
 
             batch.begin();
