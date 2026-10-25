@@ -10,7 +10,7 @@
 #include "content.hpp"
 #include "core.hpp"
 #include "data.hpp"
-#include "input.hpp"
+#include "input/input.hpp"
 #include "lights.hpp"
 #include "material.hpp"
 #include "mesh.hpp"
@@ -100,7 +100,8 @@ public:
 
     WindowManager& window_manager() { return *window_manager_; }
     Renderer& renderer() { return *renderer_; }
-    InputManager& input_manager() { return input_; }
+    /// The input manager of the default backend (SDL3), created and initialised with the window.
+    AInputManager& input_manager() { return *input_; }
     TimeManager& time_manager() { return time_; }
     ContentManager& content() { return content_; }
     CameraFactory& camera_factory() { return camera_factory_; }
@@ -132,7 +133,7 @@ private:
     std::unique_ptr<Window> window_;
     std::unique_ptr<WindowManager> window_manager_;
     std::unique_ptr<Renderer> renderer_;
-    InputManager input_;
+    std::unique_ptr<AInputManager> input_;   // declared after window_: disposed before the window goes away
     TimeManager time_;
     ContentManager content_;
     CameraFactory camera_factory_;

@@ -91,6 +91,8 @@ Framework::Framework(const FrameworkConfiguration& config)
     window_ = std::make_unique<Window>(make_window_desc(config_));
     window_manager_ = std::make_unique<WindowManager>(*window_);
     renderer_ = std::make_unique<Renderer>(*window_);
+    input_ = create_default_input_manager();
+    input_->initialize();
     sprite_batch_ = std::make_unique<SpriteBatch>();
     RIS_LOG_I("ris-framework %s | %s | %s", version_string(), renderer_->device_name(), renderer_->backend_name());
 }
@@ -117,7 +119,6 @@ void Framework::initialize() {
     for (;;) {
         Event ev;
         while (window_->poll_event(ev)) {
-            input_.handle_event(ev);
             if (ev.type == EventType::Quit) quit_ = true;
             if (ev.type == EventType::KeyDown && ev.scancode == static_cast<int32_t>(Key::Escape) && config_.exit_on_escape) quit_ = true;
             if (ev.type == EventType::WindowResized) {
@@ -129,8 +130,9 @@ void Framework::initialize() {
         if (quit_ || (config_.max_frames >= 0 && frame >= config_.max_frames)) break;
 
         time_.frame_start();
-        input_.begin_frame();
+        input_->update();
         { auto copy = update_; for (auto& [id, l] : copy) l(time_.time()); }
+        input_->after_update();
 
         const Vec2 size = renderer_->back_buffer_size();
         gfx::viewport(0, 0, static_cast<int32_t>(size.x), static_cast<int32_t>(size.y));

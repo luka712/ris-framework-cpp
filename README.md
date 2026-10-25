@@ -18,6 +18,8 @@ ASTC > ETC2 > RGBA8 transcoding), render targets, sprite batch. Math is [glm](ht
 
 The OpenGL ES helpers (buffers, shaders, programs, textures, samplers, framebuffers, blending, culling, ...) live in `ris/gles/` and mirror `webgl/` of ris-framework-ts; `ris/gles/gles.hpp` includes all of them.
 
+Input layering (like `api/input` of ris-framework-ts): `ris/input/` holds the windowing API neutral part (the abstract `AInputManager`, the shared `InputManagerBase` that does the per frame state tracking, `KeyboardState`, `MouseState`, `GamePadState`, `TouchCollection` / `TouchLocation`, `Key`, `MouseButton`, `GamePadButton`, ... and no SDL types), and the SDL3 implementation `ris::sdl3::Sdl3InputManager` lives in `ris/sdl3/input/` (keyboard, mouse, gamepads and touch). `Framework::input_manager()` returns the `AInputManager` of `ris::create_default_input_manager()`; a new backend derives from `InputManagerBase` and calls its `report_*` functions. Per frame: `update()` publishes the state collected since the last frame, the update listeners read it, `after_update()` ages touch contacts.
+
 Rendering API layering: `ris/rendering/` holds the graphics API neutral interfaces (for buffers `ABuffer`, `AVertexBuffer`, `AIndexBuffer`, `AUniformBuffer`, `ABufferFactory`), and each backend implements them in its own folder; the OpenGL ES one is `ris/gles/buffers/` (`GlesVertexBuffer`, ...). `ris::create_default_buffer_factory()` returns the factory of the current backend, so code written against the `A*` classes does not change when other rendering APIs are added.
 
 ## Building
@@ -39,7 +41,7 @@ ris-ktx2 is always linked statically into `libris_framework`, so a shared build 
 ## Using it
 
 The high level API mirrors [ris-framework-ts](https://github.com/luka712/ris-framework-ts): `Framework`, `Scene`, cameras,
-lights, materials, `ContentManager`, `InputManager`, `SpriteBatch::draw(texture, rect, color)`.
+lights, materials, `ContentManager`, `AInputManager`, `SpriteBatch::draw(texture, rect, color)`.
 
 ```cpp
 #include <ris/ris.hpp>
@@ -64,7 +66,7 @@ int main() {
 
 Differences to the TS API: calls are synchronous (no `async` content loading), lights are created with
 `scene.create_point_light(...)` instead of `new PointLight(..., scene)`, and the camera keeps the TS convention that the
-look-at negates `eye.z`. Not ported in 0.1.0: touch and gamepad input, WebGPU specific buffer and pipeline factories.
+look-at negates `eye.z`. Not ported in 0.1.0: WebGPU specific buffer and pipeline factories.
 
 The low level API (windows, buffers, shaders, vertex arrays, textures) stays available:
 

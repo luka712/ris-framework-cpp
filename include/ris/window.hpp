@@ -5,6 +5,7 @@
 #include <string>
 
 #include "core.hpp"
+#include "event.hpp"
 
 namespace ris {
 
@@ -47,44 +48,6 @@ struct WindowDesc {
     uint32_t depth_bits = 24;   ///< 0, 16, 24
     uint32_t stencil_bits = 8;  ///< 0 or 8
     bool debug = false;         ///< request a debug context and log GL debug messages
-};
-
-enum class EventType : uint32_t {
-    None = 0,
-    Quit = 1,
-    WindowResized = 2,      ///< width, height = new drawable size in pixels
-    WindowFocusGained = 3,
-    WindowFocusLost = 4,
-    KeyDown = 5,            ///< scancode, keycode, mods, repeat
-    KeyUp = 6,
-    TextInput = 7,          ///< text
-    MouseMove = 8,          ///< x, y, dx, dy
-    MouseButtonDown = 9,    ///< button, clicks, x, y
-    MouseButtonUp = 10,
-    MouseWheel = 11         ///< dx, dy
-};
-
-namespace key_mod {
-inline constexpr uint32_t shift = 1u << 0;
-inline constexpr uint32_t ctrl = 1u << 1;
-inline constexpr uint32_t alt = 1u << 2;
-inline constexpr uint32_t gui = 1u << 3;
-} // namespace key_mod
-
-/// Same layout as the C API's `ris_event`. Mouse buttons: 1 = left, 2 = middle, 3 = right.
-struct Event {
-    EventType type = EventType::None;
-    uint32_t repeat = 0;
-    uint64_t timestamp_ns = 0;
-    int32_t scancode = 0;   ///< USB HID usage, same values as SDL_Scancode
-    int32_t keycode = 0;    ///< layout dependent key (SDL_Keycode)
-    uint32_t mods = 0;      ///< key_mod bit mask
-    int32_t button = 0;
-    float x = 0, y = 0, dx = 0, dy = 0;
-    int32_t width = 0, height = 0;
-    int32_t clicks = 0;
-    int32_t reserved = 0;
-    char text[32] = {};     ///< UTF-8, EventType::TextInput only
 };
 
 enum class GlInfo : uint32_t {

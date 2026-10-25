@@ -69,7 +69,7 @@ void OrthographicCamera::update_matrices() {
 
 void OrthographicCamera::update(const GameTime&) { update_matrices(); }
 
-OrbitCamera::OrbitCamera(std::shared_ptr<PerspectiveCamera> core, const InputManager& input)
+OrbitCamera::OrbitCamera(std::shared_ptr<PerspectiveCamera> core, const AInputManager& input)
     : core_(std::move(core)), input_(input) {
     core_->eye = {0, 0, -3};
     core_->target = {0, 0, 0};

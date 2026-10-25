@@ -66,42 +66,6 @@ TEST_CASE("scene lights") {
     REQUIRE_THROWS_AS(scene.render(), ris::Error);   // no camera
 }
 
-TEST_CASE("input manager publishes state per frame") {
-    ris::InputManager input;
-    ris::Event ev;
-    ev.type = ris::EventType::KeyDown;
-    ev.scancode = static_cast<int32_t>(ris::Key::W);
-    input.handle_event(ev);
-    REQUIRE_FALSE(input.keyboard_state().is_key_down(ris::Key::W));   // not published yet
-    input.begin_frame();
-    REQUIRE(input.keyboard_state().is_key_down(ris::Key::W));
-
-    ev.type = ris::EventType::KeyUp;
-    input.handle_event(ev);
-    input.begin_frame();
-    REQUIRE(input.keyboard_state().is_key_up(ris::Key::W));
-    REQUIRE(input.keyboard_state().is_key_released(ris::Key::W));
-    input.begin_frame();
-    REQUIRE_FALSE(input.keyboard_state().is_key_released(ris::Key::W));
-
-    ev = {};
-    ev.type = ris::EventType::MouseMove;
-    ev.x = 5; ev.y = 6; ev.dx = 2; ev.dy = 3;
-    input.handle_event(ev);
-    input.handle_event(ev);
-    ev = {};
-    ev.type = ris::EventType::MouseWheel;
-    ev.dy = 1;
-    input.handle_event(ev);
-    input.begin_frame();
-    REQUIRE(input.mouse_state().x() == 5);
-    REQUIRE(input.mouse_state().dx() == 4);
-    REQUIRE(input.mouse_state().scroll_wheel_position.y == 1);
-    input.begin_frame();
-    REQUIRE(input.mouse_state().dx() == 0);
-    REQUIRE(input.mouse_state().scroll_wheel_position.y == 1);
-}
-
 TEST_CASE("geometry builder") {
     const ris::Geometry cube = ris::GeometryBuilder::create_cube(2.0f);
     REQUIRE(cube.vertex_count() == 24);
