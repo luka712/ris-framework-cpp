@@ -57,10 +57,13 @@ RisFramework.Demo:
 | `ris_sample_sprite_batch` | texture loading, one sprite with `SpriteBatch` |
 | `ris_sample_unlit_mesh` | OBJ/MTL cube, vertex colours, perspective camera, depth test |
 | `ris_sample_blinn_phong_mesh` | Blinn-Phong materials, ambient, directional and two orbiting point lights |
+| `ris_sample_ktx2_quad` | loads a Basis Universal `.ktx2` (transcoded to ASTC or ETC2) and shows it as a textured quad |
+| `ris_sample_ktx2_compare` | the same image as ASTC 4x4, ETC2 and RGBA8 `.ktx2` files side by side, skips formats the GPU lacks |
 
 All samples accept `--frames N`, `--hidden`, `--size WxH` and `--screenshot out.ppm`, for example
 `./cmake-build-debug/ris_sample_unlit_mesh --frames 60 --hidden --screenshot cube.ppm`. Escape closes a window.
-Assets live in `samples/<name>/assets` (kodim23.png is from the Kodak image suite, see `samples/sprite_batch/README.md`).
+Assets live in `samples/<name>/assets` (kodim23.png is from the Kodak image suite, see `samples/sprite_batch/README.md`; the `.ktx2` files come from the ris-ktx2-cpp test image, see `samples/ktx2_quad/README.md`).
+The two ktx2 samples size their window from `--scale N` (default 2) and lay out for that size, so use `--scale` rather than `--size` with them.
 
 ## Platform notes
 

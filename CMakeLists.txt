@@ -153,7 +153,7 @@ if(RIS_FRAMEWORK_BUILD_SAMPLES)
         target_link_libraries(ris_sample_c PRIVATE m)
     endif()
     # Ports of the ris-framework-ts / RisFramework.Demo examples. Assets are read from samples/<name>/assets.
-    foreach(sample IN ITEMS sprite_batch unlit_mesh blinn_phong_mesh)
+    foreach(sample IN ITEMS sprite_batch unlit_mesh blinn_phong_mesh ktx2_quad ktx2_compare)
         add_executable(ris_sample_${sample} samples/${sample}/main.cpp)
         target_link_libraries(ris_sample_${sample} PRIVATE ${TARGET_NAME})
         target_compile_definitions(ris_sample_${sample} PRIVATE RIS_SAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/samples")
