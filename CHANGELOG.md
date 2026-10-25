@@ -8,4 +8,5 @@ First release.
 - SDL3 window, events and input; OpenGL ES 3.0 context through EGL (ANGLE on Windows and macOS, system EGL on Linux).
 - Buffers, shaders (uniforms and uniform blocks), meshes (instancing), textures, render targets, sprite batch, `Mat4` math.
 - KTX2 textures through [ris-ktx2-cpp](https://github.com/luka712/ris-ktx2-cpp): Basis Universal data is transcoded to ASTC, then ETC2, then RGBA8.
+- Samples: sprite_batch, unlit_mesh and blinn_phong_mesh, ported from the TypeScript and C# demos.
 - PNG/JPEG/etc. loading through the stb image functions in ris-ktx2.

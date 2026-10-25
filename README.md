@@ -49,7 +49,18 @@ int main() {
 }
 ```
 
-See `samples/` for a triangle plus sprites in C and C++.
+See `samples/` for a triangle plus sprites in C and C++, and C++ ports of the examples of ris-framework-ts and
+RisFramework.Demo:
+
+| Target | What it shows |
+| --- | --- |
+| `ris_sample_sprite_batch` | texture loading, one sprite with `SpriteBatch` |
+| `ris_sample_unlit_mesh` | OBJ/MTL cube, vertex colours, perspective camera, depth test |
+| `ris_sample_blinn_phong_mesh` | Blinn-Phong materials, ambient, directional and two orbiting point lights |
+
+All samples accept `--frames N`, `--hidden`, `--size WxH` and `--screenshot out.ppm`, for example
+`./cmake-build-debug/ris_sample_unlit_mesh --frames 60 --hidden --screenshot cube.ppm`. Escape closes a window.
+Assets live in `samples/<name>/assets` (kodim23.png is from the Kodak image suite, see `samples/sprite_batch/README.md`).
 
 ## Platform notes
 

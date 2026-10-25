@@ -1,0 +1,13 @@
+# One material per cube face. The loader bakes Kd into vertex colours.
+newmtl red
+Kd 0.90 0.30 0.25
+newmtl green
+Kd 0.25 0.70 0.35
+newmtl blue
+Kd 0.25 0.45 0.90
+newmtl yellow
+Kd 0.95 0.80 0.25
+newmtl purple
+Kd 0.70 0.35 0.85
+newmtl cyan
+Kd 0.25 0.80 0.85

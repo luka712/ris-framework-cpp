@@ -1,0 +1,25 @@
+# One material per cube face: Kd diffuse, Ks specular, Ns shininess.
+newmtl red
+Kd 0.90 0.30 0.25
+Ks 0.6 0.6 0.6
+Ns 48
+newmtl green
+Kd 0.25 0.70 0.35
+Ks 0.6 0.6 0.6
+Ns 48
+newmtl blue
+Kd 0.25 0.45 0.90
+Ks 0.6 0.6 0.6
+Ns 48
+newmtl yellow
+Kd 0.95 0.80 0.25
+Ks 0.6 0.6 0.6
+Ns 48
+newmtl purple
+Kd 0.70 0.35 0.85
+Ks 0.6 0.6 0.6
+Ns 48
+newmtl cyan
+Kd 0.25 0.80 0.85
+Ks 0.6 0.6 0.6
+Ns 48
