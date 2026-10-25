@@ -2,9 +2,9 @@
 
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "camera.hpp"
@@ -18,8 +18,6 @@
 #include "scene.hpp"
 #include "sprite_batch.hpp"
 #include "ris/time.hpp"
-#include "ris/utilities/listener_id_generator.hpp"
-#include "ris/utilities/listener_map.hpp"
 #include "window.hpp"
 
 namespace ris {
@@ -75,36 +73,23 @@ public:
     const char* device_name() const { return window_.gl_info(GlInfo::Renderer); }
 
     /// Registers a listener that is called with the new drawable size when the window is resized.
-    /// @return the id for `remove_on_resized_listener`. Ids come from a static `ListenerIdGenerator`.
-    ListenerId add_on_resized_listener(std::function<void(Vec2)> listener) { return resized_.add(std::move(listener)); }
+    /// @return its id (1, 2, 3, ...), for `remove_on_resized_listener`.
+    uint32_t add_on_resized_listener(std::function<void(Vec2)> listener) {
+        const uint32_t id = ++s_resizedIds;
+        resized_[id] = std::move(listener);
+        return id;
+    }
     /// Removes a resized listener. @return false for an unknown id.
-    bool remove_on_resized_listener(ListenerId id) { return resized_.remove(id); }
+    bool remove_on_resized_listener(uint32_t id) { return resized_.erase(id) > 0; }
 
 private:
     friend class AFramework;
-    static ListenerIdGenerator s_resizedIds;   ///< shared by all renderers
+    static uint32_t s_resizedIds;   ///< shared by all renderers, the last id given
     Window& window_;
-    ListenerMap<void(Vec2)> resized_{s_resizedIds};
+    std::map<uint32_t, std::function<void(Vec2)>> resized_;
 };
 
 class AFramework;
-
-namespace detail {
-
-/// Turns a user callback into the stored form `void(AFramework&, Args...)`. The callback may take the framework as
-/// its first argument, or leave it out (like the listeners of ris-framework-ts, which capture the framework).
-template <class... Args, class F>
-std::function<void(AFramework&, Args...)> adaptListener(F callback) {
-    if constexpr (std::is_invocable_v<F&, AFramework&, Args...>) {
-        return std::function<void(AFramework&, Args...)>(std::move(callback));
-    } else {
-        static_assert(std::is_invocable_v<F&, Args...>,
-                      "a framework listener must be callable as (AFramework&, args...) or as (args...)");
-        return [callback = std::move(callback)](AFramework&, Args... args) mutable { callback(args...); };
-    }
-}
-
-} // namespace detail
 
 /// The base of the entry point, like `Framework` of ris-framework-ts. It owns the window, renderer, input, time and
 /// the factories, runs the game loop and calls the listeners. Create a `ris::Framework`, not an `AFramework`.
@@ -115,11 +100,10 @@ std::function<void(AFramework&, Args...)> adaptListener(F callback) {
 ///     framework.addOnRenderListener([&](ris::AFramework& f) { scene.render(); });   // both forms work
 ///     framework.initialize();   // runs the loop until the window closes
 ///
-/// Listeners: every `add...Listener` returns a `ListenerId` for the matching `remove...Listener`. A callback is
-/// called with the framework as its first argument and may leave that parameter out. Callbacks of one kind are
-/// stored in a `std::map` keyed by id, ids come from a static `ListenerIdGenerator` per kind, and the callbacks
-/// run in id (registration) order. Adding or removing listeners from inside a listener is safe (see
-/// `ListenerMap`): a new listener first runs on the next dispatch, a removed one does not run any more.
+/// Listeners: every `add...Listener` returns an id (1, 2, 3, ...) for the matching `remove...Listener`. The
+/// callbacks of one kind are kept in a `std::map` keyed by id, so they run in registration order. A callback may
+/// take the framework as its first argument or leave it out. Listeners may be added or removed from inside a
+/// listener: a new one first runs on the next dispatch, a removed one is not called any more.
 ///
 /// Everything created from the framework (scenes, meshes, textures, materials) must be destroyed
 /// before it. Not thread safe: use it from the thread that created it.
@@ -148,41 +132,34 @@ public:
     const FrameworkConfiguration& configuration() const { return config_; }
 
     /// Registers a listener that runs once at the start of `initialize()`, before the initialized listeners, to
-    /// load content. @param listener `void(AFramework&)` or `void()`. @return the id for `removeOnLoadContentListener`.
-    template <class F>
-    ListenerId addOnLoadContentListener(F listener) { return load_content_.add(detail::adaptListener<>(std::move(listener))); }
+    /// load content. @return its id, for `removeOnLoadContentListener`.
+    uint32_t addOnLoadContentListener(Callback listener) { return add(m_onLoadContentListeners, s_loadContentIds, std::move(listener)); }
+    uint32_t addOnLoadContentListener(std::function<void()> listener) { return addOnLoadContentListener([listener](AFramework&) { listener(); }); }
     /// Registers a listener that runs once in `initialize()`, after the load content listeners and before the loop.
-    /// @param listener `void(AFramework&)` or `void()`. @return the id for `removeOnInitializedListener`.
-    template <class F>
-    ListenerId addOnInitializedListener(F listener) { return initialized_.add(detail::adaptListener<>(std::move(listener))); }
+    /// @return its id, for `removeOnInitializedListener`.
+    uint32_t addOnInitializedListener(Callback listener) { return add(m_onInitializedListeners, s_initializedIds, std::move(listener)); }
+    uint32_t addOnInitializedListener(std::function<void()> listener) { return addOnInitializedListener([listener](AFramework&) { listener(); }); }
     /// Registers a listener that runs every frame after the input is updated.
-    /// @param listener `void(AFramework&, const GameTime&)`, `void(const GameTime&)`.
-    /// @return the id for `removeOnUpdateListener`.
-    template <class F>
-    ListenerId addOnUpdateListener(F listener) { return update_.add(detail::adaptListener<const GameTime&>(std::move(listener))); }
+    /// @return its id, for `removeOnUpdateListener`.
+    uint32_t addOnUpdateListener(UpdateCallback listener) { return add(m_onUpdateListeners, s_updateIds, std::move(listener)); }
+    uint32_t addOnUpdateListener(std::function<void(const GameTime&)> listener) { return addOnUpdateListener([listener](AFramework&, const GameTime& t) { listener(t); }); }
     /// Registers a listener for the fixed update steps: when `TimeManager::fixed_time_step_ms()` is > 0 (see
     /// `FrameworkConfiguration::fixed_time_step_ms`) it runs zero or more times per frame, before the update
     /// listeners, once for every full fixed step; its `GameTime::delta_time_ms` is the step and `elapsed_time_ms`
-    /// the fixed simulation time. Never runs without a fixed time step.
-    /// @param listener `void(AFramework&, const GameTime&)`, `void(const GameTime&)`.
-    /// @return the id for `removeOnFixedUpdateListener`.
-    template <class F>
-    ListenerId addOnFixedUpdateListener(F listener) { return fixed_update_.add(detail::adaptListener<const GameTime&>(std::move(listener))); }
+    /// the fixed simulation time. Never runs without a fixed time step. @return its id, for `removeOnFixedUpdateListener`.
+    uint32_t addOnFixedUpdateListener(UpdateCallback listener) { return add(m_onFixedUpdateListeners, s_fixedUpdateIds, std::move(listener)); }
+    uint32_t addOnFixedUpdateListener(std::function<void(const GameTime&)> listener) { return addOnFixedUpdateListener([listener](AFramework&, const GameTime& t) { listener(t); }); }
     /// Registers a listener that runs every frame after the screen is cleared, to draw.
-    /// @param listener `void(AFramework&)` or `void()`. @return the id for `removeOnRenderListener`.
-    template <class F>
-    ListenerId addOnRenderListener(F listener) { return render_.add(detail::adaptListener<>(std::move(listener))); }
+    /// @return its id, for `removeOnRenderListener`.
+    uint32_t addOnRenderListener(Callback listener) { return add(m_onRenderListeners, s_renderIds, std::move(listener)); }
+    uint32_t addOnRenderListener(std::function<void()> listener) { return addOnRenderListener([listener](AFramework&) { listener(); }); }
 
-    /// Removes a load content listener. @return false for an unknown or already removed id.
-    bool removeOnLoadContentListener(ListenerId id) { return load_content_.remove(id); }
-    /// Removes an initialized listener. @return false for an unknown or already removed id.
-    bool removeOnInitializedListener(ListenerId id) { return initialized_.remove(id); }
-    /// Removes an update listener. @return false for an unknown or already removed id.
-    bool removeOnUpdateListener(ListenerId id) { return update_.remove(id); }
-    /// Removes a fixed update listener. @return false for an unknown or already removed id.
-    bool removeOnFixedUpdateListener(ListenerId id) { return fixed_update_.remove(id); }
-    /// Removes a render listener. @return false for an unknown or already removed id.
-    bool removeOnRenderListener(ListenerId id) { return render_.remove(id); }
+    /// The remove functions return false for an unknown or already removed id.
+    bool removeOnLoadContentListener(uint32_t id) { return m_onLoadContentListeners.erase(id) > 0; }
+    bool removeOnInitializedListener(uint32_t id) { return m_onInitializedListeners.erase(id) > 0; }
+    bool removeOnUpdateListener(uint32_t id) { return m_onUpdateListeners.erase(id) > 0; }
+    bool removeOnFixedUpdateListener(uint32_t id) { return m_onFixedUpdateListeners.erase(id) > 0; }
+    bool removeOnRenderListener(uint32_t id) { return m_onRenderListeners.erase(id) > 0; }
 
     /// Runs the load content and initialized listeners, then the game loop: events, input, update
     /// listeners, clear, render listeners, swap. Returns when the window is closed (or `max_frames` is reached).
@@ -207,14 +184,18 @@ private:
     MeshFactory mesh_factory_;
     std::unique_ptr<SpriteBatch> sprite_batch_;
 
-    // One static id generator per kind of listener, shared by all frameworks: ids are unique and increasing.
-    static ListenerIdGenerator s_loadContentIds, s_initializedIds, s_updateIds, s_fixedUpdateIds, s_renderIds;
+    // The last id given, one counter per kind of listener, shared by all frameworks (ids start at 1, 0 is never used).
+    static uint32_t s_loadContentIds, s_initializedIds, s_updateIds, s_fixedUpdateIds, s_renderIds;
 
-    ListenerMap<void(AFramework&)> load_content_{s_loadContentIds};
-    ListenerMap<void(AFramework&)> initialized_{s_initializedIds};
-    ListenerMap<void(AFramework&)> render_{s_renderIds};
-    ListenerMap<void(AFramework&, const GameTime&)> update_{s_updateIds};
-    ListenerMap<void(AFramework&, const GameTime&)> fixed_update_{s_fixedUpdateIds};
+    std::map<uint32_t, Callback> m_onLoadContentListeners, m_onInitializedListeners, m_onRenderListeners;
+    std::map<uint32_t, UpdateCallback> m_onUpdateListeners, m_onFixedUpdateListeners;
+
+    template <class Map, class F>
+    static uint32_t add(Map& listeners, uint32_t& lastId, F&& listener) {
+        listeners[++lastId] = std::forward<F>(listener);
+        return lastId;
+    }
+
     bool quit_ = false;
 };
 

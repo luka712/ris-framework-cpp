@@ -68,11 +68,10 @@ int main() {
 
 Framework methods are camelCase like in ris-framework-ts (`windowManager()`, `inputManager()`, `timeManager()`,
 `cameraFactory()`, `materialFactory()`, `meshFactory()`, `spriteBatch()`, `addOnUpdateListener`, ...). `ris::Framework`
-derives from `ris::AFramework`, which holds the implementation. Every `add...Listener` returns a `ris::ListenerId` for
-the matching `remove...Listener`. A callback may take the framework as its first argument (`[&](ris::AFramework& f)`,
-`[&](ris::AFramework& f, const ris::GameTime& t)`) or leave it out. Callbacks of one kind are stored in a `std::map`
-keyed by id (`ris::ListenerMap`, `ris/utilities/listener_map.hpp`), ids come from a static `ris::ListenerIdGenerator`
-per kind, so listeners run in registration order and adding or removing listeners from inside a listener is safe.
+derives from `ris::AFramework`, which holds the implementation. Every `add...Listener` returns a `uint32_t` id (1, 2, 3, ...)
+for the matching `remove...Listener`. A callback may take the framework as its first argument (`[&](ris::AFramework& f)`,
+`[&](ris::AFramework& f, const ris::GameTime& t)`) or leave it out. The callbacks of one kind are kept in a `std::map`
+keyed by id, so they run in registration order, and listeners may be added or removed from inside a listener.
 
 Differences to the TS API: calls are synchronous (no `async` content loading), lights are created with
 `scene.create_point_light(...)` instead of `new PointLight(..., scene)`, and the camera keeps the TS convention that the

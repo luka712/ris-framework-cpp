@@ -21,9 +21,18 @@ Vec2 Renderer::back_buffer_size() const {
     return {static_cast<float>(w), static_cast<float>(h)};
 }
 
-ListenerIdGenerator Renderer::s_resizedIds;
+uint32_t Renderer::s_resizedIds = 0;
 
 namespace {
+
+/// Calls the listeners of a copy of the map, so a listener may add or remove listeners; a listener removed meanwhile is skipped.
+template <class Map, class... Args>
+void dispatch(const Map& listeners, Args&&... args) {
+    const Map copy = listeners;
+    for (const auto& [id, listener] : copy) {
+        if (listeners.contains(id)) listener(args...);
+    }
+}
 
 WindowDesc make_window_desc(const FrameworkConfiguration& c) {
     WindowDesc d;
@@ -59,11 +68,11 @@ void write_ppm(const std::string& path, int32_t w, int32_t h) {
 
 } // namespace
 
-ListenerIdGenerator AFramework::s_loadContentIds;
-ListenerIdGenerator AFramework::s_initializedIds;
-ListenerIdGenerator AFramework::s_updateIds;
-ListenerIdGenerator AFramework::s_fixedUpdateIds;
-ListenerIdGenerator AFramework::s_renderIds;
+uint32_t AFramework::s_loadContentIds = 0;
+uint32_t AFramework::s_initializedIds = 0;
+uint32_t AFramework::s_updateIds = 0;
+uint32_t AFramework::s_fixedUpdateIds = 0;
+uint32_t AFramework::s_renderIds = 0;
 
 AFramework::AFramework(const FrameworkConfiguration& config)
     : config_(config),
@@ -86,8 +95,8 @@ void AFramework::initialize() {
     quit_ = false;
     time_.prepare_start();
 
-    load_content_.invoke(*this);
-    initialized_.invoke(*this);
+    dispatch(m_onLoadContentListeners, *this);
+    dispatch(m_onInitializedListeners, *this);
 
     int32_t frame = 0;
     for (;;) {
@@ -96,25 +105,25 @@ void AFramework::initialize() {
             if (ev.type == EventType::Quit) quit_ = true;
             if (ev.type == EventType::KeyDown && ev.scancode == static_cast<int32_t>(Key::Escape) && config_.exit_on_escape) quit_ = true;
             if (ev.type == EventType::WindowResized) {
-                renderer_->resized_.invoke(Vec2(static_cast<float>(ev.width), static_cast<float>(ev.height)));
+                dispatch(renderer_->resized_, Vec2(static_cast<float>(ev.width), static_cast<float>(ev.height)));
             }
         }
         if (quit_ || (config_.max_frames >= 0 && frame >= config_.max_frames)) break;
 
         time_.frame_start();
         input_.update();
-        if (!fixed_update_.empty()) {
+        if (!m_onFixedUpdateListeners.empty()) {
             GameTime step;
-            while (time_.consume_fixed_step(step)) fixed_update_.invoke(*this, step);
+            while (time_.consume_fixed_step(step)) dispatch(m_onFixedUpdateListeners, *this, step);
         }
-        update_.invoke(*this, time_.time());
+        dispatch(m_onUpdateListeners, *this, time_.time());
         input_.after_update();
 
         const Vec2 size = renderer_->back_buffer_size();
         gfx::viewport(0, 0, static_cast<int32_t>(size.x), static_cast<int32_t>(size.y));
         gfx::set_depth_state(true, true);
         gfx::clear(renderer_->clear_color.r, renderer_->clear_color.g, renderer_->clear_color.b, renderer_->clear_color.a);
-        render_.invoke(*this);
+        dispatch(m_onRenderListeners, *this);
 
         ++frame;
         if (config_.max_frames >= 0 && frame == config_.max_frames && !config_.screenshot_path.empty()) {

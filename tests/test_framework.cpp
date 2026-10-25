@@ -151,14 +151,14 @@ TEST_CASE("framework drives the time manager: deterministic frames and fixed upd
     REQUIRE(last_elapsed == Approx(5 * 1000.0 / 60.0));
 }
 
-TEST_CASE("framework listeners: static id generators, callbacks stored by id, either callback form") {
+TEST_CASE("framework listeners: ids are 1, 2, 3 ... per kind and shared by all frameworks, either callback form") {
     if (!display_available()) SKIP("no display available");
     ris::FrameworkConfiguration config;
     config.hidden = true;
     config.back_buffer_size = {32, 32};
     config.max_frames = 3;
 
-    ris::ListenerId a = 0, c = 0;
+    uint32_t a = 0, c = 0;
     {
         ris::Framework first(config);
         a = first.addOnUpdateListener([](const ris::GameTime&) {});
@@ -171,14 +171,14 @@ TEST_CASE("framework listeners: static id generators, callbacks stored by id, ei
     }
 
     // only one window can exist at a time, so the second framework is created after the first is gone;
-    // the generator is static: its ids continue after the ones of the first framework
+    // the id counter is static: its ids continue after the ones of the first framework
     ris::Framework first(config);
     const auto b = first.addOnUpdateListener([](ris::AFramework&, const ris::GameTime&) {});
     REQUIRE(b > c);
     REQUIRE_FALSE(first.removeOnUpdateListener(c));   // belonged to the destroyed framework
     REQUIRE(first.removeOnUpdateListener(b));
 
-    // every kind has its own generator
+    // every kind has its own counter
     const auto l1 = first.addOnLoadContentListener([] {});
     const auto l2 = first.addOnLoadContentListener([](ris::AFramework&) {});
     const auto i1 = first.addOnInitializedListener([] {});
@@ -192,7 +192,7 @@ TEST_CASE("framework listeners: static id generators, callbacks stored by id, ei
     REQUIRE(first.removeOnRenderListener(r1));
 }
 
-TEST_CASE("framework listeners run in id order and may add or remove listeners while running") {
+TEST_CASE("framework listeners run in registration order and may add or remove listeners while running") {
     if (!display_available()) SKIP("no display available");
     ris::FrameworkConfiguration config;
     config.hidden = true;
@@ -201,7 +201,7 @@ TEST_CASE("framework listeners run in id order and may add or remove listeners w
 
     ris::Framework framework(config);
     std::vector<std::string> log;
-    ris::ListenerId victim = 0;
+    uint32_t victim = 0;
     bool added = false;
 
     // the framework is passed to the callbacks that ask for it
