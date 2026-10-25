@@ -263,11 +263,11 @@ Mesh& ContentManager::load_mesh(const std::string& path, Scene& scene) {
                 md.diffuse_color = Color(it->second.diffuse.x, it->second.diffuse.y, it->second.diffuse.z, it->second.opacity);
                 if (!it->second.diffuse_map.empty()) md.diffuse_texture = load_repeating(*this, it->second.diffuse_map, false);
             }
-            slot = framework_.material_factory().create_unlit_material(md);
+            slot = framework_.materialFactory().create_unlit_material(md);
         }
         subs.push_back({slot, s.index_start, s.index_count});
     }
-    return framework_.mesh_factory().create_with_sub_meshes(scene, obj.geometry, std::move(subs));
+    return framework_.meshFactory().create_with_sub_meshes(scene, obj.geometry, std::move(subs));
 }
 
 Mesh& ContentManager::load_blinn_phong_mesh(const std::string& path, Scene& scene) {
@@ -287,11 +287,11 @@ Mesh& ContentManager::load_blinn_phong_mesh(const std::string& path, Scene& scen
                 if (m.shininess) md.shininess = *m.shininess;
                 if (!m.diffuse_map.empty()) md.diffuse_texture = load_repeating(*this, m.diffuse_map, false);
             }
-            slot = framework_.material_factory().create_blinn_phong_material(md);
+            slot = framework_.materialFactory().create_blinn_phong_material(md);
         }
         subs.push_back({slot, s.index_start, s.index_count});
     }
-    return framework_.mesh_factory().create_with_sub_meshes(scene, obj.geometry, std::move(subs));
+    return framework_.meshFactory().create_with_sub_meshes(scene, obj.geometry, std::move(subs));
 }
 
 } // namespace ris

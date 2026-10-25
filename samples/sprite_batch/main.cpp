@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
         ris::Rect draw_rect(16, 16, 512, 341);
         const ris::Color color = ris::Color::white();
 
-        framework.add_on_load_content_listener([&] {
+        framework.addOnLoadContentListener([&] {
             // Kodak test image kodim23 (parrots), 512x341. See README.md for source and license.
             parrots = framework.content().load_texture_2d(sample::asset("sprite_batch", "kodim23.png"));
             draw_rect.width = static_cast<float>(parrots->width());
@@ -25,9 +25,9 @@ int main(int argc, char** argv) {
             std::cout << "Loaded kodim23.png (" << parrots->width() << "x" << parrots->height() << ").\n";
         });
 
-        framework.add_on_render_listener([&] {
+        framework.addOnRenderListener([&] {
             if (!parrots) return;
-            ris::SpriteBatch& sprite_batch = framework.sprite_batch();
+            ris::SpriteBatch& sprite_batch = framework.spriteBatch();
             sprite_batch.begin();
             sprite_batch.draw(*parrots, draw_rect, color);
             sprite_batch.end();

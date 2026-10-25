@@ -8,7 +8,7 @@
 
 namespace ris {
 
-class Framework;
+class AFramework;
 class Scene;
 class Mesh;
 
@@ -21,7 +21,7 @@ struct Texture2DDescriptor {
 /// Loads textures and models from files, like `IContentManager` of ris-framework-ts (synchronous here).
 class RIS_API ContentManager {
 public:
-    explicit ContentManager(Framework& framework) : framework_(framework) {}
+    explicit ContentManager(AFramework& framework) : framework_(framework) {}
 
     /// PNG / JPG / BMP / TGA, or KTX2 when the path ends in `.ktx2`. The framework's texture filtering preset is applied.
     std::shared_ptr<Texture> load_texture_2d(const std::string& path, const Texture2DDescriptor& d = {});
@@ -34,7 +34,7 @@ public:
     Mesh& load_blinn_phong_mesh(const std::string& path, Scene& scene);
 
 private:
-    Framework& framework_;
+    AFramework& framework_;
 };
 
 } // namespace ris

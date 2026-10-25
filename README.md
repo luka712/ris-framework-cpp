@@ -18,9 +18,9 @@ ASTC > ETC2 > RGBA8 transcoding), render targets, sprite batch. Math is [glm](ht
 
 The OpenGL ES helpers (buffers, shaders, programs, textures, samplers, framebuffers, blending, culling, ...) live in `ris/gles/` and mirror `webgl/` of ris-framework-ts; `ris/gles/gles.hpp` includes all of them.
 
-Input (like `api/input` of ris-framework-ts): `ris/input/` holds the concrete `ris::InputManager` (SDL3 is an integral part of the engine, so there is no abstract input manager or backend split; only the rendering API is pluggable) and the plain state types `KeyboardState`, `MouseState`, `GamePadState`, `TouchCollection` / `TouchLocation`, `Key`, `MouseButton`, `GamePadButton`, ... with no SDL types in any header. It covers keyboard, mouse, gamepads and touch. `Framework::input_manager()` returns it. Per frame: `update()` publishes the state collected since the last frame, the update listeners read it, `after_update()` ages touch contacts. Its public `report_*` functions let tests and custom event sources feed it without SDL events.
+Input (like `api/input` of ris-framework-ts): `ris/input/` holds the concrete `ris::InputManager` (SDL3 is an integral part of the engine, so there is no abstract input manager or backend split; only the rendering API is pluggable) and the plain state types `KeyboardState`, `MouseState`, `GamePadState`, `TouchCollection` / `TouchLocation`, `Key`, `MouseButton`, `GamePadButton`, ... with no SDL types in any header. It covers keyboard, mouse, gamepads and touch. `Framework::inputManager()` returns it. Per frame: `update()` publishes the state collected since the last frame, the update listeners read it, `after_update()` ages touch contacts. Its public `report_*` functions let tests and custom event sources feed it without SDL events.
 
-Time (like `api/time` of ris-framework-ts): SDL3 is an integral part of the engine, so there is one concrete `ris::TimeManager` in `ris/time/` (no abstract class, no backend folder; only the rendering API is pluggable). It does the per frame logic (time scale, pause, a fixed time step with `Framework::add_on_fixed_update_listener`, frame limiting with `FrameworkConfiguration::target_frames_per_second`, delta smoothing, an FPS counter, a deterministic mode) on the SDL3 time API (`SDL_GetPerformanceCounter`, `SDL_DelayPrecise`, `SDL_GetCurrentTime`, ...), next to `GameTime`, `DateTime`, `FrameRateCounter`, `Stopwatch`, `Timer` and the `ris::system_clock` functions (counter, delays, wall clock, date conversion). No SDL types appear in the headers. `Framework::time_manager()` returns the `TimeManager&`. Unit tests drive it without sleeping by giving it a `ris::ClockSource` (a counter function, its frequency and an optional delay function).
+Time (like `api/time` of ris-framework-ts): SDL3 is an integral part of the engine, so there is one concrete `ris::TimeManager` in `ris/time/` (no abstract class, no backend folder; only the rendering API is pluggable). It does the per frame logic (time scale, pause, a fixed time step with `Framework::addOnFixedUpdateListener`, frame limiting with `FrameworkConfiguration::target_frames_per_second`, delta smoothing, an FPS counter, a deterministic mode) on the SDL3 time API (`SDL_GetPerformanceCounter`, `SDL_DelayPrecise`, `SDL_GetCurrentTime`, ...), next to `GameTime`, `DateTime`, `FrameRateCounter`, `Stopwatch`, `Timer` and the `ris::system_clock` functions (counter, delays, wall clock, date conversion). No SDL types appear in the headers. `Framework::timeManager()` returns the `TimeManager&`. Unit tests drive it without sleeping by giving it a `ris::ClockSource` (a counter function, its frequency and an optional delay function).
 
 Rendering API layering: `ris/rendering/` holds the graphics API neutral interfaces (for buffers `ABuffer`, `AVertexBuffer`, `AIndexBuffer`, `AUniformBuffer`, `ABufferFactory`), and each backend implements them in its own folder; the OpenGL ES one is `ris/gles/buffers/` (`GlesVertexBuffer`, ...). `ris::create_default_buffer_factory()` returns the factory of the current backend, so code written against the `A*` classes does not change when other rendering APIs are added.
 
@@ -51,20 +51,28 @@ lights, materials, `ContentManager`, `InputManager`, `SpriteBatch::draw(texture,
 int main() {
     ris::Framework framework({.title = "hello"});
     ris::Scene scene;   // declared after the framework: destroy scenes and textures before it
-    framework.add_on_load_content_listener([&] {
-        framework.camera_factory().create_perspective_camera({.aspect_ratio = 16.0f / 9.0f}, &scene);
+    framework.addOnLoadContentListener([&] {
+        framework.cameraFactory().create_perspective_camera({.aspect_ratio = 16.0f / 9.0f}, &scene);
         scene.create_directional_light({.direction = {-0.4f, -0.6f, 1}});
         framework.content().load_blinn_phong_mesh("cube.obj", scene);
     });
-    framework.add_on_update_listener([&](const ris::GameTime& t) {
+    framework.addOnUpdateListener([&](const ris::GameTime& t) {
         scene.meshes()[0]->rotation.y += t.delta_time_sec();
         scene.camera()->update(t);
     });
-    framework.add_on_render_listener([&] { scene.render(); });
+    framework.addOnRenderListener([&] { scene.render(); });
     framework.renderer().clear_color = ris::Color::corner_flower_blue();
     framework.initialize();   // runs the loop until the window closes
 }
 ```
+
+Framework methods are camelCase like in ris-framework-ts (`windowManager()`, `inputManager()`, `timeManager()`,
+`cameraFactory()`, `materialFactory()`, `meshFactory()`, `spriteBatch()`, `addOnUpdateListener`, ...). `ris::Framework`
+derives from `ris::AFramework`, which holds the implementation. Every `add...Listener` returns a `ris::ListenerId` for
+the matching `remove...Listener`. A callback may take the framework as its first argument (`[&](ris::AFramework& f)`,
+`[&](ris::AFramework& f, const ris::GameTime& t)`) or leave it out. Callbacks of one kind are stored in a `std::map`
+keyed by id (`ris::ListenerMap`, `ris/utilities/listener_map.hpp`), ids come from a static `ris::ListenerIdGenerator`
+per kind, so listeners run in registration order and adding or removing listeners from inside a listener is safe.
 
 Differences to the TS API: calls are synchronous (no `async` content loading), lights are created with
 `scene.create_point_light(...)` instead of `new PointLight(..., scene)`, and the camera keeps the TS convention that the

@@ -3,6 +3,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstdlib>
+#include <string>
+#include <vector>
 
 #include <ris/ris.hpp>
 
@@ -87,20 +89,20 @@ TEST_CASE("framework runs a frame loop and listeners") {
     int load = 0, init = 0, updates = 0, renders = 0, removed_calls = 0;
     double last_delta = 0;
 
-    framework.add_on_load_content_listener([&] { ++load; });
-    framework.add_on_initialized_listener([&] { ++init; });
-    framework.add_on_update_listener([&](const ris::GameTime& t) { ++updates; last_delta = t.delta_time_ms; });
-    const auto id = framework.add_on_render_listener([&] { ++removed_calls; });
-    REQUIRE(framework.remove_on_render_listener(id));
-    framework.add_on_render_listener([&] { ++renders; });
+    framework.addOnLoadContentListener([&] { ++load; });
+    framework.addOnInitializedListener([&] { ++init; });
+    framework.addOnUpdateListener([&](const ris::GameTime& t) { ++updates; last_delta = t.delta_time_ms; });
+    const auto id = framework.addOnRenderListener([&] { ++removed_calls; });
+    REQUIRE(framework.removeOnRenderListener(id));
+    framework.addOnRenderListener([&] { ++renders; });
 
     // a unit cube in front of a camera, drawn with both built-in materials
-    framework.camera_factory().create_perspective_camera({.eye = {0, 0, 3}}, &scene);
+    framework.cameraFactory().create_perspective_camera({.eye = {0, 0, 3}}, &scene);
     auto cube = ris::GeometryBuilder::create_cube();
-    framework.mesh_factory().create(scene, cube, framework.material_factory().create_unlit_material());
-    framework.mesh_factory().create(scene, cube, framework.material_factory().create_blinn_phong_material()).position = {0, 1, 0};
+    framework.meshFactory().create(scene, cube, framework.materialFactory().create_unlit_material());
+    framework.meshFactory().create(scene, cube, framework.materialFactory().create_blinn_phong_material()).position = {0, 1, 0};
     scene.create_point_light({.position = {1, 1, -2}});
-    framework.add_on_render_listener([&] { scene.render(); });
+    framework.addOnRenderListener([&] { scene.render(); });
 
     framework.initialize();
     REQUIRE(load == 1);
@@ -121,21 +123,21 @@ TEST_CASE("framework drives the time manager: deterministic frames and fixed upd
     config.target_frames_per_second = 30;         // ignored in deterministic mode
 
     ris::Framework framework(config);
-    REQUIRE(framework.time_manager().deterministic_step_ms() == Approx(1000.0 / 60.0));
-    REQUIRE(framework.time_manager().fixed_time_step_ms() == Approx(1000.0 / 120.0));
-    REQUIRE(framework.time_manager().target_frames_per_second() == 30);
+    REQUIRE(framework.timeManager().deterministic_step_ms() == Approx(1000.0 / 60.0));
+    REQUIRE(framework.timeManager().fixed_time_step_ms() == Approx(1000.0 / 120.0));
+    REQUIRE(framework.timeManager().target_frames_per_second() == 30);
 
     int fixed = 0, updates = 0;
     double last_fixed_elapsed = 0, last_elapsed = 0;
-    framework.add_on_fixed_update_listener([&](const ris::GameTime& t) {
+    framework.addOnFixedUpdateListener([&](const ris::GameTime& t) {
         ++fixed;
         REQUIRE(t.delta_time_ms == Approx(1000.0 / 120.0));
         last_fixed_elapsed = t.elapsed_time_ms;
     });
-    const auto removed = framework.add_on_fixed_update_listener([&](const ris::GameTime&) { FAIL("removed"); });
-    REQUIRE(framework.remove_on_fixed_update_listener(removed));
-    REQUIRE_FALSE(framework.remove_on_fixed_update_listener(removed));
-    framework.add_on_update_listener([&](const ris::GameTime& t) {
+    const auto removed = framework.addOnFixedUpdateListener([&](const ris::GameTime&) { FAIL("removed"); });
+    REQUIRE(framework.removeOnFixedUpdateListener(removed));
+    REQUIRE_FALSE(framework.removeOnFixedUpdateListener(removed));
+    framework.addOnUpdateListener([&](const ris::GameTime& t) {
         ++updates;
         REQUIRE(t.frame_number == static_cast<uint64_t>(updates));
         last_elapsed = t.elapsed_time_ms;
@@ -147,4 +149,86 @@ TEST_CASE("framework drives the time manager: deterministic frames and fixed upd
     REQUIRE(fixed <= 12);
     REQUIRE(last_fixed_elapsed == Approx(1000.0 / 120.0 * fixed));
     REQUIRE(last_elapsed == Approx(5 * 1000.0 / 60.0));
+}
+
+TEST_CASE("framework listeners: static id generators, callbacks stored by id, either callback form") {
+    if (!display_available()) SKIP("no display available");
+    ris::FrameworkConfiguration config;
+    config.hidden = true;
+    config.back_buffer_size = {32, 32};
+    config.max_frames = 3;
+
+    ris::ListenerId a = 0, c = 0;
+    {
+        ris::Framework first(config);
+        a = first.addOnUpdateListener([](const ris::GameTime&) {});
+        c = first.addOnUpdateListener([](const ris::GameTime&) {});
+        REQUIRE(a != 0);
+        REQUIRE(a < c);
+        REQUIRE(first.removeOnUpdateListener(a));
+        REQUIRE_FALSE(first.removeOnUpdateListener(a));   // already removed
+        REQUIRE_FALSE(first.removeOnUpdateListener(0));
+    }
+
+    // only one window can exist at a time, so the second framework is created after the first is gone;
+    // the generator is static: its ids continue after the ones of the first framework
+    ris::Framework first(config);
+    const auto b = first.addOnUpdateListener([](ris::AFramework&, const ris::GameTime&) {});
+    REQUIRE(b > c);
+    REQUIRE_FALSE(first.removeOnUpdateListener(c));   // belonged to the destroyed framework
+    REQUIRE(first.removeOnUpdateListener(b));
+
+    // every kind has its own generator
+    const auto l1 = first.addOnLoadContentListener([] {});
+    const auto l2 = first.addOnLoadContentListener([](ris::AFramework&) {});
+    const auto i1 = first.addOnInitializedListener([] {});
+    const auto f1 = first.addOnFixedUpdateListener([](const ris::GameTime&) {});
+    const auto r1 = first.addOnRenderListener([] {});
+    REQUIRE(l2 > l1);
+    REQUIRE(first.removeOnLoadContentListener(l1));
+    REQUIRE(first.removeOnLoadContentListener(l2));
+    REQUIRE(first.removeOnInitializedListener(i1));
+    REQUIRE(first.removeOnFixedUpdateListener(f1));
+    REQUIRE(first.removeOnRenderListener(r1));
+}
+
+TEST_CASE("framework listeners run in id order and may add or remove listeners while running") {
+    if (!display_available()) SKIP("no display available");
+    ris::FrameworkConfiguration config;
+    config.hidden = true;
+    config.back_buffer_size = {32, 32};
+    config.max_frames = 3;
+
+    ris::Framework framework(config);
+    std::vector<std::string> log;
+    ris::ListenerId victim = 0;
+    bool added = false;
+
+    // the framework is passed to the callbacks that ask for it
+    framework.addOnLoadContentListener([&](ris::AFramework& f) {
+        REQUIRE(&f == &framework);
+        log.push_back("load");
+    });
+    framework.addOnInitializedListener([&] { log.push_back("init"); });
+    framework.addOnUpdateListener([&](ris::AFramework& f, const ris::GameTime& t) {
+        REQUIRE(&f == &framework);
+        log.push_back("u1#" + std::to_string(t.frame_number));
+        f.removeOnUpdateListener(victim);   // removed before it ran: never called
+        if (!added) {                       // added now: first runs on the next frame
+            added = true;
+            f.addOnUpdateListener([&](const ris::GameTime& t2) { log.push_back("late#" + std::to_string(t2.frame_number)); });
+        }
+    });
+    victim = framework.addOnUpdateListener([&](const ris::GameTime&) { log.push_back("victim"); });
+    framework.addOnUpdateListener([&](const ris::GameTime& t) { log.push_back("u3#" + std::to_string(t.frame_number)); });
+    framework.addOnRenderListener([&] { log.push_back("render"); });
+
+    framework.initialize();
+
+    const std::vector<std::string> expected{
+        "load", "init",
+        "u1#1", "u3#1", "render",
+        "u1#2", "u3#2", "late#2", "render",
+        "u1#3", "u3#3", "late#3", "render"};
+    REQUIRE(log == expected);
 }

@@ -8,7 +8,7 @@
 //
 // SDL3 is an integral part of the engine (windowing, input, time), so there is no abstract input manager and no
 // backend split here: `InputManager` uses SDL3 directly (keyboard, mouse, gamepads, touch). SDL types are never
-// exposed: the SDL headers stay private to the library. Get the manager from `Framework::input_manager()`.
+// exposed: the SDL headers stay private to the library. Get the manager from `Framework::inputManager()`.
 
 #include "ris/input/gamepad/game_pad_button.hpp"
 #include "ris/input/gamepad/game_pad_state.hpp"

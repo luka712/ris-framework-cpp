@@ -130,7 +130,7 @@ std::shared_ptr<OrbitCamera> CameraFactory::create_orbit_camera(float fov, float
     d.aspect_ratio = aspect_ratio;
     d.near = near_plane;
     d.far = far_plane;
-    return std::make_shared<OrbitCamera>(std::make_shared<PerspectiveCamera>(d), framework_.input_manager());
+    return std::make_shared<OrbitCamera>(std::make_shared<PerspectiveCamera>(d), framework_.inputManager());
 }
 
 } // namespace ris

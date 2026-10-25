@@ -9,7 +9,7 @@
 
 namespace ris {
 
-class Framework;
+class AFramework;
 class Scene;
 
 /// Base of all cameras. Mirrors `ICamera` of ris-framework-ts.
@@ -116,7 +116,7 @@ private:
 /// Creates cameras, like `CameraFactory` of ris-framework-ts.
 class RIS_API CameraFactory {
 public:
-    explicit CameraFactory(Framework& framework) : framework_(framework) {}
+    explicit CameraFactory(AFramework& framework) : framework_(framework) {}
 
     /// When a scene is given the camera becomes the scene's camera.
     std::shared_ptr<PerspectiveCamera> create_perspective_camera(const PerspectiveCameraDescriptor& d = {},
@@ -129,7 +129,7 @@ public:
                                                      float far_plane = 100.0f);
 
 private:
-    Framework& framework_;
+    AFramework& framework_;
 };
 
 } // namespace ris

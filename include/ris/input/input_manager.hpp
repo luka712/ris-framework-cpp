@@ -29,7 +29,7 @@ enum class TouchPhase : int32_t {
 /// gamepad API) and touch (SDL finger events) as per frame state. SDL3 is an integral part of the engine, so this is
 /// one concrete class that uses SDL3 directly (there is no abstract input manager and no backend split, only the
 /// rendering API is pluggable). No SDL type appears in this header; the SDL headers stay private to the library.
-/// `Framework` owns one, get it from `Framework::input_manager()`.
+/// `Framework` owns one, get it from `Framework::inputManager()`.
 ///
 /// Frame model (what `Framework` does every frame):
 ///  1. native events are collected while the window is polled (`Window::poll_event`);

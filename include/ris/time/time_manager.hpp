@@ -14,7 +14,7 @@ namespace ris {
 /// mode. It is one concrete class: the engine always runs on SDL3 (windowing, input and time), so only the rendering
 /// API is pluggable, not the time source. It measures time with the SDL3 performance counter and waits with
 /// `SDL_DelayPrecise` (through `ClockSource::system()`), but names no SDL types in this header. `Framework` owns one
-/// and exposes it as `Framework::time_manager()`.
+/// and exposes it as `Framework::timeManager()`.
 ///
 /// Tests can drive it without sleeping by passing their own `ClockSource` to the constructor.
 ///
