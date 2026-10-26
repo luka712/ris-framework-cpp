@@ -9,7 +9,7 @@
 
 TEST_CASE("index buffer on a real context") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("index buffer picks the smallest type") {
         const std::vector<uint32_t> small = {0, 1, 2, 2, 1, 65535};

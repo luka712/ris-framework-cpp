@@ -12,7 +12,7 @@ namespace gles = ris::gles;
 
 TEST_CASE("GlesBufferUtilities create, update and delete buffers") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("vertex buffers") {
         const std::vector<float> data(12, 1.0f);
@@ -94,7 +94,7 @@ TEST_CASE("GlesBufferUtilities without a window throws std::logic_error") {
 
 TEST_CASE("GlesBufferUtilities details") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     auto& buffers = GlesUtilities::buffer();
 
     SECTION("byte sized index buffer and raw byte uniform buffer") {

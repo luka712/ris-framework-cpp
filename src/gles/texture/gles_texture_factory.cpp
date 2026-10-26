@@ -61,7 +61,7 @@ GlesTexture2D* GlesTextureFactory::createFromKtx2(ktxTexture2* ktxTexture, const
     if (ktxTexture->isCubemap || ktxTexture->isArray || ktxTexture->numDimensions != 2 || ktxTexture->baseDepth > 1) {
         throw std::domain_error("createFromKtx2: only plain 2D textures are supported in 0.1.0");
     }
-    require_context();
+
 
     VkFormat vkFormat = ris_ktxTexture2_GetVkFormat(ktxTexture);
     const uint32_t numLevels = std::max<uint32_t>(1, ris_ktxTexture2_GetNumLevels(ktxTexture));
@@ -165,7 +165,7 @@ GlesTexture2D* GlesTextureFactory::create(int32_t width, int32_t height, std::sp
                                     + std::to_string(channels) + " channels needs " + std::to_string(expected)
                                     + " bytes of data, got " + std::to_string(data.size()));
     }
-    require_context();
+
 
     TextureDescriptor desc;
     desc.width = width;
@@ -193,7 +193,7 @@ GlesTexture2D* GlesTextureFactory::createEmpty(int32_t width, int32_t height, st
         throw std::domain_error("createEmpty: compressed textures cannot be created empty");
     }
     check_usage("createEmpty", textureUsage);
-    require_context();
+
 
     // Fast path: no CPU side buffer and no upload when the texture is transparent black, which is what a new texture is.
     // (The TypeScript version also takes the opaque Color.black() here, which makes it transparent.)

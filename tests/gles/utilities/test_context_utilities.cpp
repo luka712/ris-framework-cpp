@@ -32,7 +32,7 @@ TEST_CASE("utilities need a window") {
 
 TEST_CASE("error, extension and debug label utilities on a real context") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("check_error") {
         REQUIRE_NOTHROW(gles::error_utilities::check_error("nothing happened"));

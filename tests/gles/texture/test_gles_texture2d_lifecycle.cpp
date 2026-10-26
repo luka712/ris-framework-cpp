@@ -54,7 +54,7 @@ TEST_CASE("GlesTexture2D descriptor constructor needs a valid size and does noth
 
 TEST_CASE("GlesTexture2D initialize() creates the GL texture, size and mip levels") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("plain texture") {
         const std::vector<uint8_t> pixels(4 * 4 * 4, 100);
@@ -124,7 +124,7 @@ TEST_CASE("GlesTexture2D initialize() creates the GL texture, size and mip level
 
 TEST_CASE("GlesTexture2D dispose()") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const std::vector<uint8_t> pixels(2 * 2 * 4, 255);
 
     SECTION("is idempotent and raises the event once") {
@@ -176,7 +176,7 @@ TEST_CASE("GlesTexture2D default texture of a framework") {
     int disposedByFramework = 0;
     bool listenerAdded = false;
     {
-        FrameworkConfiguration config = ris_createFrameworkConfiguration();
+        RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
         ris::Framework framework(config);
 
         gles::GlesTexture2D* first = gles::GlesTexture2D::getOrCreateDefault(framework);

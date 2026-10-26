@@ -30,7 +30,7 @@ std::vector<VertexAttrib> to_vertex_attribs(const VertexBufferLayout& layout, ui
 }
 
 void initialize(uint32_t buffer, const VertexBufferLayout& layout) {
-    require_context();
+
     const std::vector<VertexAttrib> attribs = to_vertex_attribs(layout, 0);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     for (const VertexAttrib& a : attribs) vertex_attribute::enable(a, layout.array_stride);

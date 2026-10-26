@@ -10,7 +10,7 @@
 
 TEST_CASE("buffer factory on a real context") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("the default factory creates the OpenGL ES buffers") {
         const std::unique_ptr<ris::ABufferFactory> factory = ris::create_default_buffer_factory();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <SDL3/SDL_video.h>
 
 #include "ris/gles/gles_gpu_info.hpp"
 #include "ris/gles/blending/gles_blend_state.hpp"
@@ -10,13 +11,17 @@
 #include "ris/rendering/a_graphics_device.hpp"
 #include "ris/rendering/graphics_device_descriptor.hpp"
 
+namespace ris {
+    class Framework;
+}
+
 namespace ris::gles {
 
 /// The OpenGL ES 3 implementation of AGraphicsDevice, like `WebGlGraphicsDevice` of ris-framework-ts. It creates
 /// GlesSampler, GlesBlendState, GlesPrimitiveState, GlesRenderPass and GlesSwapChain (the `create...` results can be
 /// cast to these with static_cast to reach the GL specific functions such as `apply()`). Create it directly, or
 /// through create_default_graphics_device(); `Framework::graphicsDevice()` owns the one of the application.
-/// Needs the window's GL context (so a ris::Window) from `initialize()` on, everything on the window's thread.
+/// Needs the window's GL context (so an WindowManager) from `initialize()` on, everything on the window's thread.
 /// See AGraphicsDevice for the ownership rules and the exceptions.
 ///
 /// Details:
@@ -31,7 +36,7 @@ namespace ris::gles {
 class RIS_API GlesGraphicsDevice : public AGraphicsDevice {
 public:
     /// Does not touch the GL context: call `initialize()` when the window exists.
-    explicit GlesGraphicsDevice(const GraphicsDeviceDescriptor& descriptor = {});
+    explicit GlesGraphicsDevice( Framework& framework, const GraphicsDeviceDescriptor& descriptor = {});
     ~GlesGraphicsDevice() override;
 
     const AGpuInfo& getGpuInfo() const override;
@@ -48,7 +53,7 @@ public:
     ABlendState* createBlendState(const BlendStateDescriptor& descriptor) override;
     APrimitiveState* createPrimitiveState(const PrimitiveStateDescriptor& descriptor) override;
     ARenderPass* createRenderPass(const RenderPassDescriptor& descriptor) override;
-    ASwapChain* createSwapChain(Window& window, const SwapChainDescriptor& swapChainDescription) override;
+    ASwapChain* createSwapChain(WindowManager& window, const SwapChainDescriptor& swapChainDescription) override;
 
     void pushDebugGroup(const std::string& groupName) override;
     void popDebugGroup() override;
@@ -56,6 +61,8 @@ public:
 private:
     void requireInitialized(const char* what) const;
 
+    Framework& m_framework;
+    SDL_GLContext m_glContext = nullptr;
     GraphicsDeviceDescriptor descriptor_;
     bool initialized_ = false;
     std::unique_ptr<GlesGraphicsDeviceFeatures> m_features;   // created by initialize()

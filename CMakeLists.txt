@@ -91,6 +91,7 @@ target_include_directories(${TARGET_NAME}
             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
         PRIVATE
             "${CMAKE_CURRENT_SOURCE_DIR}/src"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/ris"   # src/data.cpp includes "data.hpp"
 )
 
 if(UNIX AND NOT APPLE)

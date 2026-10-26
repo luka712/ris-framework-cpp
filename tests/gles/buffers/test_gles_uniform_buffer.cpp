@@ -9,7 +9,7 @@
 
 TEST_CASE("uniform buffer on a real context") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("uniform buffer is padded to 16 bytes") {
         const std::vector<float> data(5, 1.0f);   // 20 bytes

@@ -86,7 +86,6 @@ private:
 } // namespace
 
 uint32_t create(std::span<const uint32_t> color_textures, std::string_view label) {
-    require_context();
     if (color_textures.empty()) {
         throw std::invalid_argument("framebuffer_utilities::create: no colour textures");
     }
@@ -114,7 +113,6 @@ uint32_t create(uint32_t color_texture, std::string_view label) {
 
 uint32_t create_with_renderbuffer_as_depth_buffer(uint32_t color_texture, DepthAttachmentType depth_type,
                                                 uint32_t render_buffer, std::string_view label) {
-    require_context();
     const GLenum attachment = attachment_point(depth_type);
     FramebufferScope fb;
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0);
@@ -125,7 +123,6 @@ uint32_t create_with_renderbuffer_as_depth_buffer(uint32_t color_texture, DepthA
 
 uint32_t create_with_texture_as_depth_buffer(uint32_t color_texture, DepthAttachmentType depth_type, uint32_t depth_texture,
                                            std::string_view label) {
-    require_context();
     const GLenum attachment = attachment_point(depth_type);
     FramebufferScope fb;
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0);
@@ -144,26 +141,25 @@ DepthAttachmentType depth_attachment_type_for(TextureFormat format) {
 }
 
 void attach_depth_stencil_renderbuffer(uint32_t framebuffer, uint32_t render_buffer, TextureFormat format) {
-    require_context();
     const GLenum attachment = attachment_point(depth_attachment_type_for(format));
     BindScope bound(framebuffer);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, render_buffer);
 }
 
 void attach_depth_stencil_texture(uint32_t framebuffer, uint32_t depth_texture, TextureFormat format) {
-    require_context();
+
     const GLenum attachment = attachment_point(depth_attachment_type_for(format));
     BindScope bound(framebuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, depth_texture, 0);
 }
 
 void bind(uint32_t framebuffer) {
-    require_context();
+
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 }
 
 void delete_framebuffer(uint32_t& framebuffer) noexcept {
-    if (framebuffer != 0 && has_context()) {
+    if (framebuffer != 0) {
         const GLuint id = framebuffer;
         glDeleteFramebuffers(1, &id);
     }

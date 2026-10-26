@@ -7,7 +7,6 @@
 #include <cmath>
 #include <vector>
 
-#include "input/event_tap.hpp"
 #include "internal.hpp"
 
 using namespace ris::detail;
@@ -477,7 +476,6 @@ void InputManager::initialize() {
         return;
     }
     impl_->initialised = true;
-    detail::add_event_tap(this, [this](const SDL_Event& event) { handle_native_event(&event); });
 
     // The gamepad subsystem is optional: without it (no joystick support, restricted environment) input
     // still works and every gamepad reports "not connected".
@@ -514,7 +512,6 @@ void InputManager::dispose() {
         return;
     }
     impl_->initialised = false;
-    detail::remove_event_tap(this);
     if (impl_->gamepad_subsystem) {
         for (Impl::PadSlot& slot : impl_->pads) {
             if (slot.gamepad) {

@@ -25,13 +25,15 @@ void log(LogLevel level, const char* fmt, ...)
 #define RIS_LOG_W(...) ::ris::detail::log(::ris::LogLevel::Warn, __VA_ARGS__)
 #define RIS_LOG_E(...) ::ris::detail::log(::ris::LogLevel::Error, __VA_ARGS__)
 
-/// Throws std::logic_error unless a ris::Window (and thus a GL context) exists.
-void require_context();
-bool has_context() noexcept;
-/// Called by Window.
-void set_context_alive(bool alive) noexcept;
 
-/// Throws std::runtime_error if glGetError reports an error.
-void check_gl(const char* what);
+
+/// Calls the listeners of a copy of the map, so a listener may add or remove listeners; a listener removed meanwhile is skipped.
+template <class Map, class... Args>
+void dispatch(const Map& listeners, Args&&... args) {
+    const Map copy = listeners;
+    for (const auto& [id, listener] : copy) {
+        if (listeners.contains(id)) listener(args...);
+    }
+}
 
 } // namespace ris::detail

@@ -13,12 +13,16 @@
 namespace gles = ris::gles;
 
 TEST_CASE("the default graphics device is the OpenGL ES one") {
-    const std::unique_ptr<ris::AGraphicsDevice> device = ris::create_default_graphics_device();
+    if (!ris_test::display_available()) SKIP("no display available");
+    ris_test::HiddenWindow window;
+    const std::unique_ptr<ris::AGraphicsDevice> device = ris::create_default_graphics_device(window);
     REQUIRE(dynamic_cast<gles::GlesGraphicsDevice*>(device.get()) != nullptr);
 }
 
 TEST_CASE("an uninitialised graphics device throws std::logic_error") {
-    gles::GlesGraphicsDevice device;
+    if (!ris_test::display_available()) SKIP("no display available");
+    ris_test::HiddenWindow window;
+    gles::GlesGraphicsDevice device(window);
     CHECK_THROWS_AS(device.getGpuInfo(), std::logic_error);
     CHECK_THROWS_AS(device.getFeatures(), std::logic_error);
     CHECK_THROWS_AS(device.getDefaultTextureSampler(), std::logic_error);
@@ -28,14 +32,12 @@ TEST_CASE("an uninitialised graphics device throws std::logic_error") {
     CHECK_THROWS_AS(device.frameEnd(), std::logic_error);
     CHECK_THROWS_AS(device.createSampler({}), std::logic_error);
     CHECK_THROWS_AS(device.createPrimitiveState({}), std::logic_error);
-    // No window exists here either: initialize() reports the missing context.
-    CHECK_THROWS_AS(device.initialize(), std::logic_error);
 }
 
 TEST_CASE("graphics device initialize, GPU info and features") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
-    gles::GlesGraphicsDevice device;
+    ris_test::HiddenWindow window;
+    gles::GlesGraphicsDevice device(window);
     device.initialize();
 
     SECTION("initialize twice is an error") {
@@ -51,17 +53,17 @@ TEST_CASE("graphics device initialize, GPU info and features") {
         CHECK_FALSE(info.getApiVersion().empty());
         CHECK(info.getApi() == ris::RenderingBackend::OpenGLES);
         // OpenGL ES is detected from the GL strings, the API below it (ANGLE's) is not reported through GL.
-        const bool es = std::string(window.gl_info(ris::GlInfo::Version)).find("OpenGL ES") != std::string::npos ||
-                        std::string(window.gl_info(ris::GlInfo::Renderer)).find("OpenGL ES") != std::string::npos;
+        const bool es = std::string(GlesUtilities::context().glString(GL_VERSION)).find("OpenGL ES") != std::string::npos ||
+                        std::string(GlesUtilities::context().glString(GL_RENDERER)).find("OpenGL ES") != std::string::npos;
         CHECK(info.getUnderlyingBackend() == (es ? ris::RenderingBackend::OpenGLES : ris::RenderingBackend::Default));
-        CHECK(info.getName() == window.gl_info(ris::GlInfo::Renderer));
-        CHECK(info.getApiVersion() == window.gl_info(ris::GlInfo::Version));
+        CHECK(info.getName() == GlesUtilities::context().glString(GL_RENDERER));
+        CHECK(info.getApiVersion() == GlesUtilities::context().glString(GL_VERSION));
     }
 
     SECTION("features agree with the extensions and the compressed format list") {
         const ris::AGraphicsDeviceFeatures& features = device.getFeatures();
         CHECK(features.supportsTextureCompressionETC2()); // core in OpenGL ES 3
-        CHECK(features.supportsTextureCompressionASTC() == window.has_gl_extension("GL_KHR_texture_compression_astc_ldr"));
+        CHECK(features.supportsTextureCompressionASTC() == GlesUtilities::context().isExtensionSupported("GL_KHR_texture_compression_astc_ldr"));
         if (features.supportsTextureCompressionBC()) CHECK(features.supportsTextureCompressionS3TC());
 
         const auto& formats = device.getGpuInfo().getSupportedCompressedTextureFormats();
@@ -89,18 +91,18 @@ TEST_CASE("graphics device initialize, GPU info and features") {
 
 TEST_CASE("the default sampler follows the filtering preset") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     ris::GraphicsDeviceDescriptor descriptor;
     descriptor.samplerFilteringPreset = RIS_TEXTURE_FILTERING_NEAREST;
-    gles::GlesGraphicsDevice nearest(descriptor);
+    gles::GlesGraphicsDevice nearest(window, descriptor);
     nearest.initialize();
     CHECK(nearest.getDefaultTextureSampler().getMinFilter() == ris::SamplerFilter::Nearest);
     CHECK(nearest.getDefaultTextureSampler().getMagFilter() == ris::SamplerFilter::Nearest);
     CHECK(nearest.getDefaultTextureSampler().getMipmapFilter() == ris::MipMapSamplerFilter::None);
 
     descriptor.samplerFilteringPreset = RIS_TEXTURE_FILTERING_BILINEAR;
-    gles::GlesGraphicsDevice bilinear(descriptor);
+    gles::GlesGraphicsDevice bilinear(window, descriptor);
     bilinear.initialize();
     CHECK(bilinear.getDefaultTextureSampler().getMinFilter() == ris::SamplerFilter::Linear);
     CHECK(bilinear.getDefaultTextureSampler().getMipmapFilter() == ris::MipMapSamplerFilter::None);
@@ -108,8 +110,8 @@ TEST_CASE("the default sampler follows the filtering preset") {
 
 TEST_CASE("graphics device debug functions are safe") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
-    gles::GlesGraphicsDevice device;
+    ris_test::HiddenWindow window;
+    gles::GlesGraphicsDevice device(window);
     device.initialize();
 
     SECTION("setupDebugCallback can be called more than once") {

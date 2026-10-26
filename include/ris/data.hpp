@@ -1,5 +1,6 @@
 #pragma once
 
+#include "data.h"
 #include "math.hpp"
 
 namespace ris {
@@ -24,11 +25,11 @@ struct Color {
     static constexpr Color yellow() { return {1, 1, 0, 1}; }
     static constexpr Color orange() { return {1, 0.647f, 0, 1}; }
     static constexpr Color gray() { return {0.5f, 0.5f, 0.5f, 1}; }
-    static constexpr Color light_pink() { return {1.0f, 0.71f, 0.76f, 1}; }
+    static constexpr Color lightPink() { return {1.0f, 0.71f, 0.76f, 1}; }
     static constexpr Color wheat() { return {0.96f, 0.87f, 0.70f, 1}; }
-    static constexpr Color white_smoke() { return {0.96f, 0.96f, 0.96f, 1}; }
-    static constexpr Color slate_gray() { return {0.44f, 0.50f, 0.56f, 1}; }
-    static constexpr Color corner_flower_blue() { return {0.39f, 0.58f, 0.93f, 1}; }
+    static constexpr Color whiteSmoke() { return {0.96f, 0.96f, 0.96f, 1}; }
+    static constexpr Color slateGray() { return {0.44f, 0.50f, 0.56f, 1}; }
+    static constexpr Color cornerFlowerBlue() { return {0.39f, 0.58f, 0.93f, 1}; }
 };
 
 /// Axis aligned rectangle, y pointing down (screen space).

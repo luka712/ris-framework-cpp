@@ -145,7 +145,7 @@ struct ASpriteBatch::Impl {
 };
 
 ASpriteBatch::ASpriteBatch(uint32_t max_sprites_per_flush) {
-    require_context();
+
     impl_ = std::make_unique<Impl>(max_sprites_per_flush);
 }
 
@@ -154,7 +154,7 @@ ASpriteBatch::ASpriteBatch(ASpriteBatch&&) noexcept = default;
 ASpriteBatch& ASpriteBatch::operator=(ASpriteBatch&&) noexcept = default;
 
 void ASpriteBatch::begin(const float* view_projection, BlendMode blend) {
-    require_context();
+
     if (impl_->active) {
         throw std::invalid_argument("SpriteBatch::begin called twice without end()");
     }

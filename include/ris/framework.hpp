@@ -21,7 +21,7 @@
 #include "ris/rendering/texture/a_texture_factory.hpp"
 #include "ris/ris.h"
 #include "ris/time.hpp"
-#include "window.hpp"
+#include "ris/window_manager.hpp"
 
 #ifdef __cplusplus
     #define EXTERN_API extern "C"
@@ -30,29 +30,10 @@
 #endif
 
 namespace ris {
-    /// Window access, like `IWindowManager`.
-    class RIS_API WindowManager {
-    public:
-        explicit WindowManager(Window &window) : window_(window) {
-        }
-
-        Window &window() { return window_; }
-
-        /// Drawable size in pixels.
-        glm::vec2 size() const;
-
-        void set_title(const std::string &title) { window_.set_title(title); }
-        void set_fullscreen(bool enabled) { window_.set_fullscreen(enabled); }
-        void quit() { window_.request_quit(); }
-
-    private:
-        Window &window_;
-    };
-
     /// Frame level rendering state, like `IRenderer`.
     class RIS_API Renderer {
     public:
-        explicit Renderer(Window &window) : window_(window) {
+        explicit Renderer(WindowManager &window) : window_(window) {
         }
 
         /// The colour the back buffer is cleared with at the start of every frame. Black by default.
@@ -60,10 +41,7 @@ namespace ris {
         void setClearColor(Color color) { m_clearColor = color; }
 
         /// Drawable size in pixels.
-        glm::vec2 back_buffer_size() const;
-
-        const char *backend_name() const { return window_.gl_info(GlInfo::AngleBackend); }
-        const char *device_name() const { return window_.gl_info(GlInfo::Renderer); }
+        glm::vec2 back_buffer_size() const { return window_.getWindowBounds(); }
 
         /// Registers a listener that is called with the new drawable size when the window is resized.
         /// @return its id (1, 2, 3, ...), for `remove_on_resized_listener`.
@@ -79,7 +57,7 @@ namespace ris {
     private:
         friend class Framework;
         static uint32_t s_resizedIds; ///< shared by all renderers, the last id given
-        Window &window_;
+        WindowManager &window_;
         Color m_clearColor = Color::black();
         std::map<uint32_t, std::function<void(glm::vec2)> > resized_;
     };
@@ -105,7 +83,7 @@ namespace ris {
     class RIS_API Framework {
     public:
         /// TODO: doc comment
-        explicit Framework(const FrameworkConfiguration &config);
+        explicit Framework(const RisFrameworkConfiguration &config);
 
         // TODO: doc comment
         virtual ~Framework();
@@ -113,7 +91,7 @@ namespace ris {
         // TODO: doc comment
         Framework(const Framework &) = delete;
 
-        WindowManager &windowManager() { return *window_manager_; }
+        WindowManager &windowManager() { return *m_windowManager; }
         Renderer &renderer() { return *renderer_; }
         /// The input manager (SDL3), created and initialised with the window.
         InputManager &inputManager() { return input_; }
@@ -130,7 +108,7 @@ namespace ris {
         /// and initialised with the window, see AGraphicsDevice.
         AGraphicsDevice &graphicsDevice() { return *m_graphicsDevice; }
         ASpriteBatch &spriteBatch() const { return *sprite_batch_; }
-        const FrameworkConfiguration &configuration() const { return config_; }
+        const RisFrameworkConfiguration &configuration() const { return config_; }
 
         /// Registers a listener that runs once at the start of `initialize()`, before the initialized listeners, to
         /// load content. @return its id, for `removeOnLoadContentListener`.
@@ -186,21 +164,20 @@ namespace ris {
         void initialize();
 
         /// Asks the loop to stop after the current frame.
-        void quit() { quit_ = true; }
+        void quit() { m_windowManager->quit(); }
 
     private:
-        FrameworkConfiguration config_;
-        std::unique_ptr<Window> window_;
-        std::unique_ptr<WindowManager> window_manager_;
+        RisFrameworkConfiguration config_;
+        std::unique_ptr<WindowManager> m_windowManager;
         std::unique_ptr<Renderer> renderer_;
-        InputManager input_; // declared after window_: disposed before the window goes away
+        InputManager input_; // declared after m_windowManager: disposed before the window goes away
         TimeManager time_;
         ContentManager content_;
         CameraFactory camera_factory_;
         MaterialFactory material_factory_;
         MeshFactory mesh_factory_;
         ATextureFactory* m_textureFactory;
-        AGraphicsDevice* m_graphicsDevice; // after window_: destroyed before the window goes away
+        AGraphicsDevice* m_graphicsDevice; // after m_windowManager: destroyed before the window goes away
         std::unique_ptr<ASpriteBatch> sprite_batch_;
 
         // The last id given, one counter per kind of listener, shared by all frameworks (ids start at 1, 0 is never used).
@@ -210,7 +187,5 @@ namespace ris {
                 m_onRenderListeners;
         std::map<uint32_t, std::function<void(Framework &, const GameTime &)> > m_onUpdateListeners,
                 m_onFixedUpdateListeners;
-
-        bool quit_ = false;
     };
 } // namespace ris

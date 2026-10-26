@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
     sampler.wrap_v = RIS_WRAP_REPEAT;
     ris_texture_set_sampler(tex, &sampler);
 
-    ris_sprite_batch* batch = ris_sprite_batch_create(1024);
+    RisSpriteBatch* batch = ris_sprite_batch_create(1024);
     if (!batch) fail("ris_sprite_batch_create");
 
     int frame = 0;

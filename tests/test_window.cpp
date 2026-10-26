@@ -30,9 +30,6 @@ TEST_CASE("window with a hidden window and a context") {
     ris_window* window = ris_window_create(&desc);
     REQUIRE(window != nullptr);
 
-    SECTION("only one window at a time") {
-        REQUIRE(ris_window_create(&desc) == nullptr);
-    }
     SECTION("sizes") {
         int32_t w = 0, h = 0;
         ris_window_get_size(window, &w, &h);
@@ -80,21 +77,21 @@ TEST_CASE("window with a hidden window and a context") {
 namespace {
 struct FrameworkCounts {
     int load = 0, render = 0;
-    ris_framework* seenFramework = nullptr;
+    RisFramework* seenFramework = nullptr;
 };
-void RIS_CALL onLoad(ris_framework* f, void* userData) {
+void RIS_CALL onLoad(RisFramework* f, void* userData) {
     auto* c = static_cast<FrameworkCounts*>(userData);
     ++c->load;
     c->seenFramework = f;
 }
-void RIS_CALL onRender(ris_framework* f, void* userData) {
+void RIS_CALL onRender(RisFramework* f, void* userData) {
     ++static_cast<FrameworkCounts*>(userData)->render;
     ris_quit(f);
 }
 } // namespace
 
 TEST_CASE("framework C API defaults and NULL arguments need no display") {
-    const FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    const RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
     REQUIRE(std::strcmp(config.title, "Ris Framework") == 0);
     REQUIRE(config.backBufferWidth == 800);
     REQUIRE(config.backBufferHeight == 600);
@@ -106,14 +103,22 @@ TEST_CASE("framework C API defaults and NULL arguments need no display") {
     REQUIRE(ris_initialize(nullptr) == RIS_ERROR_INVALID_ARGUMENT);
 }
 
+TEST_CASE("ris_lightPinkColor is the light pink of ris::Color::lightPink") {
+    const RisColor pink = ris_lightPinkColor();
+    REQUIRE(pink.r == 1.0f);
+    REQUIRE(pink.g == 0.71f);
+    REQUIRE(pink.b == 0.76f);
+    REQUIRE(pink.a == 1.0f);
+}
+
 TEST_CASE("framework C API runs the load content and render listeners") {
     if (!display_available()) {
         SKIP("no display available");
     }
-    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
     config.backBufferWidth = 64;
     config.backBufferHeight = 64;
-    ris_framework* framework = ris_createFramework(&config);
+    RisFramework* framework = ris_createFramework(&config);
     REQUIRE(framework != nullptr);
 
     FrameworkCounts counts;

@@ -72,6 +72,9 @@ Framework methods are camelCase like in ris-framework-ts (`windowManager()`, `in
 framework as its first argument (`[&](ris::Framework& f)`, `[&](ris::Framework& f, const ris::GameTime& t)`). The
 callbacks of one kind are kept in a `std::map` keyed by id, so they run in registration order, and listeners may be added or removed from inside a listener.
 
+`windowManager()` returns the `ris::WindowManager` (title, window bounds, update / render / resize listeners, `runEventLoop()`),
+which creates and owns the SDL3 window and the OpenGL ES context (there is no separate window class); `Framework` runs its loop through it. Input is the `InputManager` (`inputManager()`), not the window manager.
+
 Differences to the TS API: calls are synchronous (no `async` content loading), lights are created with
 `scene.create_point_light(...)` instead of `new PointLight(..., scene)`, and the camera keeps the TS convention that the
 look-at negates `eye.z`. Not ported in 0.1.0: WebGPU specific buffer and pipeline factories.
@@ -82,14 +85,10 @@ The low level API (windows, buffers, shaders, vertex arrays, textures) stays ava
 #include <ris/ris.hpp>
 
 int main() {
-    ris::Window window({.title = "hello", .width = 800, .height = 600});
-    bool running = true;
-    while (running) {
-        ris::Event e;
-        while (window.poll_event(e)) running &= e.type != ris::EventType::Quit;
-        ris::gfx::clear(0.1f, 0.2f, 0.3f, 1.0f);
-        window.swap_buffers();
-    }
+    ris::WindowManager window({.title = "hello", .width = 800, .height = 600});
+    window.initializeForGles();
+    window.addOnRenderListener([] { ris::gfx::clear(0.1f, 0.2f, 0.3f, 1.0f); });   // swapped for you
+    window.runEventLoop();   // until the window is closed or window.quit()
 }
 ```
 

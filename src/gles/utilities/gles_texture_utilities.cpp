@@ -49,7 +49,7 @@ uint32_t GlesTextureUtilities::fullMipCount(int32_t width, int32_t height) const
 uint32_t GlesTextureUtilities::createTexture2D(int32_t width, int32_t height, std::span<const std::span<const uint8_t>> data,
                                              TextureFormat format, bool useMipMaps, float anisotropy,
                                              std::string_view label) const {
-    require_context();
+
     if (anisotropy > 1.0f) throw std::runtime_error("Not implemented yet.");
     if (width <= 0 || height <= 0) {
         throw std::invalid_argument(std::string("createTexture2D: invalid size ") + std::to_string(width) + "x"
@@ -121,7 +121,7 @@ uint32_t GlesTextureUtilities::createCompressedTexture2D(int32_t width, int32_t 
                                                        int32_t blockHeight, std::span<const std::span<const uint8_t>> data,
                                                        TextureFormat format, float anisotropy,
                                                        std::string_view label) const {
-    require_context();
+
     if (anisotropy > 1.0f) throw std::runtime_error("Not implemented yet.");
     if (width <= 0 || height <= 0 || blockWidth <= 0 || blockHeight <= 0) {
         throw std::invalid_argument(std::string("createCompressedTexture2D: invalid size ") + std::to_string(width)
@@ -181,7 +181,7 @@ uint32_t GlesTextureUtilities::createCompressedTexture2D(int32_t width, int32_t 
 }
 
 void GlesTextureUtilities::deleteTexture(uint32_t& texture) const noexcept {
-    if (texture != 0 && has_context()) {
+    if (texture != 0) {
         const GLuint id = texture;
         glDeleteTextures(1, &id);
     }

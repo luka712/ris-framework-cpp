@@ -17,7 +17,7 @@ typedef struct sample {
     float width, height;
 } sample;
 
-static void RIS_CALL loadContent(ris_framework* framework, void* userData) {
+static void RIS_CALL loadContent(RisFramework* framework, void* userData) {
     sample* s = (sample*)userData;
     /* Kodak test image kodim23 (parrots), 512x341. See samples/sprite_batch/README.md for source and license. */
     s->parrots = ris_texture_load_image_file(RIS_SAMPLES_DIR "/sprite_batch/assets/kodim23.png", 1, 0, 0);
@@ -38,9 +38,9 @@ static void RIS_CALL loadContent(ris_framework* framework, void* userData) {
     printf("Loaded kodim23.png (%dx%d).\n", (int)s->width, (int)s->height);
 }
 
-static void RIS_CALL render(ris_framework* framework, void* userData) {
+static void RIS_CALL render(RisFramework* framework, void* userData) {
     sample* s = (sample*)userData;
-    ris_sprite_batch* spriteBatch = ris_getSpriteBatch(framework);
+    RisSpriteBatch* spriteBatch = ris_getSpriteBatch(framework);
     if (!s->parrots) return;
     ris_spriteBatchBegin(spriteBatch, NULL, RIS_BLEND_ALPHA);
     ris_spriteBatchDrawQuad(spriteBatch, s->parrots, 16, 16, s->width, s->height, 1, 1, 1, 1);
@@ -48,31 +48,32 @@ static void RIS_CALL render(ris_framework* framework, void* userData) {
 }
 
 int main(void) {
-    sample s = {0};
+    sample userData = {0};
     int exitCode = 0;
-    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
     config.title = "ris sample: sprite_batch_c_api";
-    config.backBufferWidth = 560;
-    config.backBufferHeight = 380;
+    config.backBufferWidth = 1280;
+    config.backBufferHeight = 720;
     config.textureFiltering = RIS_TEXTURE_FILTERING_BILINEAR;
 
-    ris_framework* framework = ris_createFramework(&config);
+    RisFramework* framework = ris_createFramework(&config);
     if (!framework) {
         fprintf(stderr, "error: ris_createFramework failed: %s\n", ris_get_last_error());
         return 1;
     }
 
-    ris_addOnLoadContentListener(framework, loadContent, &s);
-    ris_addOnRenderListener(framework, render, &s);
-    ris_setClearColor(ris_getRenderer(framework), 1.0f, 0.71f, 0.76f, 1.0f); /* light pink */
+    ris_addOnLoadContentListener(framework, loadContent, &userData);
+    ris_addOnRenderListener(framework, render, &userData);
+    const RisColor pink = ris_lightPinkColor();
+    ris_setClearColor(ris_getRenderer(framework), pink.r, pink.g, pink.b, pink.a);
 
     if (ris_initialize(framework) != RIS_OK) {
         fprintf(stderr, "error: ris_initialize failed: %s\n", ris_get_last_error());
         exitCode = 1;
     }
-    if (!s.parrots && exitCode == 0) exitCode = 1;
+    if (!userData.parrots && exitCode == 0) exitCode = 1;
 
-    ris_destroyTexture(s.parrots);   /* before the framework: it needs the GL context */
+    ris_destroyTexture(userData.parrots);   /* before the framework: it needs the GL context */
     ris_destroyFramework(framework);
     return exitCode;
 }

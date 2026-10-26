@@ -1,5 +1,5 @@
 // C++ API sample: the same scene as sample_c.c using RAII types and exceptions.
-// Usage: ris_sample_cpp [--frames N] [--hidden]
+// Usage: ris_sample_cpp [--frames N]
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -27,16 +27,16 @@ void main() { o_color = vec4(v_color, 1.0); }
 int main(int argc, char** argv) {
     try {
         int max_frames = -1;
-        ris::WindowDesc desc;
-        desc.title = "ris-framework C++ sample";
+        RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
+        config.title = "ris-framework C++ sample";
         for (int i = 1; i < argc; ++i) {
             if (!std::strcmp(argv[i], "--frames") && i + 1 < argc) max_frames = std::atoi(argv[++i]);
-            else if (!std::strcmp(argv[i], "--hidden")) desc.flags = desc.flags | ris::WindowFlags::Hidden;
         }
 
-        ris::Window window(desc);
+        ris::Framework framework(config);
+        ris::WindowManager& window = framework.windowManager();
         std::cout << "ris-framework " << ris::version_string() << " on "
-                  << window.gl_info(ris::GlInfo::Renderer) << "\n";
+                  << GlesUtilities::context().glString(GL_RENDERER) << "\n";
 
         ris::Shader shader(kVs, kFs);
         const int u_mvp = shader.uniform_location("u_mvp");
@@ -53,16 +53,10 @@ int main(int argc, char** argv) {
         ris::ASpriteBatch batch;
 
         int frame = 0;
-        bool running = true;
-        while (running && (max_frames < 0 || frame < max_frames)) {
-            ris::Event ev;
-            while (window.poll_event(ev)) {
-                if (ev.type == ris::EventType::Quit) running = false;
-            }
+        window.addOnRenderListener([&] {
             const auto t = static_cast<float>(ris::time_seconds());
-            int32_t w, h;
-            window.drawable_size(w, h);
-            ris::gfx::viewport(0, 0, w, h);
+            const glm::vec2 bounds = window.getWindowBounds();
+            ris::gfx::viewport(0, 0, static_cast<int32_t>(bounds.x), static_cast<int32_t>(bounds.y));
             ris::gfx::clear(0.1f, 0.12f + 0.05f * std::sin(t), 0.18f, 1.0f);
 
             shader.use();
@@ -73,9 +67,10 @@ int main(int argc, char** argv) {
             batch.draw_quad(nullptr, 20.0f, 20.0f, 60.0f, 60.0f, 1.0f, 0.8f, 0.2f, 1.0f);
             batch.end();
 
-            window.swap_buffers();
             ++frame;
-        }
+            if (max_frames >= 0 && frame >= max_frames) window.quit();
+        });
+        if (max_frames != 0) window.runEventLoop();
         std::cout << "rendered " << frame << " frames\n";
         return 0;
     } catch (const std::exception& e) {

@@ -34,7 +34,7 @@ const char* kindName(BufferType type) {
 
 uint32_t GlesBufferUtilities::createBuffer(BufferType type, const void* data, size_t byteSize, uint32_t usage,
                                          std::string_view label) const {
-    require_context();
+
     if (byteSize == 0) {
         throw std::invalid_argument("createBuffer: size must be greater than zero");
     }
@@ -97,7 +97,7 @@ uint32_t GlesBufferUtilities::createUniformBuffer(size_t byteSize, BufferUsageFl
 
 void GlesBufferUtilities::updateBuffer(BufferType type, uint32_t buffer, size_t byteOffset, const void* data,
                                        size_t byteSize) const {
-    require_context();
+
     if (buffer == 0 || !data || byteSize == 0) {
         throw std::invalid_argument("updateBuffer: needs a buffer, data and a non-empty range");
     }
@@ -124,7 +124,7 @@ void GlesBufferUtilities::updateVertexBuffer(uint32_t buffer, std::span<const fl
 }
 
 void GlesBufferUtilities::deleteBuffer(uint32_t& buffer) const noexcept {
-    if (buffer != 0 && has_context()) {
+    if (buffer != 0) {
         const GLuint id = buffer;
         glDeleteBuffers(1, &id);
     }

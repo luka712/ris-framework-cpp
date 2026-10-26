@@ -15,7 +15,7 @@ using namespace ris::detail;
 namespace ris::gles {
 
 GlesRenderPass::GlesRenderPass(const RenderPassDescriptor& descriptor) : label_(descriptor.label) {
-    require_context();
+
     if (descriptor.colorAttachments.empty()) {
         throw std::invalid_argument("GlesRenderPass: a render pass needs at least one color attachment");
     }
@@ -80,7 +80,7 @@ void GlesRenderPass::getTargetSize(int32_t& width, int32_t& height) const {
 }
 
 void GlesRenderPass::beginPass() {
-    require_context();
+
     if (active_) throw std::invalid_argument("GlesRenderPass::beginPass: the pass was already begun, call endPass() first");
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
@@ -113,12 +113,11 @@ void GlesRenderPass::beginPass() {
     } else {
         glDisable(GL_DEPTH_TEST);
     }
-    check_gl("GlesRenderPass::beginPass");
     active_ = true;
 }
 
 void GlesRenderPass::endPass() {
-    require_context();
+
     if (!active_) throw std::invalid_argument("GlesRenderPass::endPass: the pass was not begun, call beginPass() first");
     active_ = false;
 
@@ -142,7 +141,6 @@ void GlesRenderPass::endPass() {
         glInvalidateFramebuffer(GL_FRAMEBUFFER, static_cast<GLsizei>(discarded.size()), discarded.data());
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    check_gl("GlesRenderPass::endPass");
 }
 
 } // namespace ris::gles

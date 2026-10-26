@@ -5,11 +5,11 @@
 
 int main(int argc, char** argv) {
     try {
-        FrameworkConfiguration config {};
+        RisFrameworkConfiguration config {};
         config.title = "ris sample: sprite_batch";
-        config.backBufferWidth = 800;
-        config.backBufferHeight = 600;
-        config.textureFiltering = TextureFilteringPreset::RIS_TEXTURE_FILTERING_BILINEAR;
+        config.backBufferWidth = 1280;
+        config.backBufferHeight = 720;
+        config.textureFiltering = RIS_TEXTURE_FILTERING_BILINEAR;
         sample::apply_args(config, argc, argv);
 
         ris::Framework framework(config);
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
             sprite_batch.end();
         });
 
-        framework.renderer().setClearColor(ris::Color::light_pink());
+        framework.renderer().setClearColor(ris::Color::lightPink());
         sample::apply_run_args(framework, argc, argv);
         framework.initialize();
         return 0;

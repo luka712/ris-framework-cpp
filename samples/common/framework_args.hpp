@@ -22,7 +22,7 @@ inline std::string asset(const char* sample_name, const char* file) {
     return std::string(RIS_SAMPLES_DIR) + "/" + sample_name + "/assets/" + file;
 }
 
-inline void apply_args(FrameworkConfiguration& config, int argc, char** argv) {
+inline void apply_args(RisFrameworkConfiguration& config, int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
         if (!std::strcmp(argv[i], "--size") && i + 1 < argc) {
             int w = 0, h = 0;

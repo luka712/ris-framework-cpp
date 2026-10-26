@@ -46,12 +46,12 @@ void (*object_label_function())(GLenum identifier, GLuint name, GLsizei length, 
 } // namespace
 
 bool is_supported() {
-    require_context();
+
     return GlesUtilities::context().isExtensionSupported("GL_KHR_debug") && object_label_function() != nullptr;
 }
 
 void set_label(ObjectKind kind, uint32_t object, std::string_view label) {
-    require_context();
+
     if (label.empty() || object == 0 || !is_supported()) return;
     object_label_function()(identifier(kind), object, static_cast<GLsizei>(label.size()), label.data());
 }

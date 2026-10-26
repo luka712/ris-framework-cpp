@@ -10,7 +10,7 @@ using namespace ris::detail;
 namespace ris::gles::renderbuffer_utilities {
 
 uint32_t create(TextureFormat format, int32_t width, int32_t height, std::string_view label) {
-    require_context();
+
     if (width <= 0 || height <= 0) {
         throw std::invalid_argument(std::string("renderbuffer_utilities::create: invalid size ")
                                     + std::to_string(width) + "x" + std::to_string(height));
@@ -33,7 +33,7 @@ uint32_t create(TextureFormat format, int32_t width, int32_t height, std::string
 }
 
 void delete_renderbuffer(uint32_t& renderbuffer) noexcept {
-    if (renderbuffer != 0 && has_context()) {
+    if (renderbuffer != 0 ) {
         const GLuint id = renderbuffer;
         glDeleteRenderbuffers(1, &id);
     }

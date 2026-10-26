@@ -5,8 +5,8 @@
 
 namespace ris {
 
-std::unique_ptr<AGraphicsDevice> create_default_graphics_device(const GraphicsDeviceDescriptor& descriptor) {
-    return std::make_unique<gles::GlesGraphicsDevice>(descriptor);
+std::unique_ptr<AGraphicsDevice> create_default_graphics_device(Framework& framework, const GraphicsDeviceDescriptor& descriptor) {
+    return std::make_unique<gles::GlesGraphicsDevice>(framework, descriptor);
 }
 
 } // namespace ris

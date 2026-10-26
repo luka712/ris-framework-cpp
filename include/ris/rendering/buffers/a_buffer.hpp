@@ -19,7 +19,7 @@ namespace ris {
 ///    classes are movable, abstract ones are normally held in a `std::unique_ptr` (see ABufferFactory). A
 ///    moved-from buffer is empty and must not be used again.
 ///  - The backend's device / context must be alive while a buffer is created, updated or destroyed, and all
-///    calls must happen on the thread the device belongs to (for OpenGL ES: the thread of the ris::Window).
+///    calls must happen on the thread the device belongs to (for OpenGL ES: the thread of the WindowManager).
 ///  - Failures throw standard exceptions. Argument problems (empty data, bad stride, wrong usage flags, ...) are
 ///    reported with std::invalid_argument or std::domain_error before the device is touched, so they do
 ///    not need a window. A missing device is std::logic_error.

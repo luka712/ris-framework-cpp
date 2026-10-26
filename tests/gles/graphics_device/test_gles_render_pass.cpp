@@ -14,8 +14,8 @@ namespace fu = ris::gles::framebuffer_utilities;
 namespace {
 
 struct Fixture {
-    ris::Window window = ris_test::make_hidden_window();
-    gles::GlesGraphicsDevice device;
+    ris_test::HiddenWindow window;
+    gles::GlesGraphicsDevice device{window};
     Fixture() { device.initialize(); }
 };
 
@@ -136,7 +136,7 @@ TEST_CASE("invalid render pass descriptors throw std::invalid_argument") {
     if (!ris_test::display_available()) SKIP("no display available");
     Fixture f;
     ris::gles::GlesTexture2D texture = ris::gles::GlesTexture2D::from_rgba8(4, 4, nullptr, false);
-    const std::unique_ptr<ris::ASwapChain> swapChain(f.device.createSwapChain(f.window, {}));
+    const std::unique_ptr<ris::ASwapChain> swapChain(f.device.createSwapChain(f.window.windowManager(), {}));
 
     SECTION("no attachment") {
         CHECK_THROWS_AS(f.device.createRenderPass({}), std::invalid_argument);
@@ -165,7 +165,7 @@ TEST_CASE("swap chain") {
     Fixture f;
 
     SECTION("size, format and present") {
-        const std::unique_ptr<ris::ASwapChain> swapChain(f.device.createSwapChain(f.window, {}));
+        const std::unique_ptr<ris::ASwapChain> swapChain(f.device.createSwapChain(f.window.windowManager(), {}));
         REQUIRE(swapChain != nullptr);
         const glm::vec2 size = swapChain->getBackBufferSize();
         CHECK(size.x == 64.0f);
@@ -180,23 +180,23 @@ TEST_CASE("swap chain") {
     SECTION("the present mode sets the vsync of the window") {
         ris::SwapChainDescriptor descriptor;
         descriptor.desiredPresentationMode = ris::SurfacePresentMode::Immediate;
-        const std::unique_ptr<ris::ASwapChain> immediate(f.device.createSwapChain(f.window, descriptor));
+        const std::unique_ptr<ris::ASwapChain> immediate(f.device.createSwapChain(f.window.windowManager(), descriptor));
         CHECK(static_cast<gles::GlesSwapChain*>(immediate.get())->getPresentMode() == ris::SurfacePresentMode::Immediate);
         descriptor.desiredPresentationMode = ris::SurfacePresentMode::Mailbox;
-        CHECK_NOTHROW(f.device.createSwapChain(f.window, descriptor)->present());
+        CHECK_NOTHROW(f.device.createSwapChain(f.window.windowManager(), descriptor)->present());
     }
 
     SECTION("invalid descriptors") {
         ris::SwapChainDescriptor descriptor;
         descriptor.width = -1;
-        CHECK_THROWS_AS(f.device.createSwapChain(f.window, descriptor), std::invalid_argument);
+        CHECK_THROWS_AS(f.device.createSwapChain(f.window.windowManager(), descriptor), std::invalid_argument);
         descriptor = {};
         descriptor.desiredPresentationMode = static_cast<ris::SurfacePresentMode>(77);
-        CHECK_THROWS_AS(f.device.createSwapChain(f.window, descriptor), std::domain_error);
+        CHECK_THROWS_AS(f.device.createSwapChain(f.window.windowManager(), descriptor), std::domain_error);
     }
 
     SECTION("a render pass draws to the window and clears it") {
-        const std::unique_ptr<ris::ASwapChain> swapChain(f.device.createSwapChain(f.window, {}));
+        const std::unique_ptr<ris::ASwapChain> swapChain(f.device.createSwapChain(f.window.windowManager(), {}));
         ris::RenderPassColorAttachment screen;
         screen.swapChain = swapChain.get();
         screen.clearColor = ris::Color(0, 0, 1, 1);

@@ -46,7 +46,7 @@ TEST_CASE("GlesTextureUtilities without a window throws std::logic_error") {
 
 TEST_CASE("GlesTextureUtilities createTexture2D") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("mip count") {
         REQUIRE(GlesUtilities::texture().fullMipCount(1, 1) == 1);
@@ -111,7 +111,7 @@ TEST_CASE("GlesTextureUtilities createTexture2D") {
 
 TEST_CASE("GlesTextureUtilities createCompressedTexture2D") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     // ETC2 RGBA8 is core in OpenGL ES 3 (and emulated by ANGLE): 16 bytes per 4x4 block.
     const std::vector<uint8_t> block(16, 0);
@@ -146,7 +146,7 @@ TEST_CASE("GlesTextureUtilities createCompressedTexture2D") {
 
 TEST_CASE("GlesTextureUtilities mip maps") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("generated from level 0") {
         // 8x8 with a generated chain (8, 4, 2, 1): level 0 keeps its pixels and GL reports no error.
@@ -173,7 +173,7 @@ TEST_CASE("GlesTextureUtilities mip maps") {
 
 TEST_CASE("GlesTextureUtilities anisotropy above 1 is not implemented") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     // Like ris-framework-ts: throws std::runtime_error("Not implemented yet.") and creates nothing.
     const void* none = nullptr;

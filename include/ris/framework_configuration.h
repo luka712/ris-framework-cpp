@@ -24,6 +24,6 @@ typedef struct FrameworkConfiguration {
     uint32_t backBufferHeight;
     /** The texture filtering preset. By default set to Trilinear. */
     TextureFilteringPreset textureFiltering;
-} FrameworkConfiguration;
+} RisFrameworkConfiguration;
 
 #endif /* RIS_FRAMEWORK_CONFIGURATION_H */

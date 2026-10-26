@@ -8,7 +8,7 @@ using namespace ris::detail;
 namespace ris::gles::blending_utilities {
 
 void enable_blend(const BlendParams& params) {
-    require_context();
+
     glEnable(GL_BLEND);
     glBlendFuncSeparate(converter::convert_blend_factor(params.color.src_factor),
                         converter::convert_blend_factor(params.color.dst_factor),
@@ -19,7 +19,7 @@ void enable_blend(const BlendParams& params) {
 }
 
 void disable_blend() {
-    require_context();
+
     glDisable(GL_BLEND);
 }
 

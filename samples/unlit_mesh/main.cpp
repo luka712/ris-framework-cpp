@@ -6,7 +6,7 @@
 
 int main(int argc, char** argv) {
     try {
-        FrameworkConfiguration config = ris_createFrameworkConfiguration();
+        RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
         config.title = "ris sample: unlit_mesh";
         sample::apply_args(config, argc, argv);
 
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 
         framework.addOnRenderListener([&](ris::Framework&) { scene.render(); });
 
-        framework.renderer().setClearColor(ris::Color::light_pink());
+        framework.renderer().setClearColor(ris::Color::lightPink());
         sample::apply_run_args(framework, argc, argv);
         framework.initialize();
         return 0;

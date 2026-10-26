@@ -9,7 +9,7 @@
 
 TEST_CASE("vertex buffer on a real context") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("vertex buffer") {
         const std::vector<float> data(5 * 4, 0.5f);   // 4 vertices of float3 + float2

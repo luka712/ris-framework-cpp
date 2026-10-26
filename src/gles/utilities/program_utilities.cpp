@@ -9,7 +9,7 @@ using namespace ris::detail;
 namespace ris::gles::program_utilities {
 
 uint32_t create(uint32_t vertex_shader, uint32_t fragment_shader) {
-    require_context();
+
     const GLuint program = glCreateProgram();
     glAttachShader(program, vertex_shader);
     glAttachShader(program, fragment_shader);
@@ -31,7 +31,7 @@ uint32_t create(uint32_t vertex_shader, uint32_t fragment_shader) {
 }
 
 void delete_program(uint32_t& program) noexcept {
-    if (program != 0 && has_context()) glDeleteProgram(program);
+    if (program != 0) glDeleteProgram(program);
     program = 0;
 }
 

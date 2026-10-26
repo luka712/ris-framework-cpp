@@ -12,7 +12,6 @@ namespace ris::gles {
     } // namespace
 
     GlesGpuInfo::GlesGpuInfo(const AGraphicsDeviceFeatures &features) {
-        require_context(); // throws std::logic_error without a window, glGetString needs the context
         m_name = GlesUtilities::context().glString(GL_RENDERER);
         m_vendor = GlesUtilities::context().glString(GL_VENDOR);
         m_apiVersion = GlesUtilities::context().glString(GL_VERSION);

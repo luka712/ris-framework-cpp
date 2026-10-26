@@ -17,7 +17,7 @@ GlesBlendState::GlesBlendState(const BlendStateDescriptor& descriptor) : descrip
 }
 
 void GlesBlendState::apply() const {
-    require_context();
+
     if (!descriptor_.blendingEnabled) {
         glDisable(GL_BLEND);
     } else {
@@ -25,7 +25,6 @@ void GlesBlendState::apply() const {
         glBlendFuncSeparate(colorSrcFactor_, colorDstFactor_, alphaSrcFactor_, alphaDstFactor_);
         glBlendEquationSeparate(colorOperation_, alphaOperation_);
     }
-    check_gl("GlesBlendState::apply");
 }
 
 } // namespace ris::gles

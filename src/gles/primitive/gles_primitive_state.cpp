@@ -14,7 +14,7 @@ GlesPrimitiveState::GlesPrimitiveState(const PrimitiveStateDescriptor& descripto
 }
 
 void GlesPrimitiveState::apply() const {
-    require_context();
+
     if (descriptor_.cullFace == CullMode::None) {
         glDisable(GL_CULL_FACE);
     } else {
@@ -22,7 +22,7 @@ void GlesPrimitiveState::apply() const {
         glCullFace(cullFace_);
     }
     glFrontFace(frontFace_);
-    check_gl("GlesPrimitiveState::apply");
+
 }
 
 } // namespace ris::gles

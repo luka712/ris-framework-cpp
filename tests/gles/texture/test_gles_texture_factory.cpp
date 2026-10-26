@@ -49,7 +49,7 @@ struct KtxFile {
 
 TEST_CASE("texture factory createEmpty") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
 
     SECTION("without a color the texture is transparent black") {
@@ -121,7 +121,7 @@ TEST_CASE("texture factory createEmpty") {
 
 TEST_CASE("texture factory create") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
 
     std::vector<uint8_t> pixels;   // 4x4: red on the left half, blue on the right half
@@ -184,7 +184,7 @@ TEST_CASE("texture factory create") {
 
 TEST_CASE("texture factory createFromKtx2") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
     const char* path = RIS_TEST_DATA_DIR "/test_basis_uastc.ktx2";
 
@@ -302,7 +302,7 @@ TEST_CASE("texture factory createFromKtx2") {
 
 TEST_CASE("a factory made with a framework asks its graphics device for the GPU features") {
     if (!ris_test::display_available()) SKIP("no display available");
-    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
     ris::Framework framework(config);
     const gles::GlesTextureFactory factory(framework);
 
@@ -320,7 +320,7 @@ TEST_CASE("a factory made with a framework asks its graphics device for the GPU 
 
 TEST_CASE("Framework::textureFactory is the OpenGL ES factory") {
     if (!ris_test::display_available()) SKIP("no display available");
-    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
     ris::Framework framework(config);
     REQUIRE(dynamic_cast<gles::GlesTextureFactory*>(&framework.textureFactory()) != nullptr);
     const std::unique_ptr<ris::ATexture2D> tex(framework.textureFactory().createEmpty(2, 2, ris::Color::red()));

@@ -8,7 +8,6 @@ using namespace ris::detail;
 namespace ris::gles::culling_utilities {
 
 void set_culling(CullMode mode) {
-    require_context();
     if (mode == CullMode::None) {
         glDisable(GL_CULL_FACE);
         return;
@@ -18,7 +17,6 @@ void set_culling(CullMode mode) {
 }
 
 void set_front_face(FrontFace front_face) {
-    require_context();
     glFrontFace(converter::convert_front_face(front_face));
 }
 

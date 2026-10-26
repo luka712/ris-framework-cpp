@@ -1,7 +1,7 @@
 # Fails if a header of the API neutral layers includes a backend, OpenGL or SDL header:
 #  - ris/rendering/, ris/content/ and ris/data/ (graphics API neutral): no ris/gles/, GL / EGL / ANGLE headers, graphics.hpp
 #  - ris/input/ and ris/time/ (SDL3 is integral to the engine, so there is no input / time backend split, but SDL
-#    must stay private): no ris/gles/, SDL headers, window.hpp, graphics.hpp, GL headers
+#    must stay private): no ris/gles/, SDL headers, window_manager.hpp, graphics.hpp, GL headers
 # Usage: cmake -DRIS_INCLUDE_DIR=<path to include/> -P check_neutral_headers.cmake
 set(_bad "")
 set(_checked 0)
@@ -22,7 +22,7 @@ file(GLOB_RECURSE _input_headers "${RIS_INCLUDE_DIR}/ris/input/*.hpp" "${RIS_INC
 foreach(_header IN LISTS _input_headers)
     file(STRINGS "${_header}" _includes REGEX "^[ \t]*#[ \t]*include")
     foreach(_line IN LISTS _includes)
-        if(_line MATCHES "ris/gles/|SDL|sdl3|GLES|EGL|GL/|opengl|angle|graphics\\.hpp|window\\.hpp")
+        if(_line MATCHES "ris/gles/|SDL|sdl3|GLES|EGL|GL/|opengl|angle|graphics\\.hpp|window_manager\\.hpp")
             string(APPEND _bad "  ${_header}: ${_line}\n")
         endif()
     endforeach()

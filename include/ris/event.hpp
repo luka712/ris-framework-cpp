@@ -4,7 +4,7 @@
 
 namespace ris {
 
-/// Kinds of window / input events delivered by `Window::poll_event`. The values match the C API's
+/// Kinds of window / input events of the C API (`ris_window_poll_event`) and of `InputManager::handle_event`. The values match the C API's
 /// `ris_event_type`.
 enum class EventType : uint32_t {
     None = 0,

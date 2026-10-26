@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv) {
     try {
-        FrameworkConfiguration config = ris_createFrameworkConfiguration();
+        RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
         config.title = "ris sample: blinn_phong_mesh";
         sample::apply_args(config, argc, argv);
 
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
 
         framework.addOnRenderListener([&](ris::Framework&) { scene.render(); });
 
-        framework.renderer().setClearColor(ris::Color::corner_flower_blue());
+        framework.renderer().setClearColor(ris::Color::cornerFlowerBlue());
         sample::apply_run_args(framework, argc, argv);
         framework.initialize();
         return 0;

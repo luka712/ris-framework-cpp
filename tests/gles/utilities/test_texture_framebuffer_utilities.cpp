@@ -14,7 +14,7 @@ using ris::TextureFormat;
 
 TEST_CASE("renderbuffer and framebuffer utilities") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("renderbuffers") {
         uint32_t rb = gles::renderbuffer_utilities::create(TextureFormat::Depth24Stencil8, 16, 16, "depth");
@@ -96,7 +96,7 @@ TEST_CASE("renderbuffer and framebuffer utilities") {
 
 TEST_CASE("render target on the gles utilities") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     ris::RenderTarget target(16, 16, true);   // with a depth stencil render buffer
     target.bind();
@@ -107,7 +107,7 @@ TEST_CASE("render target on the gles utilities") {
 
 TEST_CASE("sampler utilities") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     namespace su = ris::gles::sampler_utilities;
 
     SECTION("defaults") {

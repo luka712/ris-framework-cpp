@@ -10,7 +10,7 @@
 
 TEST_CASE("vertex array description checks the stride") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     const std::vector<float> data(10, 0.0f);
     ris::gles::GlesVertexBuffer vb(data, 20);
@@ -19,7 +19,7 @@ TEST_CASE("vertex array description checks the stride") {
 
 TEST_CASE("typed buffers draw a quad with a uniform block") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     // two triangles covering the whole viewport: position (vec3) + uv (vec2)
     const std::vector<float> vertices = {

@@ -17,12 +17,18 @@ inline bool display_available() {
 #endif
 }
 
-inline ris::Window make_hidden_window() {
-    ris::WindowDesc desc;
-    desc.width = 64;
-    desc.height = 64;
-    desc.flags = ris::WindowFlags::Hidden;
-    return ris::Window(desc);
-}
+/// A framework with a 64x64 window and its OpenGL ES context current (the graphics device creates the context).
+class HiddenWindow : public ris::Framework {
+public:
+    HiddenWindow() : ris::Framework(configuration()) {}
+
+private:
+    static RisFrameworkConfiguration configuration() {
+        RisFrameworkConfiguration configuration = ris_createFrameworkConfiguration();
+        configuration.backBufferWidth = 64;
+        configuration.backBufferHeight = 64;
+        return configuration;
+    }
+};
 
 } // namespace ris_test

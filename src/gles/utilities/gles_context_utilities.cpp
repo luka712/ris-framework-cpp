@@ -12,7 +12,7 @@ std::string GlesContextUtilities::glString(GLenum name) {
 }
 
 std::vector<std::string> GlesContextUtilities::getExtensions() {
-    require_context();   // throws std::logic_error without a window, like all the gles utilities
+       // throws std::logic_error without a window, like all the gles utilities
     GLint count = 0;
     glGetIntegerv(GL_NUM_EXTENSIONS, &count);
 

@@ -28,7 +28,7 @@ std::vector<uint8_t> rgba_pixels(int width, int height) {
 
 TEST_CASE("ATexture2D properties after creation") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
     const auto pixels = rgba_pixels(8, 4);
 
@@ -66,7 +66,7 @@ TEST_CASE("ATexture2D properties after creation") {
 
 TEST_CASE("ATexture2D mip levels") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
     const auto pixels = rgba_pixels(4, 4);
 
@@ -99,7 +99,7 @@ TEST_CASE("ATexture2D mip levels") {
 
 TEST_CASE("ATexture2D createEmpty size") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
     const std::unique_ptr<ris::ATexture2D> tex(factory.createEmpty(16, 8, std::nullopt, ris::TextureUsage::CopyDst, ris::TextureFormat::Rgba8Unorm, "empty"));
     CHECK(tex->getSize() == 16 * 8 * 4);
@@ -109,7 +109,7 @@ TEST_CASE("ATexture2D createEmpty size") {
 
 TEST_CASE("ATexture2D state transitions") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
 
     SECTION("factory textures are initialized, a second initialize() throws") {
@@ -151,7 +151,7 @@ TEST_CASE("ATexture2D state transitions") {
 
 TEST_CASE("ATexture2D default texture view") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
     const std::unique_ptr<ris::ATexture2D> tex(factory.createEmpty(4, 4, std::nullopt, ris::TextureUsage::TextureBinding, ris::TextureFormat::Rgba8Unorm, "tex"));
 
@@ -166,7 +166,7 @@ TEST_CASE("ATexture2D default texture view") {
 
 TEST_CASE("ATexture2D createView") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
     const std::unique_ptr<ris::ATexture2D> tex(factory.createEmpty(4, 4));
 
@@ -208,7 +208,7 @@ TEST_CASE("ATexture2D createView") {
 
 TEST_CASE("ATexture2D disposed listeners") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
 
     SECTION("the listener fires once when the texture is destroyed") {
@@ -284,7 +284,7 @@ TEST_CASE("ATexture2D disposed listeners") {
 
 TEST_CASE("ATexture2D ids are unique and increasing") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
     const std::unique_ptr<ris::ATexture2D> a(factory.createEmpty(2, 2));
     const std::unique_ptr<ris::ATexture2D> b(factory.createEmpty(2, 2));
@@ -296,7 +296,7 @@ TEST_CASE("ATexture2D ids are unique and increasing") {
 
 TEST_CASE("ATexture2D from a KTX2 file") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const gles::GlesTextureFactory factory;
     ktxTexture2* ktx = nullptr;
     REQUIRE(ris_ktxTexture2_CreateFromNamedFile(RIS_TEST_DATA_DIR "/test_basis_uastc.ktx2", KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktx) == KTX_SUCCESS);

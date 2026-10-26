@@ -32,7 +32,7 @@ std::string error_message(const std::function<void()>& fn) {
 
 TEST_CASE("shader and program utilities") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("compile and link") {
         uint32_t vs = gles::shader_utilities::create_vertex_shader(kVertex);

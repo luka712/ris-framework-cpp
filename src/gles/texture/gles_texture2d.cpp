@@ -144,7 +144,7 @@ GlesTexture2D GlesTexture2D::adopt(uint32_t glHandle, int32_t width, int32_t hei
 
 GlesTexture2D GlesTexture2D::from_rgba8(int32_t width, int32_t height, const void* pixels, bool generate_mipmaps,
                                         bool srgb, TextureUsage usage, const std::string& label) {
-    require_context();
+
     if (width <= 0 || height <= 0) {
         throw std::invalid_argument(std::string("Texture::from_rgba8: invalid size ") + std::to_string(width) + "x"
                                     + std::to_string(height));
@@ -167,7 +167,7 @@ GlesTexture2D GlesTexture2D::from_rgba8(int32_t width, int32_t height, const voi
 
 GlesTexture2D GlesTexture2D::from_image_file(const std::string& path, bool generate_mipmaps, bool srgb,
                                              bool flip_vertically) {
-    require_context();
+
     ris_stbi_set_flip_vertically_on_load(flip_vertically);
     int w = 0, h = 0, channels = 0;
     unsigned char* pixels = ris_stbi_load(path.c_str(), &w, &h, &channels, 4);
@@ -186,7 +186,7 @@ GlesTexture2D GlesTexture2D::from_image_file(const std::string& path, bool gener
 }
 
 GlesTexture2D GlesTexture2D::from_ktx2_memory(const void* data, size_t size) {
-    require_context();
+
     if (!data || size == 0) {
         throw std::invalid_argument("Texture::from_ktx2_memory: empty data");
     }
@@ -259,7 +259,7 @@ void GlesTexture2D::dispose() noexcept {
     // An empty texture (default constructed or moved from) has nothing to release and raises no event.
     if (textureState_ == State::Disposing || textureState_ == State::Disposed) return;
     textureState_ = State::Disposing;
-    if (glHandle_ != 0 && has_context()) {
+    if (glHandle_ != 0 ) {
         glDeleteTextures(1, &glHandle_);
     }
     glHandle_ = 0;
@@ -368,7 +368,7 @@ GlesTextureView* GlesTexture2D::createView(const TextureViewDescriptor& descript
 // ---- OpenGL ES ------------------------------------------------------------------------------
 
 void GlesTexture2D::set_sampler(const SamplerDesc& s) {
-    require_context();
+
     glBindTexture(GL_TEXTURE_2D, glHandle_);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLint>(converter::convert_filter(s.min_filter)));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
@@ -379,7 +379,7 @@ void GlesTexture2D::set_sampler(const SamplerDesc& s) {
 }
 
 void GlesTexture2D::bind(uint32_t unit) const {
-    require_context();
+
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, glHandle_);
 }

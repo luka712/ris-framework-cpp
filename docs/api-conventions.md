@@ -7,6 +7,7 @@
 - Methods are camelCase (`addOnLoadContentListener`).
 - No type aliases. Write the real type, such as `glm::vec2`.
 - Keep it simple (KISS): plain members and `std::function` over extra helper classes or abstraction layers, raw pointers owned by a manager over `std::shared_ptr`, plain `std::` exceptions. 
+- Member fields should use `m_` prefix. In example width should be `m_width`. Use camel case otherwise ie `m_backBufferWidth`.
 
 ## C
 

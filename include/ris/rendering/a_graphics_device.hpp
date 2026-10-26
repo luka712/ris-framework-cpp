@@ -23,7 +23,7 @@
 
 namespace ris {
 
-class Window;   // see ris/window.hpp
+class WindowManager;   // see ris/window_manager.hpp
 
 /// The graphics device, like `IGraphicsDevice` of ris-framework-ts: the entry point to the GPU. It reports what the
 /// GPU can do, owns the default sampler, blend state and primitive state, and creates samplers, blend states,
@@ -33,8 +33,8 @@ class Window;   // see ris/window.hpp
 /// (ris/rendering/default_graphics_device.hpp).
 ///
 /// Rules every implementation follows:
-///  - `initialize()` must be called once, after the backend's context exists (for OpenGL ES: after the ris::Window
-///    was created), before anything else. Everything runs on the thread that owns the context.
+///  - `initialize()` must be called once, after the backend's context exists (for OpenGL ES: after the window manager's
+///    `initializeForGles()`), before anything else. Everything runs on the thread that owns the context.
 ///  - The objects returned by the `create...` functions are owned by the caller: free them with `delete`, before
 ///    the device is destroyed. The default sampler, blend state and primitive state are owned by the device. The
 ///    device must be destroyed before the window.
@@ -116,13 +116,13 @@ public:
     virtual ARenderPass* createRenderPass(const RenderPassDescriptor& descriptor) = 0;
 
     /// Creates a swap chain for the graphics device. The swap chain is used to present the rendered image to the
-    /// screen. Replaces the `window: any` of ris-framework-ts (a canvas there, which is a ris::Window here).
+    /// screen. Replaces the `window: any` of ris-framework-ts (a canvas there, which is an WindowManager here).
     /// @param window the window to present to. The swap chain must not outlive it.
     /// @param swapChainDescription the swap chain descriptor.
     /// @return the swap chain instance, owned by the caller (never null).
     /// @throws std::invalid_argument for a negative size, std::domain_error for a present mode the backend does not
     ///         support, std::logic_error if the device was not initialised.
-    virtual ASwapChain* createSwapChain(Window& window, const SwapChainDescriptor& swapChainDescription) = 0;
+    virtual ASwapChain* createSwapChain(WindowManager& window, const SwapChainDescriptor& swapChainDescription) = 0;
 
     /// Pushes a debug group with the specified name onto the graphics device's debug stack. The commands until the
     /// matching popDebugGroup() appear as a group in graphics debuggers (RenderDoc, ...). Pushes and pops must be balanced.

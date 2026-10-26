@@ -5,15 +5,15 @@
 
 namespace ris::gles {
 
-GlesSwapChain::GlesSwapChain(Window& window, const SwapChainDescriptor& descriptor)
+GlesSwapChain::GlesSwapChain(WindowManager& window, const SwapChainDescriptor& descriptor)
     : window_(window), presentMode_(descriptor.desiredPresentationMode) {
     if (descriptor.width < 0 || descriptor.height < 0) {
         throw std::invalid_argument("GlesSwapChain: the size must not be negative (got " + std::to_string(descriptor.width) + "x" + std::to_string(descriptor.height) + ")");
     }
     switch (presentMode_) {
-        case SurfacePresentMode::Immediate: window_.set_vsync(false); return;
+        case SurfacePresentMode::Immediate: window_.setVsync(false); return;
         case SurfacePresentMode::Fifo:
-        case SurfacePresentMode::Mailbox: window_.set_vsync(true); return;
+        case SurfacePresentMode::Mailbox: window_.setVsync(true); return;
     }
     throw std::domain_error("GlesSwapChain: unknown present mode " + std::to_string(static_cast<uint32_t>(presentMode_)));
 }
@@ -21,10 +21,7 @@ GlesSwapChain::GlesSwapChain(Window& window, const SwapChainDescriptor& descript
 GlesSwapChain::~GlesSwapChain() = default;
 
 glm::vec2 GlesSwapChain::getBackBufferSize() const {
-    int32_t width = 0;
-    int32_t height = 0;
-    window_.drawable_size(width, height);
-    return {static_cast<float>(width), static_cast<float>(height)};
+    return window_.getWindowBounds();
 }
 
 void GlesSwapChain::resize(int32_t width, int32_t height) {
@@ -35,7 +32,7 @@ void GlesSwapChain::resize(int32_t width, int32_t height) {
 }
 
 void GlesSwapChain::present() {
-    window_.swap_buffers();
+    window_.swapBuffers();
 }
 
 } // namespace ris::gles

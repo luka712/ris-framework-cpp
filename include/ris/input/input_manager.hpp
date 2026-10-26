@@ -32,7 +32,7 @@ enum class TouchPhase : int32_t {
 /// `Framework` owns one, get it from `Framework::inputManager()`.
 ///
 /// Frame model (what `Framework` does every frame):
-///  1. native events are collected while the window is polled (`Window::poll_event`);
+///  1. native events are collected while the window manager runs its event loop (`WindowManager::runEventLoop`);
 ///  2. `update()` publishes everything collected since the previous `update()` as the current state: the
 ///     keyboard, mouse, gamepad and touch objects are then valid for the whole frame, including the "released"
 ///     and "pressed" flags, which only live for this one frame;
@@ -43,9 +43,10 @@ enum class TouchPhase : int32_t {
 /// always show the latest published frame; keeping a reference is fine. All methods must be called from the
 /// thread that runs the frame loop (the thread of the window); nothing is synchronised.
 ///
-/// How it gets events: `initialize()` registers the manager with the `ris::Window` event pump, so every SDL event
-/// that `Window::poll_event` (and therefore the framework loop) pulls from SDL is also shown to the manager. An
-/// application that pumps SDL itself can call `handle_native_event` instead.
+/// How it gets events: the window manager does not know the input manager. `Framework` registers
+/// `handle_native_event` with `WindowManager::addOnSdlEventListener`, so every SDL event the event loop pulls from
+/// SDL is also shown to the manager. An application without `Framework` does the same, or calls
+/// `handle_native_event` from its own SDL event loop.
 ///
 /// Mapping:
 ///  - keys: SDL scancodes are the USB HID usages of `ris::Key`; mouse: SDL button 1/2/3/4/5 = left / middle /
@@ -65,7 +66,7 @@ enum class TouchPhase : int32_t {
 /// network input, a different windowing layer) can drive the manager without any window or SDL event. Do not feed
 /// the same input both natively and through `report_*` / `handle_event`.
 ///
-/// Lifetime: must be disposed or destroyed before the `ris::Window` (and thereby SDL) goes away; `Framework` does
+/// Lifetime: must be disposed or destroyed before the `WindowManager` (and thereby SDL) goes away; `Framework` does
 /// that. Not thread safe: use it on the thread that created the window.
 class RIS_API InputManager {
 public:
@@ -93,7 +94,7 @@ public:
     /// The capabilities of the touch panel.
     const TouchPanelCapabilities& touch_capabilities() const noexcept { return touch_capabilities_; }
 
-    /// Starts listening to SDL: registers with the window's event pump, starts the SDL gamepad subsystem, opens the
+    /// Starts the SDL gamepad subsystem, opens the
     /// gamepads that are already connected and reads the touch devices. Safe to call more than once. A missing
     /// gamepad subsystem or device is logged, not an error. `Framework` calls it once after creating the window.
     void initialize();
@@ -104,7 +105,7 @@ public:
     /// Call once per frame after the update listeners (and before the next `update()`): ages the touch contacts
     /// like `InputManager.afterUpdate` of ris-framework-ts.
     void after_update();
-    /// Unregisters from the event pump, closes the gamepads and stops the gamepad subsystem. Safe to call more than
+    /// Closes the gamepads and stops the gamepad subsystem. Safe to call more than
     /// once; called by the destructor. The manager must be disposed (or destroyed) before the window it listens
     /// to is destroyed.
     void dispose();
@@ -113,8 +114,8 @@ public:
     /// @param sdl_event pointer to an `SDL_Event` (of the SDL3 the framework is built with); not retained
     /// @return true when the event is input that the manager consumed (keyboard, mouse, touch, gamepad, focus lost)
     ///         and false for every other event, which is not touched. The event is not removed from SDL's queue.
-    /// Called by the window's event pump after `initialize()`; call it yourself only if you pump SDL outside of
-    /// `Window::poll_event`, and then do not call `initialize()`'s registration twice for the same events.
+    /// `Framework` calls it for every event of the window manager's event loop (`addOnSdlEventListener`); call it
+    /// yourself when you pump SDL yourself, and only then.
     bool handle_native_event(const void* sdl_event);
 
     /// The size touch positions are scaled to when SDL reports a finger event without a window. Defaults to

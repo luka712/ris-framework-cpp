@@ -17,7 +17,7 @@ constexpr GLenum kTextureMaxAnisotropy = 0x84FE;   // GL_EXT_texture_filter_anis
 } // namespace
 
 uint32_t create(const SamplerParams& params, std::string_view label) {
-    require_context();
+
     // Convert first: an unsupported value throws before any GL object exists.
     const GLenum min_filter = converter::convert_min_filter(params.min_filter, params.mip_map_filter);
     const GLenum mag_filter = converter::convert_mag_filter(params.mag_filter);
@@ -55,7 +55,7 @@ uint32_t create(const SamplerParams& params, std::string_view label) {
 }
 
 void delete_sampler(uint32_t& sampler) noexcept {
-    if (sampler != 0 && has_context()) {
+    if (sampler != 0) {
         const GLuint id = sampler;
         glDeleteSamplers(1, &id);
     }

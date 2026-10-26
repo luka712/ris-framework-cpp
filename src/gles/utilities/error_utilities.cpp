@@ -23,13 +23,11 @@ const char* error_name(uint32_t error) noexcept {
 }
 
 void clear_errors() {
-    require_context();
     while (glGetError() != GL_NO_ERROR) {
     }
 }
 
 void check_error(const char* what) {
-    require_context();
     GLenum err = glGetError();
     if (err == GL_NO_ERROR) return;
     const GLenum first = err;

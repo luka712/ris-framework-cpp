@@ -1,6 +1,8 @@
 // The C API: a thin extern "C" layer over the C++ API. Every function catches exceptions and
 // translates them into a return value plus ris_get_last_error().
 
+#include <SDL3/SDL.h>
+
 #include <cstddef>
 #include <cstring>
 #include <exception>
@@ -19,8 +21,19 @@
 // ---- opaque handle <-> C++ object -------------------------------------------------------------
 // Handles are the C++ objects themselves, reinterpreted.
 
-struct ris_window : ris::Window {
-    using ris::Window::Window;
+struct ris_window : ris::WindowManager {
+    SDL_GLContext glContext = nullptr;
+
+    ris_window(const ris::WindowDescriptor& desc, bool hidden, bool vsync) : ris::WindowManager(desc) {
+        initializeForGles();
+        if (hidden) SDL_HideWindow(getWindow());
+        glContext = SDL_GL_CreateContext(getWindow());
+        if (!glContext) throw std::runtime_error(std::string("SDL_GL_CreateContext failed: ") + SDL_GetError());
+        setVsync(vsync);
+    }
+    ~ris_window() {
+        SDL_GL_DestroyContext(glContext);
+    }
 };
 struct ris_buffer : ris::Buffer {
     using ris::Buffer::Buffer;
@@ -121,6 +134,65 @@ T* guard_ptr(Fn&& fn) noexcept {
     return rc == RIS_OK ? result : nullptr;
 }
 
+/// Translates an SDL event to the C API's event. False for the events the C API does not expose.
+bool translate_event(const SDL_Event& e, ris::Event& ev) {
+    ev.timestamp_ns = e.common.timestamp;
+    switch (e.type) {
+        case SDL_EVENT_QUIT:
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+            ev.type = ris::EventType::Quit;
+            return true;
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+            ev.type = ris::EventType::WindowResized;
+            ev.width = e.window.data1;
+            ev.height = e.window.data2;
+            return true;
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+            ev.type = ris::EventType::WindowFocusGained;
+            return true;
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
+            ev.type = ris::EventType::WindowFocusLost;
+            return true;
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
+            ev.type = e.type == SDL_EVENT_KEY_DOWN ? ris::EventType::KeyDown : ris::EventType::KeyUp;
+            ev.scancode = static_cast<int32_t>(e.key.scancode);
+            ev.keycode = static_cast<int32_t>(e.key.key);
+            ev.repeat = e.key.repeat ? 1u : 0u;
+            if (e.key.mod & SDL_KMOD_SHIFT) ev.mods |= ris::key_mod::shift;
+            if (e.key.mod & SDL_KMOD_CTRL) ev.mods |= ris::key_mod::ctrl;
+            if (e.key.mod & SDL_KMOD_ALT) ev.mods |= ris::key_mod::alt;
+            if (e.key.mod & SDL_KMOD_GUI) ev.mods |= ris::key_mod::gui;
+            return true;
+        case SDL_EVENT_TEXT_INPUT:
+            ev.type = ris::EventType::TextInput;
+            std::strncpy(ev.text, e.text.text, sizeof(ev.text) - 1);
+            return true;
+        case SDL_EVENT_MOUSE_MOTION:
+            ev.type = ris::EventType::MouseMove;
+            ev.x = e.motion.x;
+            ev.y = e.motion.y;
+            ev.dx = e.motion.xrel;
+            ev.dy = e.motion.yrel;
+            return true;
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            ev.type = e.type == SDL_EVENT_MOUSE_BUTTON_DOWN ? ris::EventType::MouseButtonDown : ris::EventType::MouseButtonUp;
+            ev.button = e.button.button;
+            ev.clicks = e.button.clicks;
+            ev.x = e.button.x;
+            ev.y = e.button.y;
+            return true;
+        case SDL_EVENT_MOUSE_WHEEL:
+            ev.type = ris::EventType::MouseWheel;
+            ev.dx = e.wheel.x;
+            ev.dy = e.wheel.y;
+            return true;
+        default:
+            return false;
+    }
+}
+
 ris_result invalid(const char* what) { return fail(RIS_ERROR_INVALID_ARGUMENT, what); }
 
 } // namespace
@@ -172,18 +244,11 @@ ris_window* RIS_CALL ris_window_create(const ris_window_desc* desc) {
         return nullptr;
     }
     return guard_ptr<ris_window>([&] {
-        ris::WindowDesc d;
+        ris::WindowDescriptor d;
         d.title = desc->title ? desc->title : "ris-framework";
         d.width = desc->width;
         d.height = desc->height;
-        d.flags = static_cast<ris::WindowFlags>(desc->flags);
-        d.backend = static_cast<ris::AngleBackend>(desc->backend);
-        d.vsync = desc->vsync != 0;
-        d.msaa_samples = desc->msaa_samples;
-        d.depth_bits = desc->depth_bits;
-        d.stencil_bits = desc->stencil_bits;
-        d.debug = desc->debug != 0;
-        return new ris_window(d);
+        return new ris_window(d, (desc->flags & RIS_WINDOW_HIDDEN) != 0, desc->vsync != 0);
     });
 }
 
@@ -191,59 +256,100 @@ void RIS_CALL ris_window_destroy(ris_window* window) { delete window; }
 
 void RIS_CALL ris_window_swap_buffers(ris_window* window) {
     if (!window) return;
-    guard([&] { window->swap_buffers(); });
+    guard([&] { window->swapBuffers(); });
 }
 void RIS_CALL ris_window_set_vsync(ris_window* window, uint32_t enabled) {
-    if (window) guard([&] { window->set_vsync(enabled != 0); });
+    if (window) guard([&] { window->setVsync(enabled != 0); });
 }
 void RIS_CALL ris_window_set_title(ris_window* window, const char* title) {
-    if (window && title) guard([&] { window->set_title(title); });
+    if (window && title) guard([&] { window->setTitle(title); });
 }
 void RIS_CALL ris_window_set_fullscreen(ris_window* window, uint32_t enabled) {
-    if (window) guard([&] { window->set_fullscreen(enabled != 0); });
+    if (window) guard([&] { window->setFullscreen(enabled != 0); });
 }
 void RIS_CALL ris_window_show(ris_window* window) {
-    if (window) guard([&] { window->show(); });
+    if (window) SDL_ShowWindow(window->getWindow());
 }
 void RIS_CALL ris_window_get_size(const ris_window* window, int32_t* width, int32_t* height) {
-    int32_t w = 0, h = 0;
-    if (window) window->size(w, h);
+    int w = 0, h = 0;
+    if (window) SDL_GetWindowSize(window->getWindow(), &w, &h);
     if (width) *width = w;
     if (height) *height = h;
 }
 void RIS_CALL ris_window_get_drawable_size(const ris_window* window, int32_t* width, int32_t* height) {
     int32_t w = 0, h = 0;
-    if (window) window->drawable_size(w, h);
+    if (window) {
+        const glm::vec2 bounds = window->getWindowBounds();
+        w = static_cast<int32_t>(bounds.x);
+        h = static_cast<int32_t>(bounds.y);
+    }
     if (width) *width = w;
     if (height) *height = h;
 }
-float RIS_CALL ris_window_get_content_scale(const ris_window* window) { return window ? window->content_scale() : 1.0f; }
+float RIS_CALL ris_window_get_content_scale(const ris_window* window) {
+    const float scale = window ? SDL_GetWindowDisplayScale(window->getWindow()) : 0.0f;
+    return scale > 0.0f ? scale : 1.0f;
+}
 void RIS_CALL ris_window_set_text_input(ris_window* window, uint32_t enabled) {
-    if (window) guard([&] { window->set_text_input(enabled != 0); });
+    if (!window) return;
+    if (enabled) {
+        SDL_StartTextInput(window->getWindow());
+    } else {
+        SDL_StopTextInput(window->getWindow());
+    }
 }
 void RIS_CALL ris_window_request_quit(ris_window* window) {
-    if (window) guard([&] { window->request_quit(); });
+    if (!window) return;
+    SDL_Event e;
+    SDL_zero(e);
+    e.type = SDL_EVENT_QUIT;
+    SDL_PushEvent(&e);
 }
 
 const char* RIS_CALL ris_window_get_gl_info(const ris_window* window, ris_gl_info which) {
-    return window ? window->gl_info(static_cast<ris::GlInfo>(which)) : "";
+    if (!window) return "";
+    GLenum name = 0;
+    switch (which) {
+        case RIS_GL_INFO_VENDOR: name = GL_VENDOR; break;
+        case RIS_GL_INFO_RENDERER: name = GL_RENDERER; break;
+        case RIS_GL_INFO_VERSION: name = GL_VERSION; break;
+        case RIS_GL_INFO_GLSL_VERSION: name = GL_SHADING_LANGUAGE_VERSION; break;
+        case RIS_GL_INFO_EXTENSIONS: name = GL_EXTENSIONS; break;
+        case RIS_GL_INFO_ANGLE_BACKEND: return window->getAngleBackend().c_str();
+        default: return "";
+    }
+    const char* info = reinterpret_cast<const char*>(glGetString(name));
+    return info ? info : "";
 }
 uint32_t RIS_CALL ris_window_has_gl_extension(const ris_window* window, const char* name) {
-    return window && window->has_gl_extension(name) ? 1u : 0u;
+    return window && name && GlesUtilities::context().isExtensionSupported(name) ? 1u : 0u;
 }
 
 uint32_t RIS_CALL ris_window_poll_event(ris_window* window, ris_event* out_event) {
     if (!window || !out_event) return 0;
-    ris::Event ev;
-    bool got = false;
-    guard([&] { got = window->poll_event(ev); });
-    if (!got) return 0;
-    std::memcpy(out_event, &ev, sizeof(ris_event));
-    return 1;
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        ris::Event ev;
+        if (translate_event(e, ev)) {
+            std::memcpy(out_event, &ev, sizeof(ris_event));
+            return 1;
+        }
+    }
+    return 0;
 }
 
-uint32_t RIS_CALL ris_input_key_down(int32_t scancode) { return ris::input::key_down(scancode) ? 1u : 0u; }
-uint32_t RIS_CALL ris_input_mouse_state(float* x, float* y) { return ris::input::mouse_state(x, y); }
+uint32_t RIS_CALL ris_input_key_down(int32_t scancode) {
+    int count = 0;
+    const bool* state = SDL_GetKeyboardState(&count);
+    return state && scancode >= 0 && scancode < count && state[scancode] ? 1u : 0u;
+}
+uint32_t RIS_CALL ris_input_mouse_state(float* x, float* y) {
+    float mx = 0, my = 0;
+    const SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mx, &my);
+    if (x) *x = mx;
+    if (y) *y = my;
+    return static_cast<uint32_t>(buttons);
+}
 
 // ---- graphics state -------------------------------------------------------------------------
 
@@ -480,13 +586,13 @@ void RIS_CALL ris_render_target_destroy(ris_render_target* target) { delete targ
 
 // ---- sprite batch ---------------------------------------------------------------------------
 
-ris_sprite_batch* RIS_CALL ris_sprite_batch_create(uint32_t max_sprites_per_flush) {
-    return guard_ptr<ris_sprite_batch>([&] { return new ris_sprite_batch(max_sprites_per_flush); });
+RisSpriteBatch* RIS_CALL ris_sprite_batch_create(uint32_t max_sprites_per_flush) {
+    return guard_ptr<RisSpriteBatch>([&] { return new RisSpriteBatch(max_sprites_per_flush); });
 }
-void RIS_CALL ris_spriteBatchBegin(ris_sprite_batch* batch, const float* view_projection, uint32_t blend_mode) {
+void RIS_CALL ris_spriteBatchBegin(RisSpriteBatch* batch, const float* view_projection, uint32_t blend_mode) {
     if (batch) guard([&] { batch->begin(view_projection, static_cast<ris::BlendMode>(blend_mode)); });
 }
-void RIS_CALL ris_sprite_batch_draw(ris_sprite_batch* batch, const ris_sprite* sprite) {
+void RIS_CALL ris_sprite_batch_draw(RisSpriteBatch* batch, const ris_sprite* sprite) {
     if (!batch || !sprite) return;
     guard([&] {
         ris::Sprite s;
@@ -496,60 +602,61 @@ void RIS_CALL ris_sprite_batch_draw(ris_sprite_batch* batch, const ris_sprite* s
         batch->draw(s);
     });
 }
-void RIS_CALL ris_spriteBatchDrawQuad(ris_sprite_batch* batch, ris_texture* texture, float x, float y, float width, float height, float r, float g, float b, float a) {
+void RIS_CALL ris_spriteBatchDrawQuad(RisSpriteBatch* batch, ris_texture* texture, float x, float y, float width, float height, float r, float g, float b, float a) {
     if (batch) guard([&] { batch->draw_quad(texture ? &texture->value : nullptr, x, y, width, height, r, g, b, a); });
 }
-void RIS_CALL ris_spriteBatchEnd(ris_sprite_batch* batch) {
+void RIS_CALL ris_spriteBatchEnd(RisSpriteBatch* batch) {
     if (batch) guard([&] { batch->end(); });
 }
-void RIS_CALL ris_sprite_batch_destroy(ris_sprite_batch* batch) { delete batch; }
+void RIS_CALL ris_sprite_batch_destroy(RisSpriteBatch* batch) { delete batch; }
 
 // ---- framework ------------------------------------------------------------------------------
 // ris_framework and ris_Renderer are the C++ objects themselves (ris::Framework, ris::Renderer), reinterpreted.
 
 namespace {
-ris::Framework* fw(ris_framework* framework) { return reinterpret_cast<ris::Framework*>(framework); }
+ris::Framework* fw(RisFramework* framework) { return reinterpret_cast<ris::Framework*>(framework); }
 } // namespace
 
-FrameworkConfiguration RIS_CALL ris_createFrameworkConfiguration(void) {
+RisFrameworkConfiguration RIS_CALL ris_createFrameworkConfiguration(void) {
     return {"Ris Framework", 800, 600, RIS_TEXTURE_FILTERING_TRILINEAR};
 }
 
-ris_framework* RIS_CALL ris_createFramework(const FrameworkConfiguration* config) {
+RisFramework* RIS_CALL ris_createFramework(const RisFrameworkConfiguration* config) {
     if (!config) {
         invalid("ris_createFramework: config is null");
         return nullptr;
     }
-    return guard_ptr<ris_framework>([&] { return reinterpret_cast<ris_framework*>(new ris::Framework(*config)); });
+    return guard_ptr<RisFramework>([&] { return reinterpret_cast<RisFramework*>(new ris::Framework(*config)); });
 }
-void RIS_CALL ris_destroyFramework(ris_framework* framework) { delete fw(framework); }
+void RIS_CALL ris_destroyFramework(RisFramework* framework) { delete fw(framework); }
 
-uint32_t RIS_CALL ris_addOnLoadContentListener(ris_framework* framework, ris_frameworkCallback callback, void* userData) {
+uint32_t RIS_CALL ris_addOnLoadContentListener(RisFramework* framework, ris_frameworkCallback callback, void* userData) {
     if (!framework || !callback) return 0;
     return fw(framework)->addOnLoadContentListener([framework, callback, userData](ris::Framework&) { callback(framework, userData); });
 }
-uint32_t RIS_CALL ris_addOnRenderListener(ris_framework* framework, ris_frameworkCallback callback, void* userData) {
+uint32_t RIS_CALL ris_addOnRenderListener(RisFramework* framework, ris_frameworkCallback callback, void* userData) {
     if (!framework || !callback) return 0;
     return fw(framework)->addOnRenderListener([framework, callback, userData](ris::Framework&) { callback(framework, userData); });
 }
 
-ris_result RIS_CALL ris_initialize(ris_framework* framework) {
+ris_result RIS_CALL ris_initialize(RisFramework* framework) {
     if (!framework) return invalid("ris_initialize: framework is null");
     return guard([&] { fw(framework)->initialize(); });
 }
-void RIS_CALL ris_quit(ris_framework* framework) {
+void RIS_CALL ris_quit(RisFramework* framework) {
     if (framework) fw(framework)->quit();
 }
 
-ris_sprite_batch* RIS_CALL ris_getSpriteBatch(ris_framework* framework) {
-    return framework ? reinterpret_cast<ris_sprite_batch*>(&fw(framework)->spriteBatch()) : nullptr;
+RisSpriteBatch* RIS_CALL ris_getSpriteBatch(RisFramework* framework) {
+    return framework ? reinterpret_cast<RisSpriteBatch*>(&fw(framework)->spriteBatch()) : nullptr;
 }
-ris_Renderer* RIS_CALL ris_getRenderer(ris_framework* framework) {
+ris_Renderer* RIS_CALL ris_getRenderer(RisFramework* framework) {
     return framework ? reinterpret_cast<ris_Renderer*>(&fw(framework)->renderer()) : nullptr;
 }
 void RIS_CALL ris_setClearColor(ris_Renderer* renderer, float r, float g, float b, float a) {
     if (renderer) reinterpret_cast<ris::Renderer*>(renderer)->setClearColor(ris::Color(r, g, b, a));
 }
+
 
 // ---- math -----------------------------------------------------------------------------------
 

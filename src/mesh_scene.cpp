@@ -62,7 +62,7 @@ static_assert(sizeof(PackedVertex) == 48);
 } // namespace
 
 Mesh::Mesh(const Geometry& g, std::vector<SubMesh> sub_meshes) : sub_meshes_(std::move(sub_meshes)) {
-    require_context();
+
     const size_t n = g.vertex_count();
     if (n == 0 || g.positions.size() % 3 != 0) {
         throw std::invalid_argument("Mesh: geometry needs positions (3 floats per vertex)");

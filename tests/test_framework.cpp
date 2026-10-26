@@ -21,7 +21,7 @@ bool display_available() {
 } // namespace
 
 TEST_CASE("Color and Rect") {
-    const ris::Color c = ris::Color::corner_flower_blue();
+    const ris::Color c = ris::Color::cornerFlowerBlue();
     REQUIRE(c.r == Approx(0.39f));
     REQUIRE(c.a == 1.0f);
     REQUIRE(ris::Color::white() == ris::Color(1, 1, 1, 1));
@@ -79,7 +79,7 @@ TEST_CASE("geometry builder") {
 
 TEST_CASE("framework runs a frame loop and listeners") {
     if (!display_available()) SKIP("no display available");
-    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
     config.backBufferWidth = 64;
     config.backBufferHeight = 64;
 
@@ -116,7 +116,7 @@ TEST_CASE("framework runs a frame loop and listeners") {
 
 TEST_CASE("framework drives the time manager: deterministic frames and fixed update steps") {
     if (!display_available()) SKIP("no display available");
-    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
     config.backBufferWidth = 64;
     config.backBufferHeight = 64;
 
@@ -152,7 +152,7 @@ TEST_CASE("framework drives the time manager: deterministic frames and fixed upd
 
 TEST_CASE("framework listeners: ids are 1, 2, 3 ... per kind and shared by all frameworks, either callback form") {
     if (!display_available()) SKIP("no display available");
-    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
     config.backBufferWidth = 32;
     config.backBufferHeight = 32;
 
@@ -192,7 +192,7 @@ TEST_CASE("framework listeners: ids are 1, 2, 3 ... per kind and shared by all f
 
 TEST_CASE("framework listeners run in registration order and may add or remove listeners while running") {
     if (!display_available()) SKIP("no display available");
-    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    RisFrameworkConfiguration config = ris_createFrameworkConfiguration();
     config.backBufferWidth = 32;
     config.backBufferHeight = 32;
 

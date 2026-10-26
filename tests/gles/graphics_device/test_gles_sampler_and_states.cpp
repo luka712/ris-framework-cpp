@@ -23,8 +23,8 @@ bool near(const std::array<int, 4>& px, int r, int g, int b, int tolerance = 2) 
 
 /// A window and an initialised device.
 struct Fixture {
-    ris::Window window = ris_test::make_hidden_window();
-    gles::GlesGraphicsDevice device;
+    ris_test::HiddenWindow window;
+    gles::GlesGraphicsDevice device{window};
     Fixture() { device.initialize(); }
 };
 

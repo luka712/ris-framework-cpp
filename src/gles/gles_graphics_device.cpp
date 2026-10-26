@@ -9,10 +9,13 @@
 #include <GLES2/gl2ext.h> // after internal.hpp: needs the GL types of <GLES3/gl3.h>
 #include <GLES3/gl3.h>
 #include <GLES3/gl32.h>
+#include <SDL3/SDL_log.h>
 
 #include "ris/gles/render_pass/gles_render_pass.hpp"
 #include "ris/gles/swap_chain/gles_swap_chain.hpp"
 #include "ris/gles/utilities/gles_utilities.hpp"
+#include  "ris/framework.hpp"
+#include "window_manager.hpp"
 
 using namespace ris::detail;
 
@@ -58,10 +61,22 @@ namespace ris::gles {
         }
     } // namespace
 
-    GlesGraphicsDevice::GlesGraphicsDevice(const GraphicsDeviceDescriptor &descriptor) : descriptor_(descriptor) {
+    GlesGraphicsDevice::GlesGraphicsDevice(Framework& framework, const GraphicsDeviceDescriptor &descriptor) :
+    m_framework(framework),
+    descriptor_(descriptor) {
     }
 
-    GlesGraphicsDevice::~GlesGraphicsDevice() = default;
+    GlesGraphicsDevice::~GlesGraphicsDevice() {
+        // The GL objects of the device go before the context does.
+        defaultPrimitiveState_.reset();
+        defaultBlendState_.reset();
+        defaultTextureSampler_.reset();
+        m_gpuInfo.reset();
+        m_features.reset();
+        if (m_glContext) {
+            SDL_GL_DestroyContext(m_glContext);
+        }
+    }
 
     void GlesGraphicsDevice::requireInitialized(const char *what) const {
         if (!initialized_) {
@@ -97,7 +112,15 @@ namespace ris::gles {
     }
 
     void GlesGraphicsDevice::initialize() {
-        require_context();
+
+        const auto sdlWindow = m_framework.windowManager().getWindow();
+        m_glContext = SDL_GL_CreateContext(sdlWindow);
+        if (!m_glContext) {
+            SDL_Log("SDL_GL_CreateContext failed: %s", SDL_GetError());
+            SDL_DestroyWindow(sdlWindow);
+            return;
+        }
+
         if (initialized_) throw std::invalid_argument(
             "GlesGraphicsDevice::initialize: the graphics device is already initialized");
 
@@ -114,7 +137,7 @@ namespace ris::gles {
 
     void GlesGraphicsDevice::setupDebugCallback() {
         requireInitialized("setupDebugCallback");
-        require_context();
+
         if (!hasDebug()) return;
         auto callbackFn = reinterpret_cast<void (*)(GLDEBUGPROCKHR, const void *)>(findFunction("glDebugMessageCallbackKHR",
                                                                     "glDebugMessageCallback"));
@@ -148,7 +171,7 @@ namespace ris::gles {
         return new GlesRenderPass(descriptor);
     }
 
-    ASwapChain *GlesGraphicsDevice::createSwapChain(Window &window, const SwapChainDescriptor &swapChainDescription) {
+    ASwapChain *GlesGraphicsDevice::createSwapChain(WindowManager &window, const SwapChainDescriptor &swapChainDescription) {
         requireInitialized("createSwapChain");
         return new GlesSwapChain(window, swapChainDescription);
     }

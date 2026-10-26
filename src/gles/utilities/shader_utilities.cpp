@@ -7,7 +7,7 @@ using namespace ris::detail;
 namespace ris::gles::shader_utilities {
 
 uint32_t create(const std::string& source, ShaderStage stage) {
-    require_context();
+
     GLenum type = 0;
     const char* stage_name = nullptr;
     switch (stage) {
@@ -41,7 +41,7 @@ uint32_t create_vertex_shader(const std::string& source) { return create(source,
 uint32_t create_fragment_shader(const std::string& source) { return create(source, ShaderStage::Fragment); }
 
 void delete_shader(uint32_t& shader) noexcept {
-    if (shader != 0 && has_context()) glDeleteShader(shader);
+    if (shader != 0) glDeleteShader(shader);
     shader = 0;
 }
 

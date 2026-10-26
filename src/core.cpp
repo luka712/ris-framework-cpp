@@ -76,12 +76,10 @@ void log(LogLevel level, const char* fmt, ...) {
 
 void require_context() {
     if (!g_context_alive.load(std::memory_order_acquire)) {
-        throw std::logic_error("no ris::Window exists: create a Window before using graphics objects");
+        throw std::logic_error("no window exists: create a WindowManager before using graphics objects");
     }
 }
 
-bool has_context() noexcept { return g_context_alive.load(std::memory_order_acquire); }
-void set_context_alive(bool alive) noexcept { g_context_alive.store(alive, std::memory_order_release); }
 
 void check_gl(const char* what) { gles::error_utilities::check_error(what); }
 

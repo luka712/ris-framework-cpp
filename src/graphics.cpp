@@ -20,12 +20,12 @@ GLuint g_current_program = 0;
 namespace gfx {
 
 void viewport(int32_t x, int32_t y, int32_t width, int32_t height) {
-    require_context();
+
     glViewport(x, y, width, height);
 }
 
 void set_scissor(bool enabled, int32_t x, int32_t y, int32_t width, int32_t height) {
-    require_context();
+
     if (enabled) {
         glEnable(GL_SCISSOR_TEST);
         glScissor(x, y, width, height);
@@ -35,7 +35,7 @@ void set_scissor(bool enabled, int32_t x, int32_t y, int32_t width, int32_t heig
 }
 
 void clear(float r, float g, float b, float a, ClearFlags flags) {
-    require_context();
+
     GLbitfield mask = 0;
     const uint32_t f = static_cast<uint32_t>(flags);
     if (f & static_cast<uint32_t>(ClearFlags::Color)) {
@@ -56,7 +56,7 @@ void clear(float r, float g, float b, float a, ClearFlags flags) {
 }
 
 void set_blend_mode(BlendMode mode) {
-    require_context();
+
     using namespace gles::blending_utilities;
     switch (mode) {
         case BlendMode::None:
@@ -82,7 +82,7 @@ void set_blend_mode(BlendMode mode) {
 }
 
 void set_depth_state(bool test_enabled, bool write_enabled, CompareFunc func) {
-    require_context();
+
     if (test_enabled) {
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(gles::converter::convert_compare_func(func));
@@ -93,7 +93,7 @@ void set_depth_state(bool test_enabled, bool write_enabled, CompareFunc func) {
 }
 
 void set_cull_mode(CullMode mode) {
-    require_context();
+
     if (mode == CullMode::None) {
         gles::culling_utilities::set_culling(CullMode::None);
         return;
@@ -103,7 +103,7 @@ void set_cull_mode(CullMode mode) {
 }
 
 std::vector<uint8_t> read_pixels(int32_t x, int32_t y, int32_t width, int32_t height) {
-    require_context();
+
     if (width <= 0 || height <= 0) {
         throw std::invalid_argument(std::string("read_pixels: invalid size ") + std::to_string(width) + "x"
                                     + std::to_string(height));
@@ -111,7 +111,6 @@ std::vector<uint8_t> read_pixels(int32_t x, int32_t y, int32_t width, int32_t he
     std::vector<uint8_t> pixels(static_cast<size_t>(width) * static_cast<size_t>(height) * 4u);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
-    check_gl("glReadPixels");
     return pixels;
 }
 
@@ -124,7 +123,7 @@ Buffer::Buffer(BufferType type, BufferUsage usage, const void* data, size_t size
 }
 
 Buffer::~Buffer() {
-    if (id_ != 0 && has_context()) {
+    if (id_ != 0 ) {
         glDeleteBuffers(1, &id_);
     }
 }
@@ -134,7 +133,7 @@ Buffer::Buffer(Buffer&& other) noexcept
 
 Buffer& Buffer::operator=(Buffer&& other) noexcept {
     if (this != &other) {
-        if (id_ != 0 && has_context()) glDeleteBuffers(1, &id_);
+        if (id_ != 0 ) glDeleteBuffers(1, &id_);
         id_ = std::exchange(other.id_, 0);
         type_ = other.type_;
         size_ = std::exchange(other.size_, 0);
@@ -143,7 +142,7 @@ Buffer& Buffer::operator=(Buffer&& other) noexcept {
 }
 
 void Buffer::update(size_t offset, const void* data, size_t size) {
-    require_context();
+
     if (!data || offset + size > size_) {
         throw std::out_of_range(std::string("Buffer::update: range [") + std::to_string(offset) + ", "
                                 + std::to_string(offset + size) + ") is outside the buffer (size "
@@ -154,7 +153,7 @@ void Buffer::update(size_t offset, const void* data, size_t size) {
 }
 
 void Buffer::bind_base(uint32_t binding) const {
-    require_context();
+
     glBindBufferBase(GL_UNIFORM_BUFFER, binding, id_);
 }
 
@@ -162,7 +161,7 @@ void Buffer::bind_base(uint32_t binding) const {
 
 Shader::Shader(const std::string& vertex_source, const std::string& fragment_source) {
     using namespace gles;
-    require_context();
+
     GLuint vs = shader_utilities::create_vertex_shader(vertex_source);
     GLuint fs = 0;
     try {
@@ -178,7 +177,7 @@ Shader::Shader(const std::string& vertex_source, const std::string& fragment_sou
 }
 
 Shader::~Shader() {
-    if (program_ != 0 && has_context()) {
+    if (program_ != 0 ) {
         if (g_current_program == program_) g_current_program = 0;
         glDeleteProgram(program_);
     }
@@ -188,7 +187,7 @@ Shader::Shader(Shader&& other) noexcept : program_(std::exchange(other.program_,
 
 Shader& Shader::operator=(Shader&& other) noexcept {
     if (this != &other) {
-        if (program_ != 0 && has_context()) {
+        if (program_ != 0 ) {
             if (g_current_program == program_) g_current_program = 0;
             glDeleteProgram(program_);
         }
@@ -198,7 +197,7 @@ Shader& Shader::operator=(Shader&& other) noexcept {
 }
 
 void Shader::use() const {
-    require_context();
+
     if (g_current_program != program_) {
         glUseProgram(program_);
         g_current_program = program_;
@@ -206,12 +205,12 @@ void Shader::use() const {
 }
 
 int32_t Shader::uniform_location(const char* name) const {
-    require_context();
+
     return glGetUniformLocation(program_, name);
 }
 
 int32_t Shader::attrib_location(const char* name) const {
-    require_context();
+
     return glGetAttribLocation(program_, name);
 }
 
@@ -247,7 +246,7 @@ void Shader::set_mat4(int32_t loc, const float* m) const {
 }
 
 void Shader::bind_uniform_block(const char* block_name, uint32_t binding) const {
-    require_context();
+
     const GLuint index = glGetUniformBlockIndex(program_, block_name);
     if (index == GL_INVALID_INDEX) {
         throw std::invalid_argument(std::string("shader has no uniform block named '") + block_name + "'");
@@ -258,7 +257,7 @@ void Shader::bind_uniform_block(const char* block_name, uint32_t binding) const 
 // ---- VertexArray -----------------------------------------------------------------------------------
 
 VertexArray::VertexArray(const VertexArrayDesc& desc) : index_type_(desc.index_type) {
-    require_context();
+
     if (desc.attribs.empty() || desc.attribs.size() > 16) {
         throw std::invalid_argument(std::string("VertexArray: attribute count must be 1..16 (got ")
                                     + std::to_string(desc.attribs.size()) + ")");
@@ -287,17 +286,12 @@ VertexArray::VertexArray(const VertexArrayDesc& desc) : index_type_(desc.index_t
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    try {
-        check_gl("VertexArray::VertexArray");
-    } catch (...) {
-        glDeleteVertexArrays(1, &vao_);
-        vao_ = 0;
-        throw;
-    }
+
+
 }
 
 VertexArray::~VertexArray() {
-    if (vao_ != 0 && has_context()) {
+    if (vao_ != 0 ) {
         glDeleteVertexArrays(1, &vao_);
     }
 }
@@ -306,7 +300,7 @@ VertexArray::VertexArray(VertexArray&& other) noexcept : vao_(std::exchange(othe
 
 VertexArray& VertexArray::operator=(VertexArray&& other) noexcept {
     if (this != &other) {
-        if (vao_ != 0 && has_context()) glDeleteVertexArrays(1, &vao_);
+        if (vao_ != 0 ) glDeleteVertexArrays(1, &vao_);
         vao_ = std::exchange(other.vao_, 0);
         index_type_ = other.index_type_;
     }
@@ -314,7 +308,7 @@ VertexArray& VertexArray::operator=(VertexArray&& other) noexcept {
 }
 
 void VertexArray::draw(Topology topology, uint32_t first, uint32_t count, uint32_t instance_count) const {
-    require_context();
+
     if (count == 0) return;
     if (instance_count == 0) instance_count = 1;
     glBindVertexArray(vao_);
@@ -335,7 +329,7 @@ void VertexArray::draw(Topology topology, uint32_t first, uint32_t count, uint32
 
 RenderTarget::RenderTarget(int32_t width, int32_t height, bool with_depth_stencil) {
     using namespace gles;
-    require_context();
+
     if (width <= 0 || height <= 0) {
         throw std::invalid_argument(std::string("RenderTarget: invalid size ") + std::to_string(width) + "x"
                                     + std::to_string(height));
@@ -361,10 +355,9 @@ RenderTarget::RenderTarget(int32_t width, int32_t height, bool with_depth_stenci
 }
 
 RenderTarget::~RenderTarget() {
-    if (has_context()) {
         if (depth_) glDeleteRenderbuffers(1, &depth_);
         if (fbo_) glDeleteFramebuffers(1, &fbo_);
-    }
+
 }
 
 RenderTarget::RenderTarget(RenderTarget&& other) noexcept
@@ -372,10 +365,10 @@ RenderTarget::RenderTarget(RenderTarget&& other) noexcept
 
 RenderTarget& RenderTarget::operator=(RenderTarget&& other) noexcept {
     if (this != &other) {
-        if (has_context()) {
+
             if (depth_) glDeleteRenderbuffers(1, &depth_);
             if (fbo_) glDeleteFramebuffers(1, &fbo_);
-        }
+
         fbo_ = std::exchange(other.fbo_, 0);
         depth_ = std::exchange(other.depth_, 0);
         color_ = std::move(other.color_);
@@ -390,7 +383,7 @@ thread_local bool t_has_saved_viewport = false;
 } // namespace
 
 void RenderTarget::bind() const {
-    require_context();
+
     GLint current_fbo = 0;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fbo);
     if (current_fbo == 0) {
@@ -402,7 +395,7 @@ void RenderTarget::bind() const {
 }
 
 void RenderTarget::unbind() {
-    require_context();
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     if (t_has_saved_viewport) {
         glViewport(t_saved_viewport[0], t_saved_viewport[1], t_saved_viewport[2], t_saved_viewport[3]);

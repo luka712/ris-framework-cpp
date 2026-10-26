@@ -37,26 +37,26 @@ TEST_CASE("GlesGpuInfo without a window throws std::logic_error") {
 
 TEST_CASE("GlesGpuInfo reads the GL strings") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     const FakeFeatures features(false, false, true, false);
     const gles::GlesGpuInfo info(features);
 
     CHECK_FALSE(info.getName().empty());
     CHECK_FALSE(info.getVendor().empty());
     CHECK_FALSE(info.getApiVersion().empty());
-    CHECK(info.getName() == window.gl_info(ris::GlInfo::Renderer));
-    CHECK(info.getVendor() == window.gl_info(ris::GlInfo::Vendor));
-    CHECK(info.getApiVersion() == window.gl_info(ris::GlInfo::Version));
+    CHECK(info.getName() == GlesUtilities::context().glString(GL_RENDERER));
+    CHECK(info.getVendor() == GlesUtilities::context().glString(GL_VENDOR));
+    CHECK(info.getApiVersion() == GlesUtilities::context().glString(GL_VERSION));
     CHECK(info.getApi() == ris::RenderingBackend::OpenGLES);
     // OpenGL ES is detected from the GL strings, the API below it (ANGLE's) is not reported through GL.
-    const bool es = std::string(window.gl_info(ris::GlInfo::Version)).find("OpenGL ES") != std::string::npos ||
-                    std::string(window.gl_info(ris::GlInfo::Renderer)).find("OpenGL ES") != std::string::npos;
+    const bool es = std::string(GlesUtilities::context().glString(GL_VERSION)).find("OpenGL ES") != std::string::npos ||
+                    std::string(GlesUtilities::context().glString(GL_RENDERER)).find("OpenGL ES") != std::string::npos;
     CHECK(info.getUnderlyingBackend() == (es ? ris::RenderingBackend::OpenGLES : ris::RenderingBackend::Default));
 }
 
 TEST_CASE("GlesGpuInfo lists the compressed formats of the features, in order") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
 
     SECTION("everything") {
         const gles::GlesGpuInfo info(FakeFeatures(true, true, true, true));
@@ -76,8 +76,8 @@ TEST_CASE("GlesGpuInfo lists the compressed formats of the features, in order") 
 
 TEST_CASE("the graphics device exposes its GPU info after initialize") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
-    gles::GlesGraphicsDevice device;
+    ris_test::HiddenWindow window;
+    gles::GlesGraphicsDevice device(window);
     CHECK_THROWS_AS(device.getGpuInfo(), std::logic_error);
     device.initialize();
     const ris::AGpuInfo& info = device.getGpuInfo();

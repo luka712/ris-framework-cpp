@@ -18,7 +18,7 @@ RIS_API const char* version_string() noexcept;
 
 // The C++ API throws standard exceptions: std::invalid_argument (bad arguments, wrong call order),
 // std::out_of_range (an index or range outside its object), std::domain_error (a format / usage / feature the
-// backend does not support), std::logic_error (no ris::Window yet), std::ios_base::failure (a file could not be
+// backend does not support), std::logic_error (no WindowManager yet), std::ios_base::failure (a file could not be
 // read or written) and std::runtime_error (SDL / EGL / OpenGL ES / shader / KTX2 failures). The C API converts
 // them to a `ris_result` and `ris_get_last_error()`.
 

@@ -8,7 +8,7 @@ using namespace ris::detail;
 namespace ris::gles::vertex_attribute {
 
 void enable(const VertexAttrib& a, uint32_t stride) {
-    require_context();
+
     const GLenum type = converter::convert_attrib_type(a.type);
     const void* offset = reinterpret_cast<const void*>(static_cast<uintptr_t>(a.offset));
     if (a.as_integer && a.type != AttribType::Float) {

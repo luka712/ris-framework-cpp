@@ -36,9 +36,7 @@ GlesSampler::~GlesSampler() {
 }
 
 void GlesSampler::bind(uint32_t unit) const {
-    require_context();
     glBindSampler(unit, handle_);
-    check_gl("GlesSampler::bind");
 }
 
 } // namespace ris::gles

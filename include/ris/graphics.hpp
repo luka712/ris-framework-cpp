@@ -12,7 +12,7 @@
 #include "ris/gles/texture/gles_texture2d.hpp"
 #include "ris/rendering/primitive/cull_mode.hpp"
 
-// OpenGL ES 3 graphics objects. A ris::Window must exist (its context is current) while any of
+// OpenGL ES 3 graphics objects. A WindowManager must exist (its context is current) while any of
 // these are created, used or destroyed, and everything must run on the window's thread.
 // All objects are RAII, move-only, and throw standard exceptions (std::invalid_argument, std::runtime_error, ...) on failure.
 

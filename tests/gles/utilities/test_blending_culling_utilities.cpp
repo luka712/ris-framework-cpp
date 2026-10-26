@@ -22,7 +22,7 @@ bool near(const std::array<int, 4>& px, int r, int g, int b, int tolerance = 2) 
 
 TEST_CASE("blending utilities") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     ris_test::FullscreenTriangle triangle;
     ris::RenderTarget target(8, 8, false);
     target.bind();
@@ -77,7 +77,7 @@ TEST_CASE("blending utilities") {
 
 TEST_CASE("culling utilities") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::Window window = ris_test::make_hidden_window();
+    ris_test::HiddenWindow window;
     ris_test::FullscreenTriangle triangle;   // counter clockwise
     ris::RenderTarget target(8, 8, false);
     target.bind();
