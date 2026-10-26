@@ -11,8 +11,8 @@ struct Color {
     constexpr Color() = default;
     constexpr Color(float r_, float g_, float b_, float a_ = 1.0f) : r(r_), g(g_), b(b_), a(a_) {}
 
-    Vec3 rgb() const { return {r, g, b}; }
-    Vec4 rgba() const { return {r, g, b, a}; }
+    glm::vec3 rgb() const { return {r, g, b}; }
+    glm::vec4 rgba() const { return {r, g, b, a}; }
     constexpr bool operator==(const Color&) const = default;
 
     static constexpr Color white() { return {1, 1, 1, 1}; }

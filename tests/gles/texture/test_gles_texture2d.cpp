@@ -50,11 +50,10 @@ TEST_CASE("ATexture2D properties after creation") {
     SECTION("the GL ES texture exposes the same handle") {
         const auto* gl = dynamic_cast<const gles::GlesTexture2D*>(tex.get());
         REQUIRE(gl != nullptr);
-        CHECK(gl->getGlHandle() == tex->getHandle());
-        CHECK(gl->gl_handle() == tex->getHandle());
-        CHECK(gl->width() == tex->getWidth());
-        CHECK(gl->height() == tex->getHeight());
-        CHECK(gl->mip_levels() == tex->getMipLevels());
+        CHECK(gl->getGlTexture() == tex->getHandle());
+        CHECK(gl->getWidth() == tex->getWidth());
+        CHECK(gl->getHeight() == tex->getHeight());
+        CHECK(gl->getMipLevels() == tex->getMipLevels());
     }
     SECTION("sRGB data gets the sRGB format") {
         const std::unique_ptr<ris::ATexture2D> srgb(factory.create(8, 4, pixels, 4, {}, ris::TextureUsage::TextureBinding,
@@ -90,10 +89,9 @@ TEST_CASE("ATexture2D mip levels") {
         CHECK(tex->getMipLevels() == 4);
         CHECK(tex->getSize() == (16 + 4 + 2 + 1) * 4);
     }
-    SECTION("ris::Texture reports the same values") {
-        ris::Texture t = ris::Texture::from_rgba8(4, 4, pixels.data(), true, false, ris::TextureUsage::TextureBinding, "legacy");
+    SECTION("ris::gles::GlesTexture2D reports the same values") {
+        ris::gles::GlesTexture2D t = ris::gles::GlesTexture2D::from_rgba8(4, 4, pixels.data(), true, false, ris::TextureUsage::TextureBinding, "legacy");
         CHECK(t.getMipLevels() == 3);
-        CHECK(t.mip_levels() == 3);
         CHECK(t.getLabel() == "legacy");
         CHECK(t.getTextureUsage() == ris::TextureUsage::TextureBinding);
     }
@@ -121,7 +119,7 @@ TEST_CASE("ATexture2D state transitions") {
         CHECK(tex->getTextureState() == ris::State::Initialized);
     }
     SECTION("a moved-from texture is disposed and empty") {
-        gles::GlesTexture2D a = ris::Texture::from_rgba8(2, 2, nullptr, false);
+        gles::GlesTexture2D a = ris::gles::GlesTexture2D::from_rgba8(2, 2, nullptr, false);
         const uint64_t handle = a.getHandle();
         const uint32_t id = a.getId();
         gles::GlesTexture2D b(std::move(a));
@@ -135,8 +133,8 @@ TEST_CASE("ATexture2D state transitions") {
         CHECK_THROWS_AS(a.getDefaultTextureView(), std::logic_error);
     }
     SECTION("move assignment disposes the old texture and moves the default view") {
-        gles::GlesTexture2D a = ris::Texture::from_rgba8(2, 2, nullptr, false);
-        gles::GlesTexture2D b = ris::Texture::from_rgba8(4, 4, nullptr, false);
+        gles::GlesTexture2D a = ris::gles::GlesTexture2D::from_rgba8(2, 2, nullptr, false);
+        gles::GlesTexture2D b = ris::gles::GlesTexture2D::from_rgba8(4, 4, nullptr, false);
         int disposed = 0;
         a.addOnDisposedListener([&](ris::ATexture2D& t) {
             CHECK(t.getWidth() == 2);
@@ -275,7 +273,7 @@ TEST_CASE("ATexture2D disposed listeners") {
     SECTION("a moved texture raises the event once, for the new owner") {
         int calls = 0;
         {
-            gles::GlesTexture2D a = ris::Texture::from_rgba8(2, 2, nullptr, false);
+            gles::GlesTexture2D a = ris::gles::GlesTexture2D::from_rgba8(2, 2, nullptr, false);
             a.addOnDisposedListener([&](ris::ATexture2D&) { ++calls; });
             gles::GlesTexture2D b(std::move(a));
             CHECK(calls == 0);
@@ -290,7 +288,7 @@ TEST_CASE("ATexture2D ids are unique and increasing") {
     const gles::GlesTextureFactory factory;
     const std::unique_ptr<ris::ATexture2D> a(factory.createEmpty(2, 2));
     const std::unique_ptr<ris::ATexture2D> b(factory.createEmpty(2, 2));
-    const gles::GlesTexture2D c = ris::Texture::from_rgba8(2, 2, nullptr, false);
+    const gles::GlesTexture2D c = ris::gles::GlesTexture2D::from_rgba8(2, 2, nullptr, false);
     CHECK(a->getId() >= 1);
     CHECK(b->getId() > a->getId());
     CHECK(c.getId() > b->getId());

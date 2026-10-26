@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #include "internal.hpp"
-#include "ris/gles/utilities/debug_label_utilities.hpp"
+#include "ris/gles/utilities/gles_debug_utilities.hpp"
 #include "ris/gles/utilities/error_utilities.hpp"
 #include "ris/gles/utilities/gles_converter.hpp"
 #include "ris/rendering/texture/texture_utilities.hpp"
@@ -46,7 +46,7 @@ uint32_t GlesTextureUtilities::fullMipCount(int32_t width, int32_t height) const
     return TextureUtilities::mipLevels(width, height);
 }
 
-GlUint GlesTextureUtilities::createTexture2D(int32_t width, int32_t height, std::span<const MipLevelData> data,
+uint32_t GlesTextureUtilities::createTexture2D(int32_t width, int32_t height, std::span<const std::span<const uint8_t>> data,
                                              TextureFormat format, bool useMipMaps, float anisotropy,
                                              std::string_view label) const {
     require_context();
@@ -106,19 +106,19 @@ GlUint GlesTextureUtilities::createTexture2D(int32_t width, int32_t height, std:
     return guard.id;
 }
 
-GlUint GlesTextureUtilities::createTexture2D(int32_t width, int32_t height, const void* pixels, TextureFormat format,
+uint32_t GlesTextureUtilities::createTexture2D(int32_t width, int32_t height, const void* pixels, TextureFormat format,
                                              bool useMipMaps, float anisotropy, std::string_view label) const {
     if (!pixels || width <= 0 || height <= 0) {
-        return createTexture2D(width, height, std::span<const MipLevelData>{}, format, useMipMaps, anisotropy, label);
+        return createTexture2D(width, height, std::span<const std::span<const uint8_t>>{}, format, useMipMaps, anisotropy, label);
     }
-    const MipLevelData level0(static_cast<const uint8_t*>(pixels),
+    const std::span<const uint8_t> level0(static_cast<const uint8_t*>(pixels),
                               static_cast<size_t>(width) * static_cast<size_t>(height) * kBytesPerPixel);
-    return createTexture2D(width, height, std::span<const MipLevelData>(&level0, 1), format, useMipMaps, anisotropy,
+    return createTexture2D(width, height, std::span<const std::span<const uint8_t>>(&level0, 1), format, useMipMaps, anisotropy,
                              label);
 }
 
-GlUint GlesTextureUtilities::createCompressedTexture2D(int32_t width, int32_t height, int32_t blockWidth,
-                                                       int32_t blockHeight, std::span<const MipLevelData> data,
+uint32_t GlesTextureUtilities::createCompressedTexture2D(int32_t width, int32_t height, int32_t blockWidth,
+                                                       int32_t blockHeight, std::span<const std::span<const uint8_t>> data,
                                                        TextureFormat format, float anisotropy,
                                                        std::string_view label) const {
     require_context();
@@ -180,7 +180,7 @@ GlUint GlesTextureUtilities::createCompressedTexture2D(int32_t width, int32_t he
     return guard.id;
 }
 
-void GlesTextureUtilities::deleteTexture(GlUint& texture) const noexcept {
+void GlesTextureUtilities::deleteTexture(uint32_t& texture) const noexcept {
     if (texture != 0 && has_context()) {
         const GLuint id = texture;
         glDeleteTextures(1, &id);

@@ -10,18 +10,17 @@
 TEST_CASE("vertex buffer on a real context") {
     if (!ris_test::display_available()) SKIP("no display available");
     ris::Window window = ris_test::make_hidden_window();
-    using F = ris::BufferUsageFlags;
 
     SECTION("vertex buffer") {
         const std::vector<float> data(5 * 4, 0.5f);   // 4 vertices of float3 + float2
-        ris::gles::GlesVertexBuffer vb(data, 20, F::Vertex | F::CopyDst, "quad");
+        ris::gles::GlesVertexBuffer vb(data, 20, ris::BufferUsageFlags::Vertex | ris::BufferUsageFlags::CopyDst, "quad");
         REQUIRE(vb.label() == "quad");
         REQUIRE(vb.vertex_count() == 4);
         REQUIRE(vb.byte_stride() == 20);
         REQUIRE(vb.byte_size() == 80);
         REQUIRE(vb.gl_handle() != 0);
-        REQUIRE(ris::has_flag(vb.usage(), F::Vertex));
-        REQUIRE(ris::has_flag(vb.usage(), F::CopyDst));
+        REQUIRE(ris::has_flag(vb.usage(), ris::BufferUsageFlags::Vertex));
+        REQUIRE(ris::has_flag(vb.usage(), ris::BufferUsageFlags::CopyDst));
 
         const std::vector<float> one(5, 1.0f);
         REQUIRE_NOTHROW(vb.update(one, 60));                             // last vertex

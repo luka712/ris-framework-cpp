@@ -42,7 +42,7 @@ public:
     size_t byte_size() const noexcept override { return object_.byte_size(); }
     BufferUsageFlags usage() const noexcept override { return object_.usage(); }
 
-    /// See AUniformBuffer::update. The Mat4 and Vec4 overloads of the base class are available too.
+    /// See AUniformBuffer::update. The glm::mat4 and glm::vec4 overloads of the base class are available too.
     void update(std::span<const float> data, size_t byte_offset = 0) override;
     using AUniformBuffer::update;
 

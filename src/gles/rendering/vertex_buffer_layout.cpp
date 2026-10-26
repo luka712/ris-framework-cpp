@@ -29,7 +29,7 @@ std::vector<VertexAttrib> to_vertex_attribs(const VertexBufferLayout& layout, ui
     return out;
 }
 
-void initialize(GlUint buffer, const VertexBufferLayout& layout) {
+void initialize(uint32_t buffer, const VertexBufferLayout& layout) {
     require_context();
     const std::vector<VertexAttrib> attribs = to_vertex_attribs(layout, 0);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);

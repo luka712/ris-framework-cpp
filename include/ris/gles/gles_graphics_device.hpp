@@ -23,7 +23,7 @@ namespace ris::gles {
 ///  - The GPU info is a GlesGpuInfo, it comes from `GL_RENDERER`, `GL_VENDOR` and `GL_VERSION`.
 ///  - The features come from the extensions, see GlesGraphicsDeviceFeatures.
 ///  - `setupDebugCallback()` uses `GL_KHR_debug`: the driver messages go to ris' log (`[gl] ...`, like the window's
-///    `WindowDesc::debug` does). `pushDebugGroup` / `popDebugGroup` use it too and do nothing without it.
+///    `WindowDesc::debug` does). `pushDebugGroup` / `popDebugGroup` call `glPushDebugGroup` / `glPopDebugGroup` (OpenGL ES 3.2).
 ///  - `frameEnd()` does nothing: OpenGL ES keeps no per-frame resources to clean up. It exists for the backends
 ///    that have some.
 ///  - The default sampler uses `TextureFilteringPreset`: Nearest, Bilinear (linear, no mips) or Trilinear
@@ -58,7 +58,6 @@ private:
 
     GraphicsDeviceDescriptor descriptor_;
     bool initialized_ = false;
-    int32_t debugGroupDepth_ = 0;
     std::unique_ptr<GlesGraphicsDeviceFeatures> m_features;   // created by initialize()
     std::unique_ptr<GlesGpuInfo> m_gpuInfo;                   // created by initialize(), after the features
     std::unique_ptr<GlesSampler> defaultTextureSampler_;

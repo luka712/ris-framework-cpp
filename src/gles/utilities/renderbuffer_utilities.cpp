@@ -1,7 +1,7 @@
 #include "ris/gles/utilities/renderbuffer_utilities.hpp"
 
 #include "internal.hpp"
-#include "ris/gles/utilities/debug_label_utilities.hpp"
+#include "ris/gles/utilities/gles_debug_utilities.hpp"
 #include "ris/gles/utilities/error_utilities.hpp"
 #include "ris/gles/utilities/gles_converter.hpp"
 
@@ -9,7 +9,7 @@ using namespace ris::detail;
 
 namespace ris::gles::renderbuffer_utilities {
 
-GlUint create(TextureFormat format, int32_t width, int32_t height, std::string_view label) {
+uint32_t create(TextureFormat format, int32_t width, int32_t height, std::string_view label) {
     require_context();
     if (width <= 0 || height <= 0) {
         throw std::invalid_argument(std::string("renderbuffer_utilities::create: invalid size ")
@@ -32,7 +32,7 @@ GlUint create(TextureFormat format, int32_t width, int32_t height, std::string_v
     return rb;
 }
 
-void delete_renderbuffer(GlUint& renderbuffer) noexcept {
+void delete_renderbuffer(uint32_t& renderbuffer) noexcept {
     if (renderbuffer != 0 && has_context()) {
         const GLuint id = renderbuffer;
         glDeleteRenderbuffers(1, &id);

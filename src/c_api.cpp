@@ -34,12 +34,12 @@ struct ris_mesh : ris::VertexArray {
 struct ris_render_target : ris::RenderTarget {
     using ris::RenderTarget::RenderTarget;
 };
-struct ris_sprite_batch : ris::SpriteBatch {
-    using ris::SpriteBatch::SpriteBatch;
+struct ris_sprite_batch : ris::ASpriteBatch {
+    using ris::ASpriteBatch::ASpriteBatch;
 };
-// ris::Texture is created by its static functions and the factories only, so the handle is the object itself.
+// ris::gles::GlesTexture2D is created by its static functions and the factories only, so the handle is the object itself.
 struct ris_texture {
-    ris::Texture value;
+    ris::gles::GlesTexture2D value;
 };
 
 // ---- layout checks: C structs that are reinterpreted ------------------------------------------
@@ -396,7 +396,7 @@ void RIS_CALL ris_mesh_destroy(ris_mesh* mesh) { delete mesh; }
 
 ris_texture* RIS_CALL ris_texture_create_rgba8(int32_t width, int32_t height, const void* pixels, uint32_t generate_mipmaps, uint32_t srgb) {
     return guard_ptr<ris_texture>([&] {
-        return new ris_texture{ris::Texture::from_rgba8(width, height, pixels, generate_mipmaps != 0, srgb != 0)};
+        return new ris_texture{ris::gles::GlesTexture2D::from_rgba8(width, height, pixels, generate_mipmaps != 0, srgb != 0)};
     });
 }
 ris_texture* RIS_CALL ris_texture_load_image_file(const char* path, uint32_t generate_mipmaps, uint32_t srgb, uint32_t flip_vertically) {
@@ -405,7 +405,7 @@ ris_texture* RIS_CALL ris_texture_load_image_file(const char* path, uint32_t gen
         return nullptr;
     }
     return guard_ptr<ris_texture>([&] {
-        return new ris_texture{ris::Texture::from_image_file(path, generate_mipmaps != 0, srgb != 0, flip_vertically != 0)};
+        return new ris_texture{ris::gles::GlesTexture2D::from_image_file(path, generate_mipmaps != 0, srgb != 0, flip_vertically != 0)};
     });
 }
 ris_texture* RIS_CALL ris_texture_load_ktx2_file(const char* path) {
@@ -417,11 +417,11 @@ ris_texture* RIS_CALL ris_texture_load_ktx2_file(const char* path) {
         std::ifstream file(path, std::ios::binary);
         if (!file) throw std::ios_base::failure(std::string("could not open KTX2 '") + path + "'");
         const std::vector<char> bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        return new ris_texture{ris::Texture::from_ktx2_memory(bytes.data(), bytes.size())};
+        return new ris_texture{ris::gles::GlesTexture2D::from_ktx2_memory(bytes.data(), bytes.size())};
     });
 }
 ris_texture* RIS_CALL ris_texture_load_ktx2_memory(const void* data, size_t size) {
-    return guard_ptr<ris_texture>([&] { return new ris_texture{ris::Texture::from_ktx2_memory(data, size)}; });
+    return guard_ptr<ris_texture>([&] { return new ris_texture{ris::gles::GlesTexture2D::from_ktx2_memory(data, size)}; });
 }
 void RIS_CALL ris_sampler_desc_default(ris_sampler_desc* desc) {
     if (!desc) return;
@@ -449,11 +449,11 @@ ris_result RIS_CALL ris_texture_set_sampler(ris_texture* texture, const ris_samp
 void RIS_CALL ris_texture_bind(const ris_texture* texture, uint32_t unit) {
     if (texture) guard([&] { texture->value.bind(unit); });
 }
-int32_t RIS_CALL ris_texture_get_width(const ris_texture* t) { return t ? t->value.width() : 0; }
-int32_t RIS_CALL ris_texture_get_height(const ris_texture* t) { return t ? t->value.height() : 0; }
-uint32_t RIS_CALL ris_texture_get_mip_levels(const ris_texture* t) { return t ? t->value.mip_levels() : 0; }
-uint32_t RIS_CALL ris_texture_get_gl_handle(const ris_texture* t) { return t ? t->value.gl_handle() : 0; }
-void RIS_CALL ris_texture_destroy(ris_texture* texture) { delete texture; }
+int32_t RIS_CALL ris_texture_get_width(const ris_texture* t) { return t ? t->value.getWidth() : 0; }
+int32_t RIS_CALL ris_texture_get_height(const ris_texture* t) { return t ? t->value.getHeight() : 0; }
+uint32_t RIS_CALL ris_texture_get_mip_levels(const ris_texture* t) { return t ? t->value.getMipLevels() : 0; }
+uint32_t RIS_CALL ris_texture_get_gl_handle(const ris_texture* t) { return t ? t->value.getGlTexture() : 0; }
+void RIS_CALL ris_destroyTexture(ris_texture* texture) { delete texture; }
 
 // ---- render targets -------------------------------------------------------------------------
 
@@ -471,10 +471,10 @@ void RIS_CALL ris_render_target_bind(const ris_render_target* target) {
 }
 ris_texture* RIS_CALL ris_render_target_get_texture(const ris_render_target* target) {
     // The colour texture lives inside the render target, and ris_texture is layout compatible
-    // with ris::Texture (a struct holding exactly one), so hand out its address.
-    static_assert(sizeof(ris_texture) == sizeof(ris::Texture), "ris_texture must wrap exactly one ris::Texture");
+    // with ris::gles::GlesTexture2D (a struct holding exactly one), so hand out its address.
+    static_assert(sizeof(ris_texture) == sizeof(ris::gles::GlesTexture2D), "ris_texture must wrap exactly one ris::gles::GlesTexture2D");
     if (!target) return nullptr;
-    return reinterpret_cast<ris_texture*>(const_cast<ris::Texture*>(&target->texture()));
+    return reinterpret_cast<ris_texture*>(const_cast<ris::gles::GlesTexture2D*>(&target->texture()));
 }
 void RIS_CALL ris_render_target_destroy(ris_render_target* target) { delete target; }
 
@@ -483,7 +483,7 @@ void RIS_CALL ris_render_target_destroy(ris_render_target* target) { delete targ
 ris_sprite_batch* RIS_CALL ris_sprite_batch_create(uint32_t max_sprites_per_flush) {
     return guard_ptr<ris_sprite_batch>([&] { return new ris_sprite_batch(max_sprites_per_flush); });
 }
-void RIS_CALL ris_sprite_batch_begin(ris_sprite_batch* batch, const float* view_projection, uint32_t blend_mode) {
+void RIS_CALL ris_spriteBatchBegin(ris_sprite_batch* batch, const float* view_projection, uint32_t blend_mode) {
     if (batch) guard([&] { batch->begin(view_projection, static_cast<ris::BlendMode>(blend_mode)); });
 }
 void RIS_CALL ris_sprite_batch_draw(ris_sprite_batch* batch, const ris_sprite* sprite) {
@@ -491,41 +491,88 @@ void RIS_CALL ris_sprite_batch_draw(ris_sprite_batch* batch, const ris_sprite* s
     guard([&] {
         ris::Sprite s;
         std::memcpy(static_cast<void*>(&s), sprite, sizeof(ris::Sprite));
-        // `texture` is a ris_texture*, which wraps a ris::Texture as its first member.
+        // `texture` is a ris_texture*, which wraps a ris::gles::GlesTexture2D as its first member.
         s.texture = sprite->texture ? &sprite->texture->value : nullptr;
         batch->draw(s);
     });
 }
-void RIS_CALL ris_sprite_batch_draw_quad(ris_sprite_batch* batch, ris_texture* texture, float x, float y, float width, float height, float r, float g, float b, float a) {
+void RIS_CALL ris_spriteBatchDrawQuad(ris_sprite_batch* batch, ris_texture* texture, float x, float y, float width, float height, float r, float g, float b, float a) {
     if (batch) guard([&] { batch->draw_quad(texture ? &texture->value : nullptr, x, y, width, height, r, g, b, a); });
 }
-void RIS_CALL ris_sprite_batch_end(ris_sprite_batch* batch) {
+void RIS_CALL ris_spriteBatchEnd(ris_sprite_batch* batch) {
     if (batch) guard([&] { batch->end(); });
 }
 void RIS_CALL ris_sprite_batch_destroy(ris_sprite_batch* batch) { delete batch; }
 
+// ---- framework ------------------------------------------------------------------------------
+// ris_framework and ris_Renderer are the C++ objects themselves (ris::Framework, ris::Renderer), reinterpreted.
+
+namespace {
+ris::Framework* fw(ris_framework* framework) { return reinterpret_cast<ris::Framework*>(framework); }
+} // namespace
+
+FrameworkConfiguration RIS_CALL ris_createFrameworkConfiguration(void) {
+    return {"Ris Framework", 800, 600, RIS_TEXTURE_FILTERING_TRILINEAR};
+}
+
+ris_framework* RIS_CALL ris_createFramework(const FrameworkConfiguration* config) {
+    if (!config) {
+        invalid("ris_createFramework: config is null");
+        return nullptr;
+    }
+    return guard_ptr<ris_framework>([&] { return reinterpret_cast<ris_framework*>(new ris::Framework(*config)); });
+}
+void RIS_CALL ris_destroyFramework(ris_framework* framework) { delete fw(framework); }
+
+uint32_t RIS_CALL ris_addOnLoadContentListener(ris_framework* framework, ris_frameworkCallback callback, void* userData) {
+    if (!framework || !callback) return 0;
+    return fw(framework)->addOnLoadContentListener([framework, callback, userData](ris::Framework&) { callback(framework, userData); });
+}
+uint32_t RIS_CALL ris_addOnRenderListener(ris_framework* framework, ris_frameworkCallback callback, void* userData) {
+    if (!framework || !callback) return 0;
+    return fw(framework)->addOnRenderListener([framework, callback, userData](ris::Framework&) { callback(framework, userData); });
+}
+
+ris_result RIS_CALL ris_initialize(ris_framework* framework) {
+    if (!framework) return invalid("ris_initialize: framework is null");
+    return guard([&] { fw(framework)->initialize(); });
+}
+void RIS_CALL ris_quit(ris_framework* framework) {
+    if (framework) fw(framework)->quit();
+}
+
+ris_sprite_batch* RIS_CALL ris_getSpriteBatch(ris_framework* framework) {
+    return framework ? reinterpret_cast<ris_sprite_batch*>(&fw(framework)->spriteBatch()) : nullptr;
+}
+ris_Renderer* RIS_CALL ris_getRenderer(ris_framework* framework) {
+    return framework ? reinterpret_cast<ris_Renderer*>(&fw(framework)->renderer()) : nullptr;
+}
+void RIS_CALL ris_setClearColor(ris_Renderer* renderer, float r, float g, float b, float a) {
+    if (renderer) reinterpret_cast<ris::Renderer*>(renderer)->setClearColor(ris::Color(r, g, b, a));
+}
+
 // ---- math -----------------------------------------------------------------------------------
 
 namespace {
-void store(float* out, const ris::Mat4& m) { std::memcpy(out, glm::value_ptr(m), 16 * sizeof(float)); }
-ris::Mat4 load(const float* in) {
-    ris::Mat4 m;
+void store(float* out, const glm::mat4& m) { std::memcpy(out, glm::value_ptr(m), 16 * sizeof(float)); }
+glm::mat4 load(const float* in) {
+    glm::mat4 m;
     std::memcpy(glm::value_ptr(m), in, 16 * sizeof(float));
     return m;
 }
 } // namespace
 
-void RIS_CALL ris_mat4_identity(float* out) { if (out) store(out, ris::Mat4(1.0f)); }
+void RIS_CALL ris_mat4_identity(float* out) { if (out) store(out, glm::mat4(1.0f)); }
 void RIS_CALL ris_mat4_multiply(float* out, const float* a, const float* b) { if (out && a && b) store(out, load(a) * load(b)); }
-void RIS_CALL ris_mat4_translation(float* out, float x, float y, float z) { if (out) store(out, glm::translate(ris::Mat4(1.0f), ris::Vec3(x, y, z))); }
-void RIS_CALL ris_mat4_scale(float* out, float x, float y, float z) { if (out) store(out, glm::scale(ris::Mat4(1.0f), ris::Vec3(x, y, z))); }
-void RIS_CALL ris_mat4_rotation_x(float* out, float radians) { if (out) store(out, glm::rotate(ris::Mat4(1.0f), radians, ris::Vec3(1, 0, 0))); }
-void RIS_CALL ris_mat4_rotation_y(float* out, float radians) { if (out) store(out, glm::rotate(ris::Mat4(1.0f), radians, ris::Vec3(0, 1, 0))); }
-void RIS_CALL ris_mat4_rotation_z(float* out, float radians) { if (out) store(out, glm::rotate(ris::Mat4(1.0f), radians, ris::Vec3(0, 0, 1))); }
+void RIS_CALL ris_mat4_translation(float* out, float x, float y, float z) { if (out) store(out, glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z))); }
+void RIS_CALL ris_mat4_scale(float* out, float x, float y, float z) { if (out) store(out, glm::scale(glm::mat4(1.0f), glm::vec3(x, y, z))); }
+void RIS_CALL ris_mat4_rotation_x(float* out, float radians) { if (out) store(out, glm::rotate(glm::mat4(1.0f), radians, glm::vec3(1, 0, 0))); }
+void RIS_CALL ris_mat4_rotation_y(float* out, float radians) { if (out) store(out, glm::rotate(glm::mat4(1.0f), radians, glm::vec3(0, 1, 0))); }
+void RIS_CALL ris_mat4_rotation_z(float* out, float radians) { if (out) store(out, glm::rotate(glm::mat4(1.0f), radians, glm::vec3(0, 0, 1))); }
 void RIS_CALL ris_mat4_ortho(float* out, float l, float r, float b, float t, float n, float f) { if (out) store(out, glm::ortho(l, r, b, t, n, f)); }
 void RIS_CALL ris_mat4_perspective(float* out, float fov, float aspect, float n, float f) { if (out) store(out, glm::perspective(fov, aspect, n, f)); }
 void RIS_CALL ris_mat4_look_at(float* out, float ex, float ey, float ez, float tx, float ty, float tz, float ux, float uy, float uz) {
-    if (out) store(out, glm::lookAt(ris::Vec3(ex, ey, ez), ris::Vec3(tx, ty, tz), ris::Vec3(ux, uy, uz)));
+    if (out) store(out, glm::lookAt(glm::vec3(ex, ey, ez), glm::vec3(tx, ty, tz), glm::vec3(ux, uy, uz)));
 }
 
 } // extern "C"

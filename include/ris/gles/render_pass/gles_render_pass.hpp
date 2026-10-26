@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "ris/data.hpp"
-#include "ris/gles/gles_types.hpp"
+#include <cstdint>
 #include "ris/rendering/render_pass/a_render_pass.hpp"
 #include "ris/rendering/render_pass/render_pass_descriptor.hpp"
 
@@ -34,7 +34,7 @@ public:
     void endPass() override;
 
     /// The framebuffer object name (0 for the window's default framebuffer), for interop with native code.
-    GlUint getGlFramebuffer() const noexcept { return framebuffer_; }
+    uint32_t getGlFramebuffer() const noexcept { return framebuffer_; }
 
 private:
     struct ColorTarget {
@@ -52,8 +52,8 @@ private:
     std::vector<ColorTarget> colorTargets_;
     bool hasDepthStencil_ = false;
     RenderPassDepthStencilAttachment depthStencil_;
-    GlUint framebuffer_ = 0;
-    GlUint depthStencilRenderbuffer_ = 0;
+    uint32_t framebuffer_ = 0;
+    uint32_t depthStencilRenderbuffer_ = 0;
     bool active_ = false;
 };
 

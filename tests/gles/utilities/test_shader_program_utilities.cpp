@@ -35,11 +35,11 @@ TEST_CASE("shader and program utilities") {
     ris::Window window = ris_test::make_hidden_window();
 
     SECTION("compile and link") {
-        gles::GlUint vs = gles::shader_utilities::create_vertex_shader(kVertex);
-        gles::GlUint fs = gles::shader_utilities::create(kFragment, ris::ShaderStage::Fragment);
+        uint32_t vs = gles::shader_utilities::create_vertex_shader(kVertex);
+        uint32_t fs = gles::shader_utilities::create(kFragment, ris::ShaderStage::Fragment);
         REQUIRE(vs != 0);
         REQUIRE(fs != 0);
-        gles::GlUint program = gles::program_utilities::create(vs, fs);
+        uint32_t program = gles::program_utilities::create(vs, fs);
         REQUIRE(program != 0);
         gles::shader_utilities::delete_shader(vs);
         gles::shader_utilities::delete_shader(fs);
@@ -56,8 +56,8 @@ TEST_CASE("shader and program utilities") {
     }
     SECTION("link errors") {
         // the vertex shader writes no varying that the fragment shader reads
-        gles::GlUint vs = gles::shader_utilities::create_vertex_shader(kVertex);
-        gles::GlUint fs = gles::shader_utilities::create_fragment_shader(R"(#version 300 es
+        uint32_t vs = gles::shader_utilities::create_vertex_shader(kVertex);
+        uint32_t fs = gles::shader_utilities::create_fragment_shader(R"(#version 300 es
             precision mediump float;
             in vec2 v_missing;
             out vec4 frag;

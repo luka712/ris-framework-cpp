@@ -15,12 +15,11 @@ namespace {
 
 namespace bv = ris::buffer_validation;
 using ris::BufferUsageFlags;
-using F = ris::BufferUsageFlags;
 
 /// Storage of the fake backend: plain bytes on the CPU.
 struct Memory {
     std::vector<uint8_t> bytes;
-    BufferUsageFlags usage = F::None;
+    BufferUsageFlags usage = ris::BufferUsageFlags::None;
     std::string label;
 
     void write(size_t offset, std::span<const float> data, const char* what) {
@@ -34,7 +33,7 @@ class FakeVertexBuffer final : public ris::AVertexBuffer {
 public:
     FakeVertexBuffer(size_t byte_size, uint32_t stride, BufferUsageFlags usage, std::string label)
         : stride_(stride) {
-        mem_.usage = bv::resolve_vertex_buffer(byte_size, stride, usage, F::Storage | F::MapRead, "Fake");
+        mem_.usage = bv::resolve_vertex_buffer(byte_size, stride, usage, ris::BufferUsageFlags::Storage | ris::BufferUsageFlags::MapRead, "Fake");
         mem_.bytes.resize(byte_size);
         mem_.label = std::move(label);
     }
@@ -73,7 +72,7 @@ class FakeUniformBuffer final : public ris::AUniformBuffer {
 public:
     FakeUniformBuffer(std::span<const float> data, BufferUsageFlags usage, std::string label) {
         const std::vector<float> padded = bv::pad_uniform_data(data);
-        mem_.usage = bv::resolve_usage(usage, F::Uniform, "Fake", F::Storage | F::MapRead, "Fake");
+        mem_.usage = bv::resolve_usage(usage, ris::BufferUsageFlags::Uniform, "Fake", ris::BufferUsageFlags::Storage | ris::BufferUsageFlags::MapRead, "Fake");
         mem_.bytes.resize(padded.size() * sizeof(float));
         std::memcpy(mem_.bytes.data(), padded.data(), mem_.bytes.size());
         mem_.label = std::move(label);
@@ -111,22 +110,22 @@ public:
         return create_index_buffer(indices, std::move(label));   // the fake always narrows
     }
     std::unique_ptr<ris::AVertexBuffer> create_vertex_buffer(std::span<const float> data, uint32_t byte_stride,
-                                                             BufferUsageFlags usage = F::Vertex,
+                                                             BufferUsageFlags usage = ris::BufferUsageFlags::Vertex,
                                                              std::string label = {}) const override {
         return std::make_unique<FakeVertexBuffer>(data.size_bytes(), byte_stride, usage, std::move(label));
     }
     std::unique_ptr<ris::AVertexBuffer> create_vertex_buffer_with_byte_size(
-        size_t byte_size, uint32_t byte_stride, BufferUsageFlags usage = F::Vertex | F::CopyDst,
+        size_t byte_size, uint32_t byte_stride, BufferUsageFlags usage = ris::BufferUsageFlags::Vertex | ris::BufferUsageFlags::CopyDst,
         std::string label = {}) const override {
         return std::make_unique<FakeVertexBuffer>(byte_size, byte_stride, usage, std::move(label));
     }
     std::unique_ptr<ris::AUniformBuffer> create_uniform_buffer(std::span<const float> data,
-                                                               BufferUsageFlags usage = F::Uniform | F::CopyDst,
+                                                               BufferUsageFlags usage = ris::BufferUsageFlags::Uniform | ris::BufferUsageFlags::CopyDst,
                                                                std::string label = {}) const override {
         return std::make_unique<FakeUniformBuffer>(data, usage, std::move(label));
     }
     std::unique_ptr<ris::AUniformBuffer> create_uniform_buffer_with_byte_size(
-        size_t byte_size, BufferUsageFlags usage = F::Uniform | F::CopyDst, std::string label = {}) const override {
+        size_t byte_size, BufferUsageFlags usage = ris::BufferUsageFlags::Uniform | ris::BufferUsageFlags::CopyDst, std::string label = {}) const override {
         const std::vector<float> zeros(bv::padded_uniform_byte_size(byte_size) / sizeof(float), 0.0f);
         return std::make_unique<FakeUniformBuffer>(zeros, usage, std::move(label));
     }
@@ -138,16 +137,16 @@ TEST_CASE("a backend can implement the abstract buffers without a graphics API")
     const std::unique_ptr<ris::ABufferFactory> factory = std::make_unique<FakeBufferFactory>();
     const std::vector<float> data(10, 0.0f);
 
-    auto vb = factory->create_vertex_buffer(data, 20, F::Vertex | F::CopyDst, "vb");
+    auto vb = factory->create_vertex_buffer(data, 20, ris::BufferUsageFlags::Vertex | ris::BufferUsageFlags::CopyDst, "vb");
     REQUIRE(vb->label() == "vb");
     REQUIRE(vb->vertex_count() == 2);
     REQUIRE(vb->byte_stride() == 20);
     REQUIRE(vb->byte_size() == 40);
-    REQUIRE(ris::has_flag(vb->usage(), F::Vertex));
+    REQUIRE(ris::has_flag(vb->usage(), ris::BufferUsageFlags::Vertex));
     const std::vector<float> one(5, 1.0f);
     REQUIRE_NOTHROW(vb->update(one, 20));
     REQUIRE_THROWS_AS(vb->update(one, 24), std::out_of_range);
-    REQUIRE_THROWS_AS(factory->create_vertex_buffer(data, 20, F::Vertex | F::Index), std::invalid_argument);
+    REQUIRE_THROWS_AS(factory->create_vertex_buffer(data, 20, ris::BufferUsageFlags::Vertex | ris::BufferUsageFlags::Index), std::invalid_argument);
     REQUIRE_THROWS_AS(factory->create_vertex_buffer(data, 16), std::invalid_argument);
 
     auto fixed = factory->create_vertex_buffer(data, 20);   // no CopyDst
@@ -165,7 +164,7 @@ TEST_CASE("a backend can implement the abstract buffers without a graphics API")
     auto* fake_ub = dynamic_cast<FakeUniformBuffer*>(ub.get());
     REQUIRE(fake_ub != nullptr);
     REQUIRE(ub->byte_size() == 32);
-    ub->update(ris::Vec4(1, 2, 3, 4), 16);   // convenience overloads of the abstract class
+    ub->update(glm::vec4(1, 2, 3, 4), 16);   // convenience overloads of the abstract class
     REQUIRE(fake_ub->float_at(5) == 2.0f);
-    REQUIRE_THROWS_AS(ub->update(ris::Mat4(1.0f)), std::out_of_range);   // 64 bytes do not fit into 32
+    REQUIRE_THROWS_AS(ub->update(glm::mat4(1.0f)), std::out_of_range);   // 64 bytes do not fit into 32
 }

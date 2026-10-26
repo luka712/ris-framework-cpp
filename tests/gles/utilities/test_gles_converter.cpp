@@ -22,9 +22,8 @@ TEST_CASE("converter: primitives and culling") {
 }
 
 TEST_CASE("converter: buffers") {
-    using F = ris::BufferUsageFlags;
-    REQUIRE(conv::convert_buffer_usage(F::Vertex) == 0x88E4);                   // GL_STATIC_DRAW
-    REQUIRE(conv::convert_buffer_usage(F::Vertex | F::CopyDst) == 0x88E8);      // GL_DYNAMIC_DRAW
+    REQUIRE(conv::convert_buffer_usage(ris::BufferUsageFlags::Vertex) == 0x88E4);                   // GL_STATIC_DRAW
+    REQUIRE(conv::convert_buffer_usage(ris::BufferUsageFlags::Vertex | ris::BufferUsageFlags::CopyDst) == 0x88E8);      // GL_DYNAMIC_DRAW
     REQUIRE(conv::convert_buffer_usage(ris::BufferUsage::Static) == 0x88E4);
     REQUIRE(conv::convert_buffer_usage(ris::BufferUsage::Dynamic) == 0x88E8);
     REQUIRE(conv::convert_buffer_usage(ris::BufferUsage::Stream) == 0x88E0);

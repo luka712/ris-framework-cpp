@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "ris/core.hpp"
-#include "ris/gles/gles_types.hpp"
 #include "ris/graphics.hpp"
 #include "ris/rendering/buffers/vertex_buffer_layout.hpp"
 
@@ -26,6 +25,6 @@ RIS_API std::vector<VertexAttrib> to_vertex_attribs(const VertexBufferLayout& la
 /// @param buffer the vertex buffer name (GlesVertexBuffer::gl_handle()).
 /// @param layout the layout, converted with to_vertex_attribs().
 /// @throws std::invalid_argument if the layout is invalid or does not fit its stride.
-RIS_API void initialize(GlUint buffer, const VertexBufferLayout& layout);
+RIS_API void initialize(uint32_t buffer, const VertexBufferLayout& layout);
 
 } // namespace ris::gles::vertex_buffer_layout

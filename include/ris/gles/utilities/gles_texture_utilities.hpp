@@ -5,7 +5,6 @@
 #include <string_view>
 
 #include "ris/core.hpp"
-#include "ris/gles/gles_types.hpp"
 #include "ris/rendering/texture/texture_format.hpp"
 
 namespace ris::gles {
@@ -19,9 +18,9 @@ namespace ris::gles {
 /// The textures are plain GL names owned by the caller: delete them with deleteTexture().
 class RIS_API GlesTextureUtilities {
 public:
-    /// The pixels of one mip level: a view on bytes owned by the caller. An empty view means "leave this level
-    /// uninitialised", like an empty array element in the TypeScript version.
-    using MipLevelData = std::span<const uint8_t>;
+    // `data` of createTexture2D holds the pixels of one mip level per element: a view (std::span<const uint8_t>) on bytes
+    // owned by the caller. An empty view means "leave this level uninitialised", like an empty array element in the
+    // TypeScript version.
 
     /// Creates a 2D texture. `createTexture2D` of ris-framework-ts.
     ///
@@ -45,13 +44,13 @@ public:
     /// @throws std::runtime_error("Not implemented yet.") for an anisotropy above 1; std::invalid_argument for a bad size, more levels than the size has, a level that is too small,
     ///         or mip maps for a depth format; std::domain_error for compressed or unknown formats;
     ///         std::runtime_error if GL reports an error (the texture is deleted then).
-    GlUint createTexture2D(int32_t width, int32_t height, std::span<const MipLevelData> data = {},
+    uint32_t createTexture2D(int32_t width, int32_t height, std::span<const std::span<const uint8_t>> data = {},
                            TextureFormat format = TextureFormat::Rgba8Unorm, bool useMipMaps = false,
                            float anisotropy = 1.0f, std::string_view label = {}) const;
 
     /// Creates a 2D texture from a single block of pixels (level 0), see the other overload. `pixels` may be
     /// null for an uninitialised texture. Level 0 has `width * height * 4` bytes.
-    GlUint createTexture2D(int32_t width, int32_t height, const void* pixels,
+    uint32_t createTexture2D(int32_t width, int32_t height, const void* pixels,
                            TextureFormat format = TextureFormat::Rgba8Unorm, bool useMipMaps = false,
                            float anisotropy = 1.0f, std::string_view label = {}) const;
 
@@ -76,8 +75,8 @@ public:
     /// @throws std::runtime_error("Not implemented yet.") for an anisotropy above 1; std::invalid_argument,
     ///         std::domain_error for an uncompressed format, std::runtime_error if GL
     ///         reports an error (for example the format is not available; the texture is deleted then).
-    GlUint createCompressedTexture2D(int32_t width, int32_t height, int32_t blockWidth, int32_t blockHeight,
-                                     std::span<const MipLevelData> data,
+    uint32_t createCompressedTexture2D(int32_t width, int32_t height, int32_t blockWidth, int32_t blockHeight,
+                                     std::span<const std::span<const uint8_t>> data,
                                      TextureFormat format = TextureFormat::Etc2Rgba8Unorm,
                                      float anisotropy = 1.0f, std::string_view label = {}) const;
 
@@ -85,7 +84,7 @@ public:
     uint32_t fullMipCount(int32_t width, int32_t height) const noexcept;
 
     /// Deletes a texture and sets the name to 0. Does nothing for 0, or when the window (and context) is gone.
-    void deleteTexture(GlUint& texture) const noexcept;
+    void deleteTexture(uint32_t& texture) const noexcept;
 };
 
 } // namespace ris::gles

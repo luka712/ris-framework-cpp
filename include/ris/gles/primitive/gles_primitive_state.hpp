@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ris/gles/gles_types.hpp"
+#include <cstdint>
 #include "ris/rendering/primitive/a_primitive_state.hpp"
 #include "ris/rendering/primitive/primitive_state_descriptor.hpp"
 
@@ -18,7 +18,7 @@ public:
     FrontFace getFrontFace() const noexcept override { return descriptor_.frontFace; }
 
     /// The draw mode of the topology (`GL_TRIANGLES`, `GL_LINES`, ...) for `glDrawArrays` / `glDrawElements`.
-    GlEnum getGlPrimitiveType() const noexcept { return primitiveType_; }
+    uint32_t getGlPrimitiveType() const noexcept { return primitiveType_; }
 
     /// Applies the culling to the GL context: `glEnable(GL_CULL_FACE)` with `glCullFace` and `glFrontFace`, or
     /// `glDisable(GL_CULL_FACE)` for `CullMode::None`. The topology is not GL state, it is used by the draw call.
@@ -27,9 +27,9 @@ public:
 
 private:
     PrimitiveStateDescriptor descriptor_;
-    GlEnum primitiveType_ = 0;
-    GlEnum cullFace_ = 0;
-    GlEnum frontFace_ = 0;
+    uint32_t primitiveType_ = 0;
+    uint32_t cullFace_ = 0;
+    uint32_t frontFace_ = 0;
 };
 
 } // namespace ris::gles

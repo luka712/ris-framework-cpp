@@ -201,8 +201,8 @@ TEST_CASE("the thumb stick dead zone is radial and does not rescale the output")
 
     input.report_game_pad_axes(0, {0.1f, 0.1f}, {0.0f, 0.15f}, 0, 0);   // both inside the dead zone
     input.update();
-    REQUIRE(input.game_pad_state().thumb_sticks().left == ris::Vec2(0, 0));
-    REQUIRE(input.game_pad_state().thumb_sticks().right == ris::Vec2(0, 0));
+    REQUIRE(input.game_pad_state().thumb_sticks().left == glm::vec2(0, 0));
+    REQUIRE(input.game_pad_state().thumb_sticks().right == glm::vec2(0, 0));
 
     input.report_game_pad_axes(0, {1.0f, 0.0f}, {0.0f, -0.6f}, 0, 0);
     input.update();
@@ -228,6 +228,6 @@ TEST_CASE("unplugging a gamepad releases what it held and centres it") {
     REQUIRE_FALSE(input.game_pad_state().is_connected());
     REQUIRE(input.game_pad_state().is_button_up(GamePadButton::X));
     REQUIRE(input.game_pad_state().is_button_released(GamePadButton::X));
-    REQUIRE(input.game_pad_state().thumb_sticks().left == ris::Vec2(0, 0));
+    REQUIRE(input.game_pad_state().thumb_sticks().left == glm::vec2(0, 0));
     REQUIRE(input.game_pad_state().left_trigger() == 0.0f);
 }

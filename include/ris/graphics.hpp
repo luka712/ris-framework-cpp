@@ -106,10 +106,10 @@ public:
     void set_vec4(int32_t location, float x, float y, float z, float w) const;
     void set_mat4(int32_t location, const float* column_major_16) const;
     // glm overloads
-    void set_vec2(int32_t location, const Vec2& v) const { set_vec2(location, v.x, v.y); }
-    void set_vec3(int32_t location, const Vec3& v) const { set_vec3(location, v.x, v.y, v.z); }
-    void set_vec4(int32_t location, const Vec4& v) const { set_vec4(location, v.x, v.y, v.z, v.w); }
-    void set_mat4(int32_t location, const Mat4& m) const { set_mat4(location, glm::value_ptr(m)); }
+    void set_vec2(int32_t location, const glm::vec2& v) const { set_vec2(location, v.x, v.y); }
+    void set_vec3(int32_t location, const glm::vec3& v) const { set_vec3(location, v.x, v.y, v.z); }
+    void set_vec4(int32_t location, const glm::vec4& v) const { set_vec4(location, v.x, v.y, v.z, v.w); }
+    void set_mat4(int32_t location, const glm::mat4& m) const { set_mat4(location, glm::value_ptr(m)); }
     /// Assigns a named uniform block to a binding point, see Buffer::bind_base.
     void bind_uniform_block(const char* block_name, uint32_t binding) const;
 
@@ -188,12 +188,6 @@ struct SamplerDesc {
     Wrap wrap_v = Wrap::Clamp;
 };
 
-/// The texture of the default (and only) rendering backend: another name for gles::GlesTexture2D, the OpenGL ES
-/// implementation of ATexture2D (ris/rendering/texture/a_texture2D.hpp). `from_rgba8`, `from_image_file`,
-/// `from_ktx2_memory`, `set_sampler`, `bind`, `width()`, `height()`, `mip_levels()` and `gl_handle()` are its original
-/// API, the ATexture2D getters (`getWidth()`, ...) are available as well.
-using Texture = gles::GlesTexture2D;
-
 // ---- render targets -------------------------------------------------------------------------
 
 class RIS_API RenderTarget {
@@ -211,13 +205,13 @@ public:
     static void unbind();
 
     /// The colour attachment (RGBA8, linear filtering, clamped). Owned by the render target.
-    Texture& texture() noexcept { return color_; }
-    const Texture& texture() const noexcept { return color_; }
+    gles::GlesTexture2D& texture() noexcept { return color_; }
+    const gles::GlesTexture2D& texture() const noexcept { return color_; }
 
 private:
     uint32_t fbo_ = 0;
     uint32_t depth_ = 0;
-    Texture color_;
+    gles::GlesTexture2D color_;
 };
 
 } // namespace ris

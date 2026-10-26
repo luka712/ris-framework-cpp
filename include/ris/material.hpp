@@ -22,7 +22,7 @@ struct RenderContext {
 class RIS_API Material {
 public:
     virtual ~Material();
-    virtual void draw(const VertexArray& vertex_array, uint32_t first_index, uint32_t index_count, const Mat4& model,
+    virtual void draw(const VertexArray& vertex_array, uint32_t first_index, uint32_t index_count, const glm::mat4& model,
                       const RenderContext& context) = 0;
 };
 
@@ -30,7 +30,7 @@ struct MaterialResources;   // shared shaders and the 1x1 white texture
 
 struct UnlitMaterialDescriptor {
     Color diffuse_color = Color::white();
-    Texture* diffuse_texture = nullptr;   ///< optional, not owned (see `ContentManager::loadTexture2D`)
+    gles::GlesTexture2D* diffuse_texture = nullptr;   ///< optional, not owned (see `ContentManager::loadTexture2D`)
     CullMode cull_mode = CullMode::Back;
 };
 
@@ -41,10 +41,10 @@ public:
     ~UnlitMaterial() override;
 
     Color diffuse_color;
-    Texture* diffuse_texture;
+    gles::GlesTexture2D* diffuse_texture;
     CullMode cull_mode;
 
-    void draw(const VertexArray& vertex_array, uint32_t first_index, uint32_t index_count, const Mat4& model,
+    void draw(const VertexArray& vertex_array, uint32_t first_index, uint32_t index_count, const glm::mat4& model,
               const RenderContext& context) override;
 
 private:
@@ -56,7 +56,7 @@ struct BlinnPhongMaterialDescriptor {
     Color diffuse_color{0.8f, 0.8f, 0.8f};
     Color specular_color{0.5f, 0.5f, 0.5f};
     float shininess = 32.0f;
-    Texture* diffuse_texture = nullptr;   ///< optional, not owned (see `ContentManager::loadTexture2D`)
+    gles::GlesTexture2D* diffuse_texture = nullptr;   ///< optional, not owned (see `ContentManager::loadTexture2D`)
     CullMode cull_mode = CullMode::Back;
 };
 
@@ -69,10 +69,10 @@ public:
 
     Color ambient_color, diffuse_color, specular_color;
     float shininess;
-    Texture* diffuse_texture;
+    gles::GlesTexture2D* diffuse_texture;
     CullMode cull_mode;
 
-    void draw(const VertexArray& vertex_array, uint32_t first_index, uint32_t index_count, const Mat4& model,
+    void draw(const VertexArray& vertex_array, uint32_t first_index, uint32_t index_count, const glm::mat4& model,
               const RenderContext& context) override;
 
 private:

@@ -33,7 +33,7 @@ float read_pressure(float pressure) noexcept {
     return pressure > 1.0f ? 1.0f : pressure;
 }
 
-Vec2 apply_dead_zone(Vec2 stick, float dead_zone) noexcept {
+glm::vec2 apply_dead_zone(glm::vec2 stick, float dead_zone) noexcept {
     stick.x = std::clamp(stick.x, -1.0f, 1.0f);
     stick.y = std::clamp(stick.y, -1.0f, 1.0f);
     if (std::isnan(stick.x) || std::isnan(stick.y)) {
@@ -93,7 +93,7 @@ struct InputManager::Impl {
     std::array<PadSlot, static_cast<size_t>(max_game_pad_count)> pads;
     std::vector<Finger> fingers;
     int32_t next_touch_id = 1;
-    Vec2 touch_surface{1, 1};
+    glm::vec2 touch_surface{1, 1};
 
     int find_pad(SDL_JoystickID id) const noexcept {
         for (size_t i = 0; i < pads.size(); ++i) {
@@ -163,12 +163,12 @@ void InputManager::report_key(Key key, bool down) {
     }
 }
 
-void InputManager::report_mouse_move(Vec2 position, Vec2 delta) {
+void InputManager::report_mouse_move(glm::vec2 position, glm::vec2 delta) {
     pending_mouse_.position = position;
     pending_delta_ += delta;
 }
 
-void InputManager::report_mouse_button(MouseButton button, bool down, Vec2 position) {
+void InputManager::report_mouse_button(MouseButton button, bool down, glm::vec2 position) {
     const uint32_t bit = mouse_bit(button);
     if (bit == 0) {
         return;
@@ -185,7 +185,7 @@ void InputManager::report_mouse_button(MouseButton button, bool down, Vec2 posit
     }
 }
 
-void InputManager::report_mouse_wheel(Vec2 delta) {
+void InputManager::report_mouse_wheel(glm::vec2 delta) {
     pending_wheel_ += delta;
 }
 
@@ -248,7 +248,7 @@ void InputManager::report_game_pad_button(int32_t index, GamePadButton button, b
     }
 }
 
-void InputManager::report_game_pad_axes(int32_t index, Vec2 left_stick, Vec2 right_stick, float left_trigger,
+void InputManager::report_game_pad_axes(int32_t index, glm::vec2 left_stick, glm::vec2 right_stick, float left_trigger,
                                             float right_trigger) {
     GamePadState* pad = pending_pad(index);
     if (!pad) {
@@ -315,7 +315,7 @@ void InputManager::set_touch_capabilities(bool is_connected, int32_t maximum_tou
     touch_capabilities_.set(is_connected, std::max(maximum_touch_count, 0), has_pressure);
 }
 
-void InputManager::report_touch(TouchPhase phase, int32_t id, Vec2 position, float raw_pressure) {
+void InputManager::report_touch(TouchPhase phase, int32_t id, glm::vec2 position, float raw_pressure) {
     const float pressure = read_pressure(raw_pressure);
     switch (phase) {
         case TouchPhase::Begin: {
@@ -430,7 +430,7 @@ void InputManager::update() {
     pending_keyboard_.pressed_.fill(false);
     pending_keyboard_.released_.fill(false);
 
-    const Vec2 wheel_total = mouse_.scroll_wheel_position + pending_wheel_;
+    const glm::vec2 wheel_total = mouse_.scroll_wheel_position + pending_wheel_;
     mouse_.position = pending_mouse_.position;
     mouse_.delta = pending_delta_;
     mouse_.scroll_wheel_delta = pending_wheel_;
@@ -466,7 +466,7 @@ void InputManager::after_update() {
 
 // ---- SDL3: lifecycle and native events ---------------------------------------------------------
 
-void InputManager::set_touch_surface_size(Vec2 size) noexcept {
+void InputManager::set_touch_surface_size(glm::vec2 size) noexcept {
     if (size.x > 0 && size.y > 0) {
         impl_->touch_surface = size;
     }
@@ -558,14 +558,14 @@ bool InputManager::handle_native_event(const void* native_event) {
         case SDL_EVENT_FINGER_UP:
         case SDL_EVENT_FINGER_CANCELED: {
             const SDL_TouchFingerEvent& f = e.tfinger;
-            Vec2 surface = impl_->touch_surface;
+            glm::vec2 surface = impl_->touch_surface;
             if (SDL_Window* window = SDL_GetWindowFromID(f.windowID)) {
                 int w = 0, h = 0;
                 if (SDL_GetWindowSize(window, &w, &h) && w > 0 && h > 0) {
                     surface = {static_cast<float>(w), static_cast<float>(h)};
                 }
             }
-            const Vec2 position{f.x * surface.x, f.y * surface.y};
+            const glm::vec2 position{f.x * surface.x, f.y * surface.y};
 
             auto& fingers = impl_->fingers;
             auto it = std::find_if(fingers.begin(), fingers.end(), [&](const Impl::Finger& x) { return x.finger == f.fingerID; });

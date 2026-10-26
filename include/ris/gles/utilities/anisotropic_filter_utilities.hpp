@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ris/core.hpp"
-#include "ris/gles/gles_types.hpp"
+#include <cstdint>
 
 /// Anisotropic texture filtering through `GL_EXT_texture_filter_anisotropic`, like
 /// `WebGLFilterAnisotropicUtilities` of ris-framework-ts. They need the window's GL context and throw
@@ -19,6 +19,6 @@ RIS_API float get_max_anisotropy();
 /// `GL_TEXTURE_2D` is restored afterwards (the TypeScript version leaves the texture bound).
 /// @param texture    a 2D texture name.
 /// @param anisotropy the level, 1 is no anisotropic filtering, typical values are 4, 8 and 16.
-RIS_API void set_anisotropy(GlUint texture, float anisotropy);
+RIS_API void set_anisotropy(uint32_t texture, float anisotropy);
 
 } // namespace ris::gles::anisotropic_filter_utilities

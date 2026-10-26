@@ -36,7 +36,7 @@ public:
     explicit ContentManager(Framework& framework) : m_framework(framework) {}
 
     /// TODO: doc comment
-    Texture* loadTexture2D(const std::string& path, const Texture2DDescriptor& d = {}, const ContentConfig& config = {});
+    gles::GlesTexture2D* loadTexture2D(const std::string& path, const Texture2DDescriptor& d = {}, const ContentConfig& config = {});
     /// TODO: doc comment
     ktxTexture2* loadKtx2(const std::string& path,  const ContentConfig& config = {});
 
@@ -49,8 +49,8 @@ public:
 private:
     Framework& m_framework;
     /// Owns every texture loaded by `loadTexture2D`, they live as long as the framework.
-    std::vector<std::unique_ptr<Texture>> textures_;
-    std::map<std::string, Texture*> m_textureCache;
+    std::vector<std::unique_ptr<gles::GlesTexture2D>> textures_;
+    std::map<std::string, gles::GlesTexture2D*> m_textureCache;
     std::map<std::string, ktxTexture2*> m_ktx2TextureCache;
 };
 

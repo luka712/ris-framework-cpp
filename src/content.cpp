@@ -20,9 +20,9 @@ namespace ris {
         // ---- minimal OBJ / MTL parser ----------------------------------------------------------------
 
         struct ObjMaterial {
-            Vec3 ambient{-1, -1, -1}; // Ka, falls back to Kd
-            Vec3 diffuse{1, 1, 1};
-            std::optional<Vec3> specular;
+            glm::vec3 ambient{-1, -1, -1}; // Ka, falls back to Kd
+            glm::vec3 diffuse{1, 1, 1};
+            std::optional<glm::vec3> specular;
             std::optional<float> shininess;
             float opacity = 1.0f;
             std::string diffuse_map; // absolute or relative to the working directory
@@ -66,7 +66,7 @@ namespace ris {
                 } else if (key == "Ka") {
                     s >> current->ambient.x >> current->ambient.y >> current->ambient.z;
                 } else if (key == "Ks") {
-                    Vec3 ks{0, 0, 0};
+                    glm::vec3 ks{0, 0, 0};
                     s >> ks.x >> ks.y >> ks.z;
                     current->specular = ks;
                 } else if (key == "Ns") {
@@ -96,8 +96,8 @@ namespace ris {
             if (!in) throw std::ios_base::failure(std::string("could not open ") + path);
             const std::string dir = directory_of(path);
 
-            std::vector<Vec3> positions, normals;
-            std::vector<Vec2> uvs;
+            std::vector<glm::vec3> positions, normals;
+            std::vector<glm::vec2> uvs;
             ObjResult result;
             Geometry &g = result.geometry;
 
@@ -128,15 +128,15 @@ namespace ris {
                     std::getline(s >> std::ws, file);
                     for (auto &[name, m]: parse_mtl(dir + file)) result.materials[name] = std::move(m);
                 } else if (key == "v") {
-                    Vec3 p{0, 0, 0};
+                    glm::vec3 p{0, 0, 0};
                     s >> p.x >> p.y >> p.z;
                     positions.push_back(p);
                 } else if (key == "vt") {
-                    Vec2 t{0, 0};
+                    glm::vec2 t{0, 0};
                     s >> t.x >> t.y;
                     uvs.push_back(t);
                 } else if (key == "vn") {
-                    Vec3 n{0, 0, 1};
+                    glm::vec3 n{0, 0, 1};
                     s >> n.x >> n.y >> n.z;
                     normals.push_back(n);
                 } else if (key == "usemtl") {
@@ -174,20 +174,20 @@ namespace ris {
                         corners.push_back({v, t, n});
                     }
                     if (corners.size() < 3) continue;
-                    Vec3 flat{0, 0, 1};
+                    glm::vec3 flat{0, 0, 1};
                     {
-                        const Vec3 e1 = positions[static_cast<size_t>(corners[1].v)] - positions[static_cast<size_t>(
+                        const glm::vec3 e1 = positions[static_cast<size_t>(corners[1].v)] - positions[static_cast<size_t>(
                                             corners[0].v)];
-                        const Vec3 e2 = positions[static_cast<size_t>(corners[2].v)] - positions[static_cast<size_t>(
+                        const glm::vec3 e2 = positions[static_cast<size_t>(corners[2].v)] - positions[static_cast<size_t>(
                                             corners[0].v)];
-                        const Vec3 c = glm::cross(e1, e2);
+                        const glm::vec3 c = glm::cross(e1, e2);
                         if (glm::length(c) > 0) flat = glm::normalize(c);
                     }
                     const uint32_t base = static_cast<uint32_t>(g.vertex_count());
                     for (const Corner &c: corners) {
-                        const Vec3 &p = positions[static_cast<size_t>(c.v)];
-                        const Vec2 t = c.t >= 0 ? uvs[static_cast<size_t>(c.t)] : Vec2(0, 0);
-                        const Vec3 n = c.n >= 0 ? normals[static_cast<size_t>(c.n)] : flat;
+                        const glm::vec3 &p = positions[static_cast<size_t>(c.v)];
+                        const glm::vec2 t = c.t >= 0 ? uvs[static_cast<size_t>(c.t)] : glm::vec2(0, 0);
+                        const glm::vec3 n = c.n >= 0 ? normals[static_cast<size_t>(c.n)] : flat;
                         g.positions.insert(g.positions.end(), {p.x, p.y, p.z});
                         g.texture_coords.insert(g.texture_coords.end(), {t.x, t.y});
                         g.normals.insert(g.normals.end(), {n.x, n.y, n.z});
@@ -210,9 +210,9 @@ namespace ris {
         }
     } // namespace
 
-    Texture *ContentManager::loadTexture2D(const std::string &path, const Texture2DDescriptor &textureDescriptor,
+    gles::GlesTexture2D *ContentManager::loadTexture2D(const std::string &path, const Texture2DDescriptor &textureDescriptor,
                                            const ContentConfig &contentConfig) {
-        Texture* texture = m_textureCache[path];
+        gles::GlesTexture2D* texture = m_textureCache[path];
         if (texture != nullptr) {
             return texture;
         }
@@ -231,14 +231,14 @@ namespace ris {
             try {
                 // The only factory there is creates GlesTexture2D objects, which is what Texture is. ContentManager
                 // needs the concrete type for set_sampler, so it takes the base pointer back.
-                texture = static_cast<Texture*>(m_framework.textureFactory().createFromKtx2(ktxTexture, ktxDescriptor));
+                texture = static_cast<gles::GlesTexture2D*>(m_framework.textureFactory().createFromKtx2(ktxTexture, ktxDescriptor));
             } catch (...) {
                 ris_ktxTexture2_Destroy(ktxTexture);
                 throw;
             }
             ris_ktxTexture2_Destroy(ktxTexture);
         } else {
-            texture = new Texture(Texture::from_image_file(path, textureDescriptor.generate_mipmaps,
+            texture = new gles::GlesTexture2D(gles::GlesTexture2D::from_image_file(path, textureDescriptor.generate_mipmaps,
                                                            textureDescriptor.srgb, textureDescriptor.flip_vertically));
         }
         textures_.emplace_back(texture); // owned by the content manager from now on
@@ -246,15 +246,15 @@ namespace ris {
             m_textureCache[path] = texture;
         }
         SamplerDesc sampler; // clamped
-        const bool has_mips = texture->mip_levels() > 1;
+        const bool has_mips = texture->getMipLevels() > 1;
         switch (m_framework.configuration().textureFiltering) {
-            case TextureFilteringPreset::Nearest:
+            case RIS_TEXTURE_FILTERING_NEAREST:
                 sampler.min_filter = sampler.mag_filter = Filter::Nearest;
                 break;
-            case TextureFilteringPreset::Bilinear:
+            case RIS_TEXTURE_FILTERING_BILINEAR:
                 sampler.min_filter = sampler.mag_filter = Filter::Linear;
                 break;
-            case TextureFilteringPreset::Trilinear:
+            case RIS_TEXTURE_FILTERING_TRILINEAR:
                 sampler.min_filter = has_mips ? Filter::LinearMipmapLinear : Filter::Linear;
                 sampler.mag_filter = Filter::Linear;
                 break;
@@ -287,7 +287,7 @@ namespace ris {
     }
 
     namespace {
-        Texture *load_repeating(ContentManager &content, const std::string &path, bool srgb) {
+        gles::GlesTexture2D *load_repeating(ContentManager &content, const std::string &path, bool srgb) {
             Texture2DDescriptor td;
             td.srgb = srgb;
             return content.loadTexture2D(path, td);

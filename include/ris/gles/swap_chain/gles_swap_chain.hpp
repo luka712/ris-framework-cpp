@@ -18,7 +18,7 @@ public:
     GlesSwapChain(Window& window, const SwapChainDescriptor& descriptor);
     ~GlesSwapChain() override;
 
-    Vec2 getBackBufferSize() const override;
+    glm::vec2 getBackBufferSize() const override;
     TextureFormat getTextureFormat() const noexcept override { return TextureFormat::Rgba8Unorm; }
     void resize(int32_t width, int32_t height) override;
     void present() override;

@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
         ris_shader_set_mat4(shader, u_mvp, rot);
         ris_mesh_draw(mesh, RIS_TOPOLOGY_TRIANGLES, 0, 3, 1);
 
-        ris_sprite_batch_begin(batch, NULL, RIS_BLEND_ALPHA);
+        ris_spriteBatchBegin(batch, NULL, RIS_BLEND_ALPHA);
         for (int i = 0; i < 4; ++i) {
             ris_sprite s;
             memset(&s, 0, sizeof(s));
@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
             s.origin_x = s.origin_y = 32.0f;
             ris_sprite_batch_draw(batch, &s);
         }
-        ris_sprite_batch_end(batch);
+        ris_spriteBatchEnd(batch);
 
         ris_window_swap_buffers(window);
         ++frame;
@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
         printf("rendered %d frames, pixel(0,0) = %u %u %u %u\n", frame, pixel[0], pixel[1], pixel[2], pixel[3]);
 
     ris_sprite_batch_destroy(batch);
-    ris_texture_destroy(tex);
+    ris_destroyTexture(tex);
     ris_mesh_destroy(mesh);
     ris_buffer_destroy(ib);
     ris_buffer_destroy(vb);

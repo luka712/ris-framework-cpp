@@ -19,7 +19,7 @@ public:
     virtual ~ASwapChain() = default;
 
     /// The size of the back buffer in pixels.
-    virtual Vec2 getBackBufferSize() const = 0;
+    virtual glm::vec2 getBackBufferSize() const = 0;
 
     /// The texture format of the back buffer.
     virtual TextureFormat getTextureFormat() const noexcept = 0;

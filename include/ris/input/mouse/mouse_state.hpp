@@ -18,10 +18,10 @@ class InputManager;
 /// Differences from TS: the wheel is reported as the movement of the frame and as a running total instead of a
 /// -1 / 0 / 1 direction, and there is `is_button_pressed`.
 struct MouseState {
-    Vec2 position{0, 0};                ///< cursor position
-    Vec2 delta{0, 0};                   ///< cursor movement during the frame
-    Vec2 scroll_wheel_position{0, 0};   ///< accumulated wheel movement since start
-    Vec2 scroll_wheel_delta{0, 0};      ///< wheel movement during the frame
+    glm::vec2 position{0, 0};                ///< cursor position
+    glm::vec2 delta{0, 0};                   ///< cursor movement during the frame
+    glm::vec2 scroll_wheel_position{0, 0};   ///< accumulated wheel movement since start
+    glm::vec2 scroll_wheel_delta{0, 0};      ///< wheel movement during the frame
 
     float x() const noexcept { return position.x; }
     float y() const noexcept { return position.y; }

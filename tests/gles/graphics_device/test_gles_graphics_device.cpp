@@ -28,8 +28,6 @@ TEST_CASE("an uninitialised graphics device throws std::logic_error") {
     CHECK_THROWS_AS(device.frameEnd(), std::logic_error);
     CHECK_THROWS_AS(device.createSampler({}), std::logic_error);
     CHECK_THROWS_AS(device.createPrimitiveState({}), std::logic_error);
-    CHECK_THROWS_AS(device.pushDebugGroup("group"), std::logic_error);
-    CHECK_THROWS_AS(device.popDebugGroup(), std::logic_error);
     // No window exists here either: initialize() reports the missing context.
     CHECK_THROWS_AS(device.initialize(), std::logic_error);
 }
@@ -94,14 +92,14 @@ TEST_CASE("the default sampler follows the filtering preset") {
     ris::Window window = ris_test::make_hidden_window();
 
     ris::GraphicsDeviceDescriptor descriptor;
-    descriptor.samplerFilteringPreset = ris::TextureFilteringPreset::Nearest;
+    descriptor.samplerFilteringPreset = RIS_TEXTURE_FILTERING_NEAREST;
     gles::GlesGraphicsDevice nearest(descriptor);
     nearest.initialize();
     CHECK(nearest.getDefaultTextureSampler().getMinFilter() == ris::SamplerFilter::Nearest);
     CHECK(nearest.getDefaultTextureSampler().getMagFilter() == ris::SamplerFilter::Nearest);
     CHECK(nearest.getDefaultTextureSampler().getMipmapFilter() == ris::MipMapSamplerFilter::None);
 
-    descriptor.samplerFilteringPreset = ris::TextureFilteringPreset::Bilinear;
+    descriptor.samplerFilteringPreset = RIS_TEXTURE_FILTERING_BILINEAR;
     gles::GlesGraphicsDevice bilinear(descriptor);
     bilinear.initialize();
     CHECK(bilinear.getDefaultTextureSampler().getMinFilter() == ris::SamplerFilter::Linear);
@@ -126,8 +124,9 @@ TEST_CASE("graphics device debug functions are safe") {
         CHECK_NOTHROW(device.popDebugGroup());
     }
 
-    SECTION("pop without push is an error") {
-        CHECK_THROWS_AS(device.popDebugGroup(), std::invalid_argument);
+    SECTION("push and pop do not throw") {
+        CHECK_NOTHROW(device.pushDebugGroup("group"));
+        CHECK_NOTHROW(device.popDebugGroup());
     }
 
     SECTION("frameEnd is a no-op") {

@@ -111,8 +111,7 @@ public:
     double deterministic_step_ms() const noexcept { return deterministic_step_ms_; }
     /// Replaces the clock with a constant step, for reproducible runs (screenshots, tests): while > 0, every frame
     /// lasts exactly `step_ms` of unscaled time whatever the clock says, `elapsed_time_ms` is the time at the start
-    /// of the frame (the first frame is at 0), and `frame_end()` does not sleep. `Framework` turns it on at 60 Hz
-    /// when `FrameworkConfiguration::max_frames` is set. Must be >= 0; 0 goes back to the clock.
+    /// of the frame (the first frame is at 0), and `frame_end()` does not sleep. Must be >= 0; 0 goes back to the clock.
     void set_deterministic_step_ms(double step_ms);
 
 private:

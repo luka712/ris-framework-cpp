@@ -4,7 +4,7 @@
 
 #include "internal.hpp"
 #include "ris/gles/utilities/anisotropic_filter_utilities.hpp"
-#include "ris/gles/utilities/debug_label_utilities.hpp"
+#include "ris/gles/utilities/gles_debug_utilities.hpp"
 #include "ris/gles/utilities/error_utilities.hpp"
 #include "ris/gles/utilities/gles_converter.hpp"
 
@@ -16,7 +16,7 @@ namespace {
 constexpr GLenum kTextureMaxAnisotropy = 0x84FE;   // GL_EXT_texture_filter_anisotropic
 } // namespace
 
-GlUint create(const SamplerParams& params, std::string_view label) {
+uint32_t create(const SamplerParams& params, std::string_view label) {
     require_context();
     // Convert first: an unsupported value throws before any GL object exists.
     const GLenum min_filter = converter::convert_min_filter(params.min_filter, params.mip_map_filter);
@@ -54,7 +54,7 @@ GlUint create(const SamplerParams& params, std::string_view label) {
     return sampler;
 }
 
-void delete_sampler(GlUint& sampler) noexcept {
+void delete_sampler(uint32_t& sampler) noexcept {
     if (sampler != 0 && has_context()) {
         const GLuint id = sampler;
         glDeleteSamplers(1, &id);

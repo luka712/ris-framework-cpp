@@ -11,11 +11,10 @@
 namespace gles = ris::gles;
 namespace bl = ris::gles::blending_utilities;
 namespace cu = ris::gles::culling_utilities;
-using ris_test::Pixel;
 
 namespace {
 
-bool near(const Pixel& px, int r, int g, int b, int tolerance = 2) {
+bool near(const std::array<int, 4>& px, int r, int g, int b, int tolerance = 2) {
     return std::abs(px[0] - r) <= tolerance && std::abs(px[1] - g) <= tolerance && std::abs(px[2] - b) <= tolerance;
 }
 

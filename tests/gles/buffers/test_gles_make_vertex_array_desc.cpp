@@ -65,7 +65,7 @@ TEST_CASE("typed buffers draw a quad with a uniform block") {
     REQUIRE(px[1] == 0);
     REQUIRE(px[2] == 0);
 
-    color.update(ris::Vec4(0, 1, 0, 1));
+    color.update(glm::vec4(0, 1, 0, 1));
     px = draw_and_read();
     REQUIRE(px[0] == 0);
     REQUIRE(px[1] == 255);

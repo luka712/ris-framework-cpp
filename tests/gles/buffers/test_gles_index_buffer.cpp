@@ -10,7 +10,6 @@
 TEST_CASE("index buffer on a real context") {
     if (!ris_test::display_available()) SKIP("no display available");
     ris::Window window = ris_test::make_hidden_window();
-    using F = ris::BufferUsageFlags;
 
     SECTION("index buffer picks the smallest type") {
         const std::vector<uint32_t> small = {0, 1, 2, 2, 1, 65535};
@@ -20,7 +19,7 @@ TEST_CASE("index buffer on a real context") {
         REQUIRE(a.indices_count() == 6);
         REQUIRE(a.byte_size() == 12);
         REQUIRE(a.index_type() == ris::IndexType::UInt16);
-        REQUIRE(ris::has_flag(a.usage(), F::Index));
+        REQUIRE(ris::has_flag(a.usage(), ris::BufferUsageFlags::Index));
 
         const std::vector<uint32_t> big = {0, 1, 65536};
         ris::gles::GlesIndexBuffer b(big, "big");

@@ -20,7 +20,7 @@ GlesRenderPass::GlesRenderPass(const RenderPassDescriptor& descriptor) : label_(
         throw std::invalid_argument("GlesRenderPass: a render pass needs at least one color attachment");
     }
 
-    std::vector<GlUint> textures;
+    std::vector<uint32_t> textures;
     for (const RenderPassColorAttachment& attachment : descriptor.colorAttachments) {
         if ((attachment.swapChain != nullptr) == (attachment.texture != nullptr)) {
             throw std::invalid_argument("GlesRenderPass: a color attachment needs exactly one of swapChain and texture");
@@ -38,7 +38,7 @@ GlesRenderPass::GlesRenderPass(const RenderPassDescriptor& descriptor) : label_(
                 width_ = attachment.texture->getWidth();
                 height_ = attachment.texture->getHeight();
             }
-            textures.push_back(static_cast<GlUint>(attachment.texture->getHandle()));
+            textures.push_back(static_cast<uint32_t>(attachment.texture->getHandle()));
         }
         colorTargets_.push_back({attachment.loadAction, attachment.storeAction, attachment.clearColor});
     }
@@ -49,7 +49,7 @@ GlesRenderPass::GlesRenderPass(const RenderPassDescriptor& descriptor) : label_(
     }
 
     if (swapChain_ == nullptr) {
-        framebuffer_ = framebuffer_utilities::create(std::span<const GlUint>(textures), label_);
+        framebuffer_ = framebuffer_utilities::create(std::span<const uint32_t>(textures), label_);
         if (hasDepthStencil_) {
             try {
                 depthStencilRenderbuffer_ = renderbuffer_utilities::create(TextureFormat::Depth24Stencil8, width_, height_, label_);
@@ -70,7 +70,7 @@ GlesRenderPass::~GlesRenderPass() {
 
 void GlesRenderPass::getTargetSize(int32_t& width, int32_t& height) const {
     if (swapChain_ != nullptr) {
-        const Vec2 size = swapChain_->getBackBufferSize();
+        const glm::vec2 size = swapChain_->getBackBufferSize();
         width = static_cast<int32_t>(size.x);
         height = static_cast<int32_t>(size.y);
     } else {

@@ -20,7 +20,7 @@ GlesSwapChain::GlesSwapChain(Window& window, const SwapChainDescriptor& descript
 
 GlesSwapChain::~GlesSwapChain() = default;
 
-Vec2 GlesSwapChain::getBackBufferSize() const {
+glm::vec2 GlesSwapChain::getBackBufferSize() const {
     int32_t width = 0;
     int32_t height = 0;
     window_.drawable_size(width, height);

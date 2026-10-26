@@ -20,16 +20,16 @@ struct Fixture {
 };
 
 /// Reads the pixel (x, y) of the texture through a temporary framebuffer.
-ris_test::Pixel texel(const ris::Texture& texture, int x, int y) {
-    gles::GlUint fb = fu::create(texture.gl_handle());
+std::array<int, 4> texel(const ris::gles::GlesTexture2D& texture, int x, int y) {
+    uint32_t fb = fu::create(texture.getGlTexture());
     fu::bind(fb);
-    const ris_test::Pixel px = ris_test::read_pixel(x, y);
+    const std::array<int, 4> px = ris_test::read_pixel(x, y);
     fu::bind(0);
     fu::delete_framebuffer(fb);
     return px;
 }
 
-ris::RenderPassDescriptor textureDescriptor(ris::Texture& texture, ris::Color clear) {
+ris::RenderPassDescriptor textureDescriptor(ris::gles::GlesTexture2D& texture, ris::Color clear) {
     ris::RenderPassColorAttachment attachment;
     attachment.texture = &texture;
     attachment.clearColor = clear;
@@ -44,21 +44,21 @@ ris::RenderPassDescriptor textureDescriptor(ris::Texture& texture, ris::Color cl
 TEST_CASE("render pass clears a texture") {
     if (!ris_test::display_available()) SKIP("no display available");
     Fixture f;
-    ris::Texture texture = ris::Texture::from_rgba8(8, 4, nullptr, false);
+    ris::gles::GlesTexture2D texture = ris::gles::GlesTexture2D::from_rgba8(8, 4, nullptr, false);
 
     SECTION("clear to a colour and read a pixel back") {
         const std::unique_ptr<ris::ARenderPass> pass(f.device.createRenderPass(textureDescriptor(texture, ris::Color(1, 0, 0, 1))));
         REQUIRE(pass != nullptr);
         pass->beginPass();
         pass->endPass();
-        CHECK(texel(texture, 0, 0) == ris_test::Pixel{255, 0, 0, 255});
-        CHECK(texel(texture, 7, 3) == ris_test::Pixel{255, 0, 0, 255});
+        CHECK(texel(texture, 0, 0) == std::array<int, 4>{255, 0, 0, 255});
+        CHECK(texel(texture, 7, 3) == std::array<int, 4>{255, 0, 0, 255});
 
         // The pass is reusable, a second pass with another colour overwrites the first.
         const std::unique_ptr<ris::ARenderPass> second(f.device.createRenderPass(textureDescriptor(texture, ris::Color(0, 0, 1, 1))));
         second->beginPass();
         second->endPass();
-        CHECK(texel(texture, 3, 2) == ris_test::Pixel{0, 0, 255, 255});
+        CHECK(texel(texture, 3, 2) == std::array<int, 4>{0, 0, 255, 255});
     }
 
     SECTION("drawing happens between begin and end, load keeps the contents") {
@@ -72,7 +72,7 @@ TEST_CASE("render pass clears a texture") {
         const std::unique_ptr<ris::ARenderPass> load(f.device.createRenderPass(descriptor));
         load->beginPass();
         load->endPass();
-        CHECK(texel(texture, 1, 1) == ris_test::Pixel{0, 255, 0, 255});
+        CHECK(texel(texture, 1, 1) == std::array<int, 4>{0, 255, 0, 255});
     }
 
     SECTION("a depth and stencil attachment turns the depth test on and clears the depth") {
@@ -85,7 +85,7 @@ TEST_CASE("render pass clears a texture") {
         far->beginPass();
         triangle.draw(0, 1, 1, 1);
         far->endPass();
-        CHECK(texel(texture, 2, 1) == ris_test::Pixel{0, 255, 255, 255});
+        CHECK(texel(texture, 2, 1) == std::array<int, 4>{0, 255, 255, 255});
 
         // Cleared to 0 (the near plane): the triangle is behind and fails the depth test.
         descriptor.depthStencilAttachment->depthClearValue = 0.0f;
@@ -93,7 +93,7 @@ TEST_CASE("render pass clears a texture") {
         near->beginPass();
         triangle.draw(0, 1, 1, 1);
         near->endPass();
-        CHECK(texel(texture, 2, 1) == ris_test::Pixel{0, 0, 0, 255});
+        CHECK(texel(texture, 2, 1) == std::array<int, 4>{0, 0, 0, 255});
     }
 
     SECTION("discard store actions are accepted") {
@@ -118,8 +118,8 @@ TEST_CASE("render pass clears a texture") {
 TEST_CASE("render pass with several colour attachments") {
     if (!ris_test::display_available()) SKIP("no display available");
     Fixture f;
-    ris::Texture a = ris::Texture::from_rgba8(4, 4, nullptr, false);
-    ris::Texture b = ris::Texture::from_rgba8(4, 4, nullptr, false);
+    ris::gles::GlesTexture2D a = ris::gles::GlesTexture2D::from_rgba8(4, 4, nullptr, false);
+    ris::gles::GlesTexture2D b = ris::gles::GlesTexture2D::from_rgba8(4, 4, nullptr, false);
     ris::RenderPassDescriptor descriptor = textureDescriptor(a, ris::Color(1, 0, 0, 1));
     descriptor.colorAttachments.push_back({});
     descriptor.colorAttachments[1].texture = &b;
@@ -128,14 +128,14 @@ TEST_CASE("render pass with several colour attachments") {
     const std::unique_ptr<ris::ARenderPass> pass(f.device.createRenderPass(descriptor));
     pass->beginPass();
     pass->endPass();
-    CHECK(texel(a, 1, 1) == ris_test::Pixel{255, 0, 0, 255});
-    CHECK(texel(b, 1, 1) == ris_test::Pixel{0, 255, 0, 255});
+    CHECK(texel(a, 1, 1) == std::array<int, 4>{255, 0, 0, 255});
+    CHECK(texel(b, 1, 1) == std::array<int, 4>{0, 255, 0, 255});
 }
 
 TEST_CASE("invalid render pass descriptors throw std::invalid_argument") {
     if (!ris_test::display_available()) SKIP("no display available");
     Fixture f;
-    ris::Texture texture = ris::Texture::from_rgba8(4, 4, nullptr, false);
+    ris::gles::GlesTexture2D texture = ris::gles::GlesTexture2D::from_rgba8(4, 4, nullptr, false);
     const std::unique_ptr<ris::ASwapChain> swapChain(f.device.createSwapChain(f.window, {}));
 
     SECTION("no attachment") {
@@ -167,7 +167,7 @@ TEST_CASE("swap chain") {
     SECTION("size, format and present") {
         const std::unique_ptr<ris::ASwapChain> swapChain(f.device.createSwapChain(f.window, {}));
         REQUIRE(swapChain != nullptr);
-        const ris::Vec2 size = swapChain->getBackBufferSize();
+        const glm::vec2 size = swapChain->getBackBufferSize();
         CHECK(size.x == 64.0f);
         CHECK(size.y == 64.0f);
         CHECK(swapChain->getTextureFormat() == ris::TextureFormat::Rgba8Unorm);
@@ -205,7 +205,7 @@ TEST_CASE("swap chain") {
         descriptor.depthStencilAttachment = ris::RenderPassDepthStencilAttachment{};
         const std::unique_ptr<ris::ARenderPass> pass(f.device.createRenderPass(descriptor));
         pass->beginPass();
-        CHECK(ris_test::read_pixel(10, 10) == ris_test::Pixel{0, 0, 255, 255});
+        CHECK(ris_test::read_pixel(10, 10) == std::array<int, 4>{0, 0, 255, 255});
         pass->endPass();
         swapChain->present();
     }

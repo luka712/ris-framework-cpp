@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ris/core.hpp"
-#include "ris/gles/gles_types.hpp"
+#include <cstdint>
 
 /// `glGetError` helpers. ris-framework-ts checks `gl.getError()` inline (for example in
 /// `createCompressedTexture2D`); these are the shared versions. They need the window's GL context.
@@ -9,7 +9,7 @@ namespace ris::gles::error_utilities {
 
 /// The name of a GL error code: "GL_INVALID_ENUM", "GL_INVALID_VALUE", "GL_INVALID_OPERATION",
 /// "GL_INVALID_FRAMEBUFFER_OPERATION", "GL_OUT_OF_MEMORY", "GL_NO_ERROR", or "unknown" for other values.
-RIS_API const char* error_name(GlEnum error) noexcept;
+RIS_API const char* error_name(uint32_t error) noexcept;
 
 /// Reads and discards every pending GL error.
 /// @throws std::logic_error without a window.

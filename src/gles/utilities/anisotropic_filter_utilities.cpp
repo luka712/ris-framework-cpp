@@ -25,7 +25,7 @@ float get_max_anisotropy() {
     return max;
 }
 
-void set_anisotropy(GlUint texture, float anisotropy) {
+void set_anisotropy(uint32_t texture, float anisotropy) {
     if (!is_supported()) return;
     const float level = std::clamp(anisotropy, 1.0f, std::max(1.0f, get_max_anisotropy()));
     GLint previous = 0;

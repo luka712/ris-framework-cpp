@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ris/rendering/sampler/texture_filtering_preset.hpp"
+#include "ris/framework_configuration.h"
 
 namespace ris {
 
@@ -10,7 +10,7 @@ namespace ris {
 struct GraphicsDeviceDescriptor {
     /// The filtering of the default texture sampler (`AGraphicsDevice::getDefaultTextureSampler`). It is used when a
     /// texture is sampled without a specific sampler. Trilinear by default.
-    TextureFilteringPreset samplerFilteringPreset = TextureFilteringPreset::Trilinear;
+    TextureFilteringPreset samplerFilteringPreset = RIS_TEXTURE_FILTERING_TRILINEAR;
 };
 
 } // namespace ris

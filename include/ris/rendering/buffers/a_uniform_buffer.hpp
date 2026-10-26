@@ -25,11 +25,11 @@ public:
     virtual void update(std::span<const float> data, size_t byte_offset = 0) = 0;
 
     /// Writes a column-major matrix (64 bytes) at `byte_offset`. Same rules as the span overload.
-    void update(const Mat4& matrix, size_t byte_offset = 0) {
+    void update(const glm::mat4& matrix, size_t byte_offset = 0) {
         update(std::span<const float>(glm::value_ptr(matrix), 16), byte_offset);
     }
     /// Writes a vector (16 bytes) at `byte_offset`. Same rules as the span overload.
-    void update(const Vec4& vector, size_t byte_offset = 0) {
+    void update(const glm::vec4& vector, size_t byte_offset = 0) {
         update(std::span<const float>(glm::value_ptr(vector), 4), byte_offset);
     }
 

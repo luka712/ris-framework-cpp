@@ -22,10 +22,10 @@ namespace fu = ris::gles::framebuffer_utilities;
 namespace {
 
 /// Reads the pixel (x, y) of the texture through a temporary framebuffer.
-ris_test::Pixel texel(const ris::ATexture2D& texture, int x, int y) {
-    gles::GlUint fb = fu::create(static_cast<gles::GlUint>(texture.getHandle()));
+std::array<int, 4> texel(const ris::ATexture2D& texture, int x, int y) {
+    uint32_t fb = fu::create(static_cast<uint32_t>(texture.getHandle()));
     fu::bind(fb);
-    const ris_test::Pixel px = ris_test::read_pixel(x, y);
+    const std::array<int, 4> px = ris_test::read_pixel(x, y);
     fu::bind(0);
     fu::delete_framebuffer(fb);
     return px;
@@ -53,28 +53,28 @@ TEST_CASE("texture factory createEmpty") {
     const gles::GlesTextureFactory factory;
 
     SECTION("without a color the texture is transparent black") {
-        const std::unique_ptr<ris::Texture> tex(factory.createEmpty(4, 2));
+        const std::unique_ptr<ris::gles::GlesTexture2D> tex(factory.createEmpty(4, 2));
         REQUIRE(tex != nullptr);
-        REQUIRE(tex->width() == 4);
-        REQUIRE(tex->height() == 2);
-        REQUIRE(tex->mip_levels() == 1);
-        REQUIRE(tex->gl_handle() != 0);
-        REQUIRE(texel(*tex, 3, 1) == ris_test::Pixel{0, 0, 0, 0});
+        REQUIRE(tex->getWidth() == 4);
+        REQUIRE(tex->getHeight() == 2);
+        REQUIRE(tex->getMipLevels() == 1);
+        REQUIRE(tex->getGlTexture() != 0);
+        REQUIRE(texel(*tex, 3, 1) == std::array<int, 4>{0, 0, 0, 0});
     }
     SECTION("the default color fills every pixel") {
-        const std::unique_ptr<ris::Texture> tex(factory.createEmpty(4, 4, ris::Color(1.0f, 0.5f, 0.0f, 1.0f), ris::TextureUsage::CopyDst |
+        const std::unique_ptr<ris::gles::GlesTexture2D> tex(factory.createEmpty(4, 4, ris::Color(1.0f, 0.5f, 0.0f, 1.0f), ris::TextureUsage::CopyDst |
                                              ris::TextureUsage::TextureBinding, ris::TextureFormat::Rgba8Unorm, "orange"));
-        REQUIRE(texel(*tex, 0, 0) == ris_test::Pixel{255, 128, 0, 255});
-        REQUIRE(texel(*tex, 3, 3) == ris_test::Pixel{255, 128, 0, 255});
+        REQUIRE(texel(*tex, 0, 0) == std::array<int, 4>{255, 128, 0, 255});
+        REQUIRE(texel(*tex, 3, 3) == std::array<int, 4>{255, 128, 0, 255});
     }
     SECTION("black is a color too") {
-        const std::unique_ptr<ris::Texture> tex(factory.createEmpty(2, 2, ris::Color::black()));
-        REQUIRE(texel(*tex, 1, 1) == ris_test::Pixel{0, 0, 0, 255});
+        const std::unique_ptr<ris::gles::GlesTexture2D> tex(factory.createEmpty(2, 2, ris::Color::black()));
+        REQUIRE(texel(*tex, 1, 1) == std::array<int, 4>{0, 0, 0, 255});
     }
     SECTION("the sRGB format is accepted") {
-        const std::unique_ptr<ris::Texture> tex(factory.createEmpty(2, 2, ris::Color::white(), ris::TextureUsage::TextureBinding,
+        const std::unique_ptr<ris::gles::GlesTexture2D> tex(factory.createEmpty(2, 2, ris::Color::white(), ris::TextureUsage::TextureBinding,
                                              ris::TextureFormat::Rgba8UnormSrgb));
-        REQUIRE(tex->gl_handle() != 0);
+        REQUIRE(tex->getGlTexture() != 0);
     }
     SECTION("bad arguments") {
         REQUIRE_THROWS_AS(([&] { factory.createEmpty(0, 4); })(), std::invalid_argument);
@@ -90,32 +90,32 @@ TEST_CASE("texture factory createEmpty") {
                                Catch::Matchers::Message("Width and height must be greater than 0."));
     }
     SECTION("fast path: transparent black and no color make the same texture, nothing is uploaded") {
-        const std::unique_ptr<ris::Texture> none(factory.createEmpty(4, 4));
-        const std::unique_ptr<ris::Texture> zero(factory.createEmpty(4, 4, ris::Color::transparent()));
-        REQUIRE(texel(*none, 2, 2) == ris_test::Pixel{0, 0, 0, 0});
-        REQUIRE(texel(*zero, 2, 2) == ris_test::Pixel{0, 0, 0, 0});
+        const std::unique_ptr<ris::gles::GlesTexture2D> none(factory.createEmpty(4, 4));
+        const std::unique_ptr<ris::gles::GlesTexture2D> zero(factory.createEmpty(4, 4, ris::Color::transparent()));
+        REQUIRE(texel(*none, 2, 2) == std::array<int, 4>{0, 0, 0, 0});
+        REQUIRE(texel(*zero, 2, 2) == std::array<int, 4>{0, 0, 0, 0});
     }
     SECTION("the colored path writes every pixel of the whole size") {
-        const std::unique_ptr<ris::Texture> tex(factory.createEmpty(8, 2, ris::Color(0.0f, 1.0f, 0.0f, 0.5f)));
-        REQUIRE(texel(*tex, 0, 0) == ris_test::Pixel{0, 255, 0, 128});
-        REQUIRE(texel(*tex, 7, 1) == ris_test::Pixel{0, 255, 0, 128});
+        const std::unique_ptr<ris::gles::GlesTexture2D> tex(factory.createEmpty(8, 2, ris::Color(0.0f, 1.0f, 0.0f, 0.5f)));
+        REQUIRE(texel(*tex, 0, 0) == std::array<int, 4>{0, 255, 0, 128});
+        REQUIRE(texel(*tex, 7, 1) == std::array<int, 4>{0, 255, 0, 128});
     }
     SECTION("an undefined format is Rgba8Unorm, the given format is kept") {
-        const std::unique_ptr<ris::Texture> preferred(factory.createEmpty(2, 2));
+        const std::unique_ptr<ris::gles::GlesTexture2D> preferred(factory.createEmpty(2, 2));
         REQUIRE(preferred->getTextureFormat() == ris::TextureFormat::Rgba8Unorm);
-        const std::unique_ptr<ris::Texture> srgb(factory.createEmpty(2, 2, std::nullopt, ris::TextureUsage::TextureBinding,
+        const std::unique_ptr<ris::gles::GlesTexture2D> srgb(factory.createEmpty(2, 2, std::nullopt, ris::TextureUsage::TextureBinding,
                                                                      ris::TextureFormat::Rgba8UnormSrgb));
         REQUIRE(srgb->getTextureFormat() == ris::TextureFormat::Rgba8UnormSrgb);
     }
     SECTION("useMipmap allocates the whole chain, with and without a color") {
-        const std::unique_ptr<ris::Texture> empty(factory.createEmpty(4, 4, std::nullopt, ris::TextureUsage::TextureBinding,
+        const std::unique_ptr<ris::gles::GlesTexture2D> empty(factory.createEmpty(4, 4, std::nullopt, ris::TextureUsage::TextureBinding,
                                                                       ris::TextureFormat::Undefined, "mips", true));
         REQUIRE(empty->getMipLevels() == 3);
         REQUIRE(empty->getSize() == (16 + 4 + 1) * 4);
-        const std::unique_ptr<ris::Texture> colored(factory.createEmpty(4, 4, ris::Color::red(), ris::TextureUsage::TextureBinding,
+        const std::unique_ptr<ris::gles::GlesTexture2D> colored(factory.createEmpty(4, 4, ris::Color::red(), ris::TextureUsage::TextureBinding,
                                                                         ris::TextureFormat::Undefined, "mips", true));
         REQUIRE(colored->getMipLevels() == 3);
-        REQUIRE(texel(*colored, 1, 1) == ris_test::Pixel{255, 0, 0, 255});
+        REQUIRE(texel(*colored, 1, 1) == std::array<int, 4>{255, 0, 0, 255});
     }
 }
 
@@ -133,23 +133,23 @@ TEST_CASE("texture factory create") {
     }
 
     SECTION("RGBA data without mip maps") {
-        const std::unique_ptr<ris::Texture> tex(factory.create(4, 4, pixels, 4, "two colors"));
-        REQUIRE(tex->width() == 4);
-        REQUIRE(tex->height() == 4);
-        REQUIRE(tex->mip_levels() == 1);
-        REQUIRE(texel(*tex, 0, 0) == ris_test::Pixel{255, 0, 0, 255});
-        REQUIRE(texel(*tex, 3, 3) == ris_test::Pixel{0, 0, 255, 128});
+        const std::unique_ptr<ris::gles::GlesTexture2D> tex(factory.create(4, 4, pixels, 4, "two colors"));
+        REQUIRE(tex->getWidth() == 4);
+        REQUIRE(tex->getHeight() == 4);
+        REQUIRE(tex->getMipLevels() == 1);
+        REQUIRE(texel(*tex, 0, 0) == std::array<int, 4>{255, 0, 0, 255});
+        REQUIRE(texel(*tex, 3, 3) == std::array<int, 4>{0, 0, 255, 128});
     }
     SECTION("RGBA data with mip maps") {
-        const std::unique_ptr<ris::Texture> tex(factory.create(4, 4, pixels, 4, "mips", ris::TextureUsage::CopyDst | ris::TextureUsage::TextureBinding,
+        const std::unique_ptr<ris::gles::GlesTexture2D> tex(factory.create(4, 4, pixels, 4, "mips", ris::TextureUsage::CopyDst | ris::TextureUsage::TextureBinding,
                                         ris::TextureFormat::Rgba8Unorm, true));
-        REQUIRE(tex->mip_levels() == 3);
-        REQUIRE(texel(*tex, 1, 1) == ris_test::Pixel{255, 0, 0, 255});
+        REQUIRE(tex->getMipLevels() == 3);
+        REQUIRE(texel(*tex, 1, 1) == std::array<int, 4>{255, 0, 0, 255});
         REQUIRE_NOTHROW(gles::error_utilities::check_error("create with mips"));
     }
     SECTION("sRGB format") {
-        const std::unique_ptr<ris::Texture> tex(factory.create(4, 4, pixels, 4, {}, ris::TextureUsage::TextureBinding, ris::TextureFormat::Rgba8UnormSrgb, true));
-        REQUIRE(tex->mip_levels() == 3);
+        const std::unique_ptr<ris::gles::GlesTexture2D> tex(factory.create(4, 4, pixels, 4, {}, ris::TextureUsage::TextureBinding, ris::TextureFormat::Rgba8UnormSrgb, true));
+        REQUIRE(tex->getMipLevels() == 3);
     }
     SECTION("the TypeScript error messages") {
         REQUIRE_THROWS_MATCHES(([&] { factory.create(4, 4, {}); })(), std::invalid_argument,
@@ -160,7 +160,7 @@ TEST_CASE("texture factory create") {
                                Catch::Matchers::Message("channels must be greater than 0."));
     }
     SECTION("the default format is Rgba8Unorm and the label and usage are kept") {
-        const std::unique_ptr<ris::Texture> tex(factory.create(4, 4, pixels, 4, "kept", ris::TextureUsage::TextureBinding));
+        const std::unique_ptr<ris::gles::GlesTexture2D> tex(factory.create(4, 4, pixels, 4, "kept", ris::TextureUsage::TextureBinding));
         REQUIRE(tex->getTextureFormat() == ris::TextureFormat::Rgba8Unorm);
         REQUIRE(tex->getLabel() == "kept");
         REQUIRE(tex->getTextureUsage() == ris::TextureUsage::TextureBinding);
@@ -204,7 +204,7 @@ TEST_CASE("texture factory createFromKtx2") {
         descriptor.textureFormat = ris::TextureFormat::Rgba8Unorm;
         descriptor.label = "ktx rgba8";
         const std::unique_ptr<ris::ATexture2D> tex(factory.createFromKtx2(file.tex, descriptor));
-        const ris_test::Pixel px = texel(*tex, tex->getWidth() / 2, tex->getHeight() / 2);
+        const std::array<int, 4> px = texel(*tex, tex->getWidth() / 2, tex->getHeight() / 2);
         REQUIRE(px[3] == 255);
         REQUIRE_NOTHROW(gles::error_utilities::check_error("ktx2 rgba8"));
     }
@@ -271,8 +271,8 @@ TEST_CASE("texture factory createFromKtx2") {
         CHECK(tex->getTextureFormat() == ris::TextureFormat::Rgba8Unorm);
         CHECK(tex->getMipLevels() == 1);
         CHECK(tex->getSize() == 16);
-        CHECK(texel(*tex, 0, 0) == ris_test::Pixel{255, 0, 0, 255});
-        CHECK(texel(*tex, 1, 1) == ris_test::Pixel{10, 20, 30, 40});
+        CHECK(texel(*tex, 0, 0) == std::array<int, 4>{255, 0, 0, 255});
+        CHECK(texel(*tex, 1, 1) == std::array<int, 4>{10, 20, 30, 40});
     }
     SECTION("a Vulkan format that TextureFormat does not describe is refused") {
         ris_ktxTextureCreateInfo info{};
@@ -302,8 +302,7 @@ TEST_CASE("texture factory createFromKtx2") {
 
 TEST_CASE("a factory made with a framework asks its graphics device for the GPU features") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::FrameworkConfiguration config;
-    config.hidden = true;
+    FrameworkConfiguration config = ris_createFrameworkConfiguration();
     ris::Framework framework(config);
     const gles::GlesTextureFactory factory(framework);
 
@@ -321,8 +320,7 @@ TEST_CASE("a factory made with a framework asks its graphics device for the GPU 
 
 TEST_CASE("Framework::textureFactory is the OpenGL ES factory") {
     if (!ris_test::display_available()) SKIP("no display available");
-    ris::FrameworkConfiguration config;
-    config.hidden = true;
+    FrameworkConfiguration config = ris_createFrameworkConfiguration();
     ris::Framework framework(config);
     REQUIRE(dynamic_cast<gles::GlesTextureFactory*>(&framework.textureFactory()) != nullptr);
     const std::unique_ptr<ris::ATexture2D> tex(framework.textureFactory().createEmpty(2, 2, ris::Color::red()));

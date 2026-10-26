@@ -38,13 +38,13 @@ TEST_CASE("Color and Rect") {
 TEST_CASE("perspective camera follows the ris-framework-ts conventions") {
     ris::PerspectiveCamera camera({.aspect_ratio = 2.0f, .eye = {0, 0, 3}});
     // the look-at flips the eye z
-    REQUIRE(camera.world_position() == ris::Vec3(0, 0, -3));
+    REQUIRE(camera.world_position() == glm::vec3(0, 0, -3));
     // the origin is 3 units in front of the camera, i.e. at view z = -3
-    const ris::Vec4 origin = camera.view_matrix() * ris::Vec4(0, 0, 0, 1);
+    const glm::vec4 origin = camera.view_matrix() * glm::vec4(0, 0, 0, 1);
     REQUIRE(origin.z == Approx(-3.0f));
     camera.eye = {0, 2, 4};
     camera.update({});
-    REQUIRE(camera.world_position() == ris::Vec3(0, 2, -4));
+    REQUIRE(camera.world_position() == glm::vec3(0, 2, -4));
     REQUIRE(camera.field_of_view == Approx(glm::radians(60.0f)));
 }
 
@@ -79,12 +79,12 @@ TEST_CASE("geometry builder") {
 
 TEST_CASE("framework runs a frame loop and listeners") {
     if (!display_available()) SKIP("no display available");
-    ris::FrameworkConfiguration config;
-    config.hidden = true;
-    config.backBufferSize = {64, 64};
-    config.max_frames = 5;
+    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    config.backBufferWidth = 64;
+    config.backBufferHeight = 64;
 
     ris::Framework framework(config);
+    framework.timeManager().set_deterministic_step_ms(1000.0 / 60.0);
     ris::Scene scene;
     int load = 0, init = 0, updates = 0, renders = 0, removed_calls = 0;
     double last_delta = 0;
@@ -103,6 +103,7 @@ TEST_CASE("framework runs a frame loop and listeners") {
     framework.meshFactory().create(scene, cube, framework.materialFactory().create_blinn_phong_material()).position = {0, 1, 0};
     scene.create_point_light({.position = {1, 1, -2}});
     framework.addOnRenderListener([&](ris::Framework&) { scene.render(); });
+    framework.addOnRenderListener([&](ris::Framework& f) { if (renders == 5) f.quit(); });
 
     framework.initialize();
     REQUIRE(load == 1);
@@ -115,17 +116,14 @@ TEST_CASE("framework runs a frame loop and listeners") {
 
 TEST_CASE("framework drives the time manager: deterministic frames and fixed update steps") {
     if (!display_available()) SKIP("no display available");
-    ris::FrameworkConfiguration config;
-    config.hidden = true;
-    config.backBufferSize = {64, 64};
-    config.max_frames = 6;
-    config.fixed_time_step_ms = 1000.0 / 120.0;   // two fixed steps per deterministic 60 Hz frame
-    config.target_frames_per_second = 30;         // ignored in deterministic mode
+    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    config.backBufferWidth = 64;
+    config.backBufferHeight = 64;
 
     ris::Framework framework(config);
-    REQUIRE(framework.timeManager().deterministic_step_ms() == Approx(1000.0 / 60.0));
-    REQUIRE(framework.timeManager().fixed_time_step_ms() == Approx(1000.0 / 120.0));
-    REQUIRE(framework.timeManager().target_frames_per_second() == 30);
+    framework.timeManager().set_deterministic_step_ms(1000.0 / 60.0);
+    framework.timeManager().set_fixed_time_step_ms(1000.0 / 120.0);   // two fixed steps per deterministic 60 Hz frame
+    framework.timeManager().set_target_frames_per_second(30);         // ignored in deterministic mode
 
     int fixed = 0, updates = 0;
     double last_fixed_elapsed = 0, last_elapsed = 0;
@@ -141,6 +139,7 @@ TEST_CASE("framework drives the time manager: deterministic frames and fixed upd
         ++updates;
         REQUIRE(t.frame_number == static_cast<uint64_t>(updates));
         last_elapsed = t.elapsed_time_ms;
+        if (updates == 6) framework.quit();
     });
     framework.initialize();
 
@@ -153,10 +152,9 @@ TEST_CASE("framework drives the time manager: deterministic frames and fixed upd
 
 TEST_CASE("framework listeners: ids are 1, 2, 3 ... per kind and shared by all frameworks, either callback form") {
     if (!display_available()) SKIP("no display available");
-    ris::FrameworkConfiguration config;
-    config.hidden = true;
-    config.backBufferSize = {32, 32};
-    config.max_frames = 3;
+    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    config.backBufferWidth = 32;
+    config.backBufferHeight = 32;
 
     uint32_t a = 0, c = 0;
     {
@@ -194,10 +192,9 @@ TEST_CASE("framework listeners: ids are 1, 2, 3 ... per kind and shared by all f
 
 TEST_CASE("framework listeners run in registration order and may add or remove listeners while running") {
     if (!display_available()) SKIP("no display available");
-    ris::FrameworkConfiguration config;
-    config.hidden = true;
-    config.backBufferSize = {32, 32};
-    config.max_frames = 3;
+    FrameworkConfiguration config = ris_createFrameworkConfiguration();
+    config.backBufferWidth = 32;
+    config.backBufferHeight = 32;
 
     ris::Framework framework(config);
     std::vector<std::string> log;
@@ -222,6 +219,8 @@ TEST_CASE("framework listeners run in registration order and may add or remove l
     victim = framework.addOnUpdateListener([&](ris::Framework&, const ris::GameTime&) { log.push_back("victim"); });
     framework.addOnUpdateListener([&](ris::Framework&, const ris::GameTime& t) { log.push_back("u3#" + std::to_string(t.frame_number)); });
     framework.addOnRenderListener([&](ris::Framework&) { log.push_back("render"); });
+    int frames = 0;
+    framework.addOnRenderListener([&](ris::Framework& f) { if (++frames == 3) f.quit(); });
 
     framework.initialize();
 

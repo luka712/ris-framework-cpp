@@ -3,7 +3,7 @@
 #include <string_view>
 
 #include "ris/core.hpp"
-#include "ris/gles/gles_types.hpp"
+#include <cstdint>
 #include "ris/rendering/sampler/mip_map_sampler_filter.hpp"
 #include "ris/rendering/sampler/sampler_address_mode.hpp"
 #include "ris/rendering/sampler/sampler_compare_function.hpp"
@@ -32,9 +32,9 @@ struct SamplerParams {
 /// @param params the sampler state.
 /// @param label  optional debug label, see debug_label_utilities.
 /// @return the sampler name, to be deleted with delete_sampler().
-RIS_API GlUint create(const SamplerParams& params = {}, std::string_view label = {});
+RIS_API uint32_t create(const SamplerParams& params = {}, std::string_view label = {});
 
 /// Deletes a sampler and sets the name to 0. Does nothing for 0, or when the window (and context) is gone.
-RIS_API void delete_sampler(GlUint& sampler) noexcept;
+RIS_API void delete_sampler(uint32_t& sampler) noexcept;
 
 } // namespace ris::gles::sampler_utilities

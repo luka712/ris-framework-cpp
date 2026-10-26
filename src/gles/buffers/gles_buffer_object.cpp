@@ -2,7 +2,7 @@
 
 #include <utility>
 
-#include "ris/gles/utilities/debug_label_utilities.hpp"
+#include "ris/gles/utilities/gles_debug_utilities.hpp"
 #include "ris/rendering/buffers/buffer_validation.hpp"
 
 namespace ris::gles {

@@ -14,7 +14,7 @@ There are two APIs:
 ## Features
 
 Window and GL context, events, buffers, shaders, meshes (instancing), textures (PNG/JPEG via stb, KTX2 with
-ASTC > ETC2 > RGBA8 transcoding), render targets, sprite batch. Math is [glm](https://github.com/g-truc/glm) (`ris::Mat4` is `glm::mat4`).
+ASTC > ETC2 > RGBA8 transcoding), render targets, sprite batch. Math is [glm](https://github.com/g-truc/glm) (`glm::vec2`, `glm::vec3`, `glm::mat4`, ... are used directly).
 
 The OpenGL ES helpers (buffers, shaders, programs, textures, samplers, framebuffers, blending, culling, ...) live in `ris/gles/` and mirror `webgl/` of ris-framework-ts; `ris/gles/gles.hpp` includes all of them.
 
@@ -22,7 +22,7 @@ Input (like `api/input` of ris-framework-ts): `ris/input/` holds the concrete `r
 
 Time (like `api/time` of ris-framework-ts): SDL3 is an integral part of the engine, so there is one concrete `ris::TimeManager` in `ris/time/` (no abstract class, no backend folder; only the rendering API is pluggable). It does the per frame logic (time scale, pause, a fixed time step with `Framework::addOnFixedUpdateListener`, frame limiting with `FrameworkConfiguration::target_frames_per_second`, delta smoothing, an FPS counter, a deterministic mode) on the SDL3 time API (`SDL_GetPerformanceCounter`, `SDL_DelayPrecise`, `SDL_GetCurrentTime`, ...), next to `GameTime`, `DateTime`, `FrameRateCounter`, `Stopwatch`, `Timer` and the `ris::system_clock` functions (counter, delays, wall clock, date conversion). No SDL types appear in the headers. `Framework::timeManager()` returns the `TimeManager&`. Unit tests drive it without sleeping by giving it a `ris::ClockSource` (a counter function, its frequency and an optional delay function).
 
-Rendering API layering: `ris/rendering/` holds the graphics API neutral interfaces (for buffers `ABuffer`, `AVertexBuffer`, `AIndexBuffer`, `AUniformBuffer`, `ABufferFactory`), and each backend implements them in its own folder; the OpenGL ES one is `ris/gles/buffers/` (`GlesVertexBuffer`, ...). `ris::create_default_buffer_factory()` returns the factory of the current backend, so code written against the `A*` classes does not change when other rendering APIs are added. Textures follow the same pattern: `ATextureFactory` (`ris/rendering/texture/`) with the OpenGL ES implementation `GlesTextureFactory` (`ris/gles/texture/`), reached through `Framework::textureFactory()` or `ris::create_default_texture_factory()`. The factory returns `ATexture2D*` (caller owned; `ATexture2D`, `ATextureView` and `TextureViewDescriptor` in `ris/rendering/texture/`, implemented by `GlesTexture2D` and `GlesTextureView` in `ris/gles/texture/`), and the low level `ris::Texture` is an alias of `GlesTexture2D`. The GPU entry point is the same: `AGraphicsDevice` (`ris/rendering/a_graphics_device.hpp`: GPU info (`AGpuInfo`, implemented by `GlesGpuInfo`) and features, default sampler / blend / primitive state, `createSampler`, `createPrimitiveState`, `createRenderPass`, `createSwapChain`, debug groups) with the OpenGL ES implementation `GlesGraphicsDevice` (`ris/gles/gles_graphics_device.hpp`, plus `GlesSampler`, `GlesBlendState`, `GlesPrimitiveState`, `GlesRenderPass`, `GlesSwapChain`), reached through `Framework::graphicsDevice()` or `ris::create_default_graphics_device()`. Objects it creates are owned by the caller (free them before the device).
+Rendering API layering: `ris/rendering/` holds the graphics API neutral interfaces (for buffers `ABuffer`, `AVertexBuffer`, `AIndexBuffer`, `AUniformBuffer`, `ABufferFactory`), and each backend implements them in its own folder; the OpenGL ES one is `ris/gles/buffers/` (`GlesVertexBuffer`, ...). `ris::create_default_buffer_factory()` returns the factory of the current backend, so code written against the `A*` classes does not change when other rendering APIs are added. Textures follow the same pattern: `ATextureFactory` (`ris/rendering/texture/`) with the OpenGL ES implementation `GlesTextureFactory` (`ris/gles/texture/`), reached through `Framework::textureFactory()` or constructed directly (`gles::GlesTextureFactory`). The factory returns `ATexture2D*` (caller owned; `ATexture2D`, `ATextureView` and `TextureViewDescriptor` in `ris/rendering/texture/`, implemented by `GlesTexture2D` and `GlesTextureView` in `ris/gles/texture/`), and the low level texture class used by the sprite batch, materials and content manager is `GlesTexture2D` itself. The GPU entry point is the same: `AGraphicsDevice` (`ris/rendering/a_graphics_device.hpp`: GPU info (`AGpuInfo`, implemented by `GlesGpuInfo`) and features, default sampler / blend / primitive state, `createSampler`, `createPrimitiveState`, `createRenderPass`, `createSwapChain`, debug groups) with the OpenGL ES implementation `GlesGraphicsDevice` (`ris/gles/gles_graphics_device.hpp`, plus `GlesSampler`, `GlesBlendState`, `GlesPrimitiveState`, `GlesRenderPass`, `GlesSwapChain`), reached through `Framework::graphicsDevice()` or `ris::create_default_graphics_device()`. Objects it creates are owned by the caller (free them before the device).
 
 ## Building
 
@@ -99,11 +99,12 @@ RisFramework.Demo:
 | Target | What it shows |
 | --- | --- |
 | `ris_sample_sprite_batch` | `Framework`, `ContentManager::loadTexture2D`, `SpriteBatch::draw` |
+| `ris_sample_sprite_batch_c_api` | the same as `ris_sample_sprite_batch`, in plain C against `ris/ris.h` only (what C# and other bindings use): `ris_createFramework`, `ris_addOnLoadContentListener` / `ris_addOnRenderListener`, `ris_spriteBatch`, `ris_initialize` |
 | `ris_sample_unlit_mesh` | `Scene`, perspective camera, OBJ/MTL cube with `UnlitMaterial` per face |
 | `ris_sample_blinn_phong_mesh` | `BlinnPhongMaterial`, ambient, directional and two orbiting point lights |
 
-All samples accept `--frames N`, `--hidden`, `--size WxH` and `--screenshot out.ppm`, for example
-`./cmake-build-debug/ris_sample_unlit_mesh --frames 60 --hidden --screenshot cube.ppm`. Escape closes a window.
+All samples accept `--frames N`, `--size WxH` and `--screenshot out.ppm`, for example
+`./cmake-build-debug/ris_sample_unlit_mesh --frames 60 --screenshot cube.ppm`. Escape closes a window.
 Assets live in `samples/<name>/assets` (kodim23.png is from the Kodak image suite, see `samples/sprite_batch/README.md`).
 
 ## Platform notes

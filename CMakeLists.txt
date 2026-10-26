@@ -156,6 +156,10 @@ if(RIS_FRAMEWORK_BUILD_SAMPLES)
         target_link_libraries(ris_sample_${sample} PRIVATE ${TARGET_NAME})
         target_compile_definitions(ris_sample_${sample} PRIVATE RIS_SAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/samples")
     endforeach()
+    # sprite_batch again, in plain C against ris.h only (what a C# or other binding sees). Uses the asset of sprite_batch.
+    add_executable(ris_sample_sprite_batch_c_api samples/sprite_batch_c_api/main.c)
+    target_link_libraries(ris_sample_sprite_batch_c_api PRIVATE ${TARGET_NAME})
+    target_compile_definitions(ris_sample_sprite_batch_c_api PRIVATE RIS_SAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/samples")
 endif()
 
 if(RIS_FRAMEWORK_BUILD_TESTS)

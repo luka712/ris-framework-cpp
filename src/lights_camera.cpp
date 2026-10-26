@@ -63,7 +63,7 @@ OrthographicCamera::OrthographicCamera(float l, float r, float t, float b, float
 
 void OrthographicCamera::update_matrices() {
     projection_ = glm::ortho(left, right, bottom, top, near_plane, far_plane);
-    view_ = Mat4(1.0f);
+    view_ = glm::mat4(1.0f);
     projection_view_ = projection_ * view_;
 }
 
@@ -77,7 +77,7 @@ OrbitCamera::OrbitCamera(std::shared_ptr<PerspectiveCamera> core, const InputMan
 }
 
 void OrbitCamera::sync_from_core() {
-    const Vec3 dir = glm::normalize(core_->target - core_->eye);
+    const glm::vec3 dir = glm::normalize(core_->target - core_->eye);
     const float y = std::clamp(dir.y, -1.0f, 1.0f);
     pitch_ = -std::clamp(std::asin(y), pitch_clamp.x, pitch_clamp.y);
     yaw_ = -std::atan2(dir.x, dir.z);
@@ -100,7 +100,7 @@ void OrbitCamera::update(const GameTime& time) {
     if (moved) {
         pitch_ = std::clamp(pitch_, pitch_clamp.x, pitch_clamp.y);
         const float cp = std::cos(pitch_);
-        core_->eye = core_->target + Vec3(radius * cp * std::sin(yaw_), radius * std::sin(pitch_), -radius * cp * std::cos(yaw_));
+        core_->eye = core_->target + glm::vec3(radius * cp * std::sin(yaw_), radius * std::sin(pitch_), -radius * cp * std::cos(yaw_));
     }
     core_->update(time);
 }
@@ -118,8 +118,8 @@ std::shared_ptr<OrthographicCamera> CameraFactory::create_orthographic_camera(fl
     return std::make_shared<OrthographicCamera>(left, right, top, bottom, near_plane, far_plane);
 }
 
-std::shared_ptr<OrthographicCamera> CameraFactory::create_default_orthographic_camera(Vec2 origin) {
-    const Vec2 size = framework_.renderer().back_buffer_size();
+std::shared_ptr<OrthographicCamera> CameraFactory::create_default_orthographic_camera(glm::vec2 origin) {
+    const glm::vec2 size = framework_.renderer().back_buffer_size();
     return std::make_shared<OrthographicCamera>(origin.x, origin.x + size.x, origin.y, origin.y + size.y, -1.0f, 1.0f);
 }
 

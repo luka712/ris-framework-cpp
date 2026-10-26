@@ -6,7 +6,6 @@
 #include <string_view>
 
 #include "ris/core.hpp"
-#include "ris/gles/gles_types.hpp"
 #include "ris/graphics.hpp"
 #include "ris/rendering/buffers/buffer_usage.hpp"
 
@@ -36,7 +35,7 @@ public:
     /// @throws std::invalid_argument for a zero size, std::runtime_error if GL reports an error (the buffer is
     ///         deleted in that case) or no buffer name could be generated ("Failed to create vertex buffer.",
     ///         "Failed to create index buffer." or "Failed to create uniform buffer.", by `type`).
-    GlUint createBuffer(BufferType type, const void* data, size_t byteSize, GlEnum usage,
+    uint32_t createBuffer(BufferType type, const void* data, size_t byteSize, uint32_t usage,
                         std::string_view label = {}) const;
 
     /// `createVertexBuffer` of ris-framework-ts: a `GL_ARRAY_BUFFER` with the given floats.
@@ -44,29 +43,29 @@ public:
     /// @param usage usage flags, only `CopyDst` matters (dynamic or static draw).
     /// @param label optional debug label.
     /// @throws std::invalid_argument for empty data, std::runtime_error ("Failed to create vertex buffer." if no name could be generated).
-    GlUint createVertexBuffer(std::span<const float> data, BufferUsageFlags usage, std::string_view label = {}) const;
+    uint32_t createVertexBuffer(std::span<const float> data, BufferUsageFlags usage, std::string_view label = {}) const;
     /// A `GL_ARRAY_BUFFER` of `byteSize` uninitialised bytes (the `number` overload of the TypeScript function).
-    GlUint createVertexBuffer(size_t byteSize, BufferUsageFlags usage, std::string_view label = {}) const;
+    uint32_t createVertexBuffer(size_t byteSize, BufferUsageFlags usage, std::string_view label = {}) const;
 
     /// `createIndexBuffer` of ris-framework-ts: an element array buffer with 16 bit indices.
     /// @throws std::invalid_argument for empty data, std::runtime_error ("Failed to create index buffer." if no name could be generated).
-    GlUint createIndexBuffer(std::span<const uint16_t> indices, BufferUsageFlags usage,
+    uint32_t createIndexBuffer(std::span<const uint16_t> indices, BufferUsageFlags usage,
                              std::string_view label = {}) const;
     /// An element array buffer with 32 bit indices.
-    GlUint createIndexBuffer(std::span<const uint32_t> indices, BufferUsageFlags usage,
+    uint32_t createIndexBuffer(std::span<const uint32_t> indices, BufferUsageFlags usage,
                              std::string_view label = {}) const;
     /// An element array buffer of `byteSize` uninitialised bytes.
-    GlUint createIndexBuffer(size_t byteSize, BufferUsageFlags usage, std::string_view label = {}) const;
+    uint32_t createIndexBuffer(size_t byteSize, BufferUsageFlags usage, std::string_view label = {}) const;
 
     /// `createUniformBuffer` of ris-framework-ts: a `GL_UNIFORM_BUFFER` with the given floats. The data is not
     /// padded here (GlesUniformBuffer does that).
     /// @throws std::invalid_argument for empty data, std::runtime_error ("Failed to create uniform buffer." if no name could be generated).
-    GlUint createUniformBuffer(std::span<const float> data, BufferUsageFlags usage, std::string_view label = {}) const;
+    uint32_t createUniformBuffer(std::span<const float> data, BufferUsageFlags usage, std::string_view label = {}) const;
     /// A `GL_UNIFORM_BUFFER` with the given raw bytes.
-    GlUint createUniformBuffer(std::span<const uint8_t> data, BufferUsageFlags usage,
+    uint32_t createUniformBuffer(std::span<const uint8_t> data, BufferUsageFlags usage,
                                std::string_view label = {}) const;
     /// A `GL_UNIFORM_BUFFER` of `byteSize` uninitialised bytes.
-    GlUint createUniformBuffer(size_t byteSize, BufferUsageFlags usage, std::string_view label = {}) const;
+    uint32_t createUniformBuffer(size_t byteSize, BufferUsageFlags usage, std::string_view label = {}) const;
 
     /// Overwrites part of a buffer (`glBufferSubData`). The caller makes sure the range is inside the buffer.
     /// @param type       the kind the buffer was created as.
@@ -75,7 +74,7 @@ public:
     /// @param data       the bytes to write.
     /// @param byteSize   number of bytes to write, greater than zero.
     /// @throws std::invalid_argument for a null buffer, null data or an empty range, std::runtime_error if GL fails.
-    void updateBuffer(BufferType type, GlUint buffer, size_t byteOffset, const void* data, size_t byteSize) const;
+    void updateBuffer(BufferType type, uint32_t buffer, size_t byteOffset, const void* data, size_t byteSize) const;
 
     /// `updateVertexBuffer` of ris-framework-ts: writes floats of `data` into a `GL_ARRAY_BUFFER`. Like the
     /// WebGL `bufferSubData` with a typed array, `srcOffset` and `srcLength` count floats while `destOffset`
@@ -88,11 +87,11 @@ public:
     ///                   (the TypeScript version takes `data.length` here, which only fits for a `srcOffset` of 0).
     /// @throws std::out_of_range if `srcOffset + srcLength` is beyond the end of `data`,
     ///         std::invalid_argument for a null buffer or an empty range, std::runtime_error if GL fails.
-    void updateVertexBuffer(GlUint buffer, std::span<const float> data, size_t destOffset = 0, size_t srcOffset = 0,
+    void updateVertexBuffer(uint32_t buffer, std::span<const float> data, size_t destOffset = 0, size_t srcOffset = 0,
                             size_t srcLength = 0) const;
 
     /// Deletes a buffer and sets the name to 0. Does nothing for 0, or when the window (and context) is gone.
-    void deleteBuffer(GlUint& buffer) const noexcept;
+    void deleteBuffer(uint32_t& buffer) const noexcept;
 };
 
 } // namespace ris::gles

@@ -26,9 +26,7 @@ enum class LogLevel : int32_t { Trace = 0, Debug = 1, Info = 2, Warn = 3, Error 
 
 /// Called for every message at or above the log level. May be called from any thread.
 /// The default sink writes to stderr. Pass an empty function to restore it.
-using LogCallback = std::function<void(LogLevel level, const char* message)>;
-
-RIS_API void set_log_callback(LogCallback callback);
+RIS_API void set_log_callback(std::function<void(LogLevel level, const char* message)> callback);
 RIS_API void set_log_level(LogLevel level) noexcept;
 
 /// Monotonic seconds since the first call to any time function.

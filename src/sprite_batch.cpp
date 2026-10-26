@@ -1,4 +1,4 @@
-#include "ris/sprite_batch.hpp"
+#include "../include/ris/sprites/sprite_batch.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -53,18 +53,18 @@ uint8_t to_byte(float v) {
 
 } // namespace
 
-struct SpriteBatch::Impl {
+struct ASpriteBatch::Impl {
     uint32_t max_sprites;
     Shader shader;
     Buffer vertex_buffer;
     Buffer index_buffer;
     VertexArray mesh;
-    Texture white;
+    gles::GlesTexture2D white;
     int32_t u_view_projection;
     int32_t u_texture;
 
     std::vector<Vertex> vertices;
-    const Texture* current = nullptr;
+    const gles::GlesTexture2D* current = nullptr;
     bool active = false;
 
     static VertexArrayDesc make_mesh_desc(const Buffer& vb, const Buffer& ib) {
@@ -107,7 +107,7 @@ struct SpriteBatch::Impl {
           index_buffer(BufferType::Index, BufferUsage::Static, make_indices(max_sprites).data(),
                        sizeof(uint16_t) * 6 * max_sprites),
           mesh(make_mesh_desc(vertex_buffer, index_buffer)),
-          white(Texture::from_rgba8(1, 1, white_pixel(), false, false)),
+          white(gles::GlesTexture2D::from_rgba8(1, 1, white_pixel(), false, false)),
           u_view_projection(shader.uniform_location("u_view_projection")),
           u_texture(shader.uniform_location("u_texture")) {
         vertices.reserve(static_cast<size_t>(max_sprites) * 4);
@@ -123,7 +123,7 @@ struct SpriteBatch::Impl {
     }
 
     void push(const Sprite& s) {
-        const Texture* tex = s.texture;
+        const gles::GlesTexture2D* tex = s.texture;
         if (tex != current && !vertices.empty()) flush();
         current = tex;
         if (vertices.size() / 4 >= max_sprites) flush();
@@ -144,16 +144,16 @@ struct SpriteBatch::Impl {
     }
 };
 
-SpriteBatch::SpriteBatch(uint32_t max_sprites_per_flush) {
+ASpriteBatch::ASpriteBatch(uint32_t max_sprites_per_flush) {
     require_context();
     impl_ = std::make_unique<Impl>(max_sprites_per_flush);
 }
 
-SpriteBatch::~SpriteBatch() = default;
-SpriteBatch::SpriteBatch(SpriteBatch&&) noexcept = default;
-SpriteBatch& SpriteBatch::operator=(SpriteBatch&&) noexcept = default;
+ASpriteBatch::~ASpriteBatch() = default;
+ASpriteBatch::ASpriteBatch(ASpriteBatch&&) noexcept = default;
+ASpriteBatch& ASpriteBatch::operator=(ASpriteBatch&&) noexcept = default;
 
-void SpriteBatch::begin(const float* view_projection, BlendMode blend) {
+void ASpriteBatch::begin(const float* view_projection, BlendMode blend) {
     require_context();
     if (impl_->active) {
         throw std::invalid_argument("SpriteBatch::begin called twice without end()");
@@ -162,7 +162,7 @@ void SpriteBatch::begin(const float* view_projection, BlendMode blend) {
     impl_->current = nullptr;
     impl_->vertices.clear();
 
-    Mat4 pixel_projection;
+    glm::mat4 pixel_projection;
     if (!view_projection) {
         GLint vp[4] = {0, 0, 1, 1};
         glGetIntegerv(GL_VIEWPORT, vp);
@@ -178,14 +178,14 @@ void SpriteBatch::begin(const float* view_projection, BlendMode blend) {
     impl_->shader.set_int(impl_->u_texture, 0);
 }
 
-void SpriteBatch::draw(const Sprite& sprite) {
+void ASpriteBatch::draw(const Sprite& sprite) {
     if (!impl_->active) {
         throw std::invalid_argument("SpriteBatch::draw called outside begin()/end()");
     }
     impl_->push(sprite);
 }
 
-void SpriteBatch::draw_quad(const Texture* texture, float x, float y, float width, float height, float r, float g,
+void ASpriteBatch::draw_quad(const gles::GlesTexture2D* texture, float x, float y, float width, float height, float r, float g,
                             float b, float a) {
     Sprite s;
     s.texture = texture;
@@ -200,7 +200,7 @@ void SpriteBatch::draw_quad(const Texture* texture, float x, float y, float widt
     draw(s);
 }
 
-void SpriteBatch::end() {
+void ASpriteBatch::end() {
     if (!impl_->active) {
         throw std::invalid_argument("SpriteBatch::end called without begin()");
     }
@@ -212,19 +212,19 @@ void SpriteBatch::end() {
 
 namespace ris {
 
-void SpriteBatch::draw(const Texture& texture, const Rect& dest, const Color& color, std::optional<Rect> source,
-                       float rotation, std::optional<Vec2> origin, float layer_depth) {
+void ASpriteBatch::draw(const gles::GlesTexture2D& texture, const Rect& dest, const Color& color, std::optional<Rect> source,
+                       float rotation, std::optional<glm::vec2> origin, float layer_depth) {
     (void)layer_depth;
     Sprite s;
     s.texture = &texture;
-    const Vec2 o = origin.value_or(Vec2(0, 0));
+    const glm::vec2 o = origin.value_or(glm::vec2(0, 0));
     s.x = dest.x + o.x;
     s.y = dest.y + o.y;
     s.width = dest.width;
     s.height = dest.height;
     if (source) {
-        const float tw = static_cast<float>(std::max(1, texture.width()));
-        const float th = static_cast<float>(std::max(1, texture.height()));
+        const float tw = static_cast<float>(std::max(1, texture.getWidth()));
+        const float th = static_cast<float>(std::max(1, texture.getHeight()));
         s.u0 = source->x / tw;
         s.v0 = source->y / th;
         s.u1 = (source->x + source->width) / tw;
@@ -240,11 +240,11 @@ void SpriteBatch::draw(const Texture& texture, const Rect& dest, const Color& co
     draw(s);
 }
 
-void SpriteBatch::draw_rect(const Rect& dest, const Color& color, float rotation, std::optional<Vec2> origin,
+void ASpriteBatch::draw_rect(const Rect& dest, const Color& color, float rotation, std::optional<glm::vec2> origin,
                             float layer_depth) {
     (void)layer_depth;
     Sprite s;   // null texture = 1x1 white
-    const Vec2 o = origin.value_or(Vec2(0, 0));
+    const glm::vec2 o = origin.value_or(glm::vec2(0, 0));
     s.x = dest.x + o.x;
     s.y = dest.y + o.y;
     s.width = dest.width;

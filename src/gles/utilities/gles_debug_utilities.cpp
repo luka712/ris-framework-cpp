@@ -1,4 +1,4 @@
-#include "ris/gles/utilities/debug_label_utilities.hpp"
+#include "ris/gles/utilities/gles_debug_utilities.hpp"
 
 #include <EGL/egl.h>
 
@@ -10,8 +10,6 @@ using namespace ris::detail;
 namespace ris::gles::debug_label_utilities {
 
 namespace {
-
-using ObjectLabelFn = void (*)(GLenum identifier, GLuint name, GLsizei length, const char* label);
 
 // Object identifiers of glObjectLabel. The ones that GL_KHR_debug adds are not in <GLES3/gl3.h>.
 constexpr GLenum kBuffer = 0x82E0;
@@ -34,13 +32,13 @@ GLenum identifier(ObjectKind kind) {
     return 0;
 }
 
-ObjectLabelFn object_label_function() {
+void (*object_label_function())(GLenum identifier, GLuint name, GLsizei length, const char* label) {
     // Extension entry points are looked up through EGL. The core name is used by OpenGL ES 3.2 contexts,
     // the KHR suffix by GL_KHR_debug on older ones.
-    static const ObjectLabelFn fn = [] {
+    static void (*const fn)(GLenum identifier, GLuint name, GLsizei length, const char* label) = [] {
         void (*p)() = eglGetProcAddress("glObjectLabelKHR");
         if (!p) p = eglGetProcAddress("glObjectLabel");
-        return reinterpret_cast<ObjectLabelFn>(p);
+        return reinterpret_cast<void (*)(GLenum identifier, GLuint name, GLsizei length, const char* label)>(p);
     }();
     return fn;
 }
@@ -52,7 +50,7 @@ bool is_supported() {
     return GlesUtilities::context().isExtensionSupported("GL_KHR_debug") && object_label_function() != nullptr;
 }
 
-void set_label(ObjectKind kind, GlUint object, std::string_view label) {
+void set_label(ObjectKind kind, uint32_t object, std::string_view label) {
     require_context();
     if (label.empty() || object == 0 || !is_supported()) return;
     object_label_function()(identifier(kind), object, static_cast<GLsizei>(label.size()), label.data());

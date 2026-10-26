@@ -6,7 +6,7 @@
 
 int main(int argc, char** argv) {
     try {
-        ris::FrameworkConfiguration config;
+        FrameworkConfiguration config = ris_createFrameworkConfiguration();
         config.title = "ris sample: unlit_mesh";
         sample::apply_args(config, argc, argv);
 
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
         framework.addOnLoadContentListener([&](ris::Framework&) {
             // Passing the scene makes the camera the scene's camera.
-            const ris::Vec2 size = framework.renderer().back_buffer_size();
+            const glm::vec2 size = framework.renderer().back_buffer_size();
             camera = framework.cameraFactory().create_perspective_camera(
                 {.fov = 60, .aspect_ratio = size.x / size.y, .near = 0.1f, .far = 100, .eye = {0, 0, 3}}, &scene);
             // One sub mesh per usemtl range (6 faces -> 6 sub meshes), each with an unlit material coloured by its Kd.
@@ -41,6 +41,7 @@ int main(int argc, char** argv) {
         framework.addOnRenderListener([&](ris::Framework&) { scene.render(); });
 
         framework.renderer().setClearColor(ris::Color::light_pink());
+        sample::apply_run_args(framework, argc, argv);
         framework.initialize();
         return 0;
     } catch (const std::exception& e) {

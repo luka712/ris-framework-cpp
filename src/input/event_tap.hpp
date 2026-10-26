@@ -10,10 +10,9 @@
 
 namespace ris::detail {
 
-using EventTap = std::function<void(const SDL_Event&)>;
 
 /// Registers `tap` under `owner` (any unique address). A second registration of the same owner replaces the first.
-void add_event_tap(const void* owner, EventTap tap);
+void add_event_tap(const void* owner, std::function<void(const SDL_Event&)> tap);
 /// Removes the tap of `owner`, if any.
 void remove_event_tap(const void* owner);
 /// Called by the event pump for every SDL event.

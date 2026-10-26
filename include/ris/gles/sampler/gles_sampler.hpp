@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <string>
 
-#include "ris/gles/gles_types.hpp"
 #include "ris/rendering/sampler/a_sampler.hpp"
 #include "ris/rendering/sampler/sampler_descriptor.hpp"
 
@@ -37,7 +36,7 @@ public:
     const SamplerDescriptor& getDescriptor() const noexcept { return descriptor_; }
 
     /// The GL sampler object name, for interop with native code. Owned by this object.
-    GlUint getGlHandle() const noexcept { return handle_; }
+    uint32_t getGlHandle() const noexcept { return handle_; }
 
     /// Binds the sampler to a texture unit (`glBindSampler`): textures bound to the unit are sampled with this
     /// sampler instead of their own sampler state, until another sampler (or 0) is bound to the unit.
@@ -49,7 +48,7 @@ private:
 
     uint32_t id_ = 0;
     SamplerDescriptor descriptor_;
-    GlUint handle_ = 0;
+    uint32_t handle_ = 0;
 };
 
 } // namespace ris::gles

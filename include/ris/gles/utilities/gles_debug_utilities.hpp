@@ -4,7 +4,6 @@
 #include <string_view>
 
 #include "ris/core.hpp"
-#include "ris/gles/gles_types.hpp"
 
 /// Names GL objects for graphics debuggers (RenderDoc, apitrace, ...). The native counterpart of
 /// `SpectorJSUtilities.setLabel` of ris-framework-ts, which attaches `__SPECTOR_Metadata` to WebGL objects:
@@ -24,6 +23,6 @@ RIS_API bool is_supported();
 /// object: call it after the object has been used (textures and buffers must have been bound once) and
 /// after the creation was checked with error_utilities::check_error.
 /// @throws std::logic_error without a window.
-RIS_API void set_label(ObjectKind kind, GlUint object, std::string_view label);
+RIS_API void set_label(ObjectKind kind, uint32_t object, std::string_view label);
 
 } // namespace ris::gles::debug_label_utilities

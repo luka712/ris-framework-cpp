@@ -8,7 +8,7 @@ namespace ris::detail {
 namespace {
 struct Entry {
     const void* owner;
-    EventTap tap;
+    std::function<void(const SDL_Event&)> tap;
 };
 struct State {
     std::list<Entry> list;   // stable addresses: a tap may add taps while it runs
@@ -23,7 +23,7 @@ void compact(State& s) {
 }
 } // namespace
 
-void add_event_tap(const void* owner, EventTap tap) {
+void add_event_tap(const void* owner, std::function<void(const SDL_Event&)> tap) {
     State& s = state();
     for (Entry& entry : s.list) {
         if (entry.owner == owner) {

@@ -11,7 +11,6 @@
 TEST_CASE("buffer factory on a real context") {
     if (!ris_test::display_available()) SKIP("no display available");
     ris::Window window = ris_test::make_hidden_window();
-    using F = ris::BufferUsageFlags;
 
     SECTION("the default factory creates the OpenGL ES buffers") {
         const std::unique_ptr<ris::ABufferFactory> factory = ris::create_default_buffer_factory();
@@ -19,16 +18,16 @@ TEST_CASE("buffer factory on a real context") {
 
         const std::vector<float> data(6, 0.0f);
         const std::vector<uint32_t> idx = {0, 1, 2};
-        std::unique_ptr<ris::AVertexBuffer> vb = factory->create_vertex_buffer(data, 12, F::Vertex, "v");
+        std::unique_ptr<ris::AVertexBuffer> vb = factory->create_vertex_buffer(data, 12, ris::BufferUsageFlags::Vertex, "v");
         std::unique_ptr<ris::AIndexBuffer> ib = factory->create_index_buffer(idx, "i");
-        std::unique_ptr<ris::AUniformBuffer> ub = factory->create_uniform_buffer(data, F::Uniform | F::CopyDst, "u");
+        std::unique_ptr<ris::AUniformBuffer> ub = factory->create_uniform_buffer(data, ris::BufferUsageFlags::Uniform | ris::BufferUsageFlags::CopyDst, "u");
         REQUIRE(vb->vertex_count() == 2);
         REQUIRE(vb->label() == "v");
         REQUIRE(ib->indices_count() == 3);
         REQUIRE(ib->type() == ris::IndexBufferType::UInt16);
         REQUIRE(ub->byte_size() == 32);
         REQUIRE(ub->label() == "u");
-        REQUIRE(ris::has_flag(ub->usage(), F::Uniform));
+        REQUIRE(ris::has_flag(ub->usage(), ris::BufferUsageFlags::Uniform));
 
         // the native handles are only reachable on the concrete classes
         const auto* gl_vb = dynamic_cast<const ris::gles::GlesVertexBuffer*>(vb.get());
@@ -50,9 +49,9 @@ TEST_CASE("buffer factory on a real context") {
 
         auto ub = factory.create_uniform_buffer_with_byte_size(65);
         REQUIRE(ub->byte_size() == 80);
-        REQUIRE_NOTHROW(ub->update(ris::Mat4(1.0f), 16));
-        REQUIRE_NOTHROW(ub->update(ris::Vec4(1), 0));
-        REQUIRE_THROWS_AS(ub->update(ris::Mat4(1.0f), 32), std::out_of_range);
+        REQUIRE_NOTHROW(ub->update(glm::mat4(1.0f), 16));
+        REQUIRE_NOTHROW(ub->update(glm::vec4(1), 0));
+        REQUIRE_THROWS_AS(ub->update(glm::mat4(1.0f), 32), std::out_of_range);
 
         const std::vector<uint32_t> idx = {0, 1, 2};
         auto wide = factory.create_index_buffer_uint32(idx);

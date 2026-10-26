@@ -64,7 +64,7 @@ struct KtxHandle {
 
 // ---- creation -------------------------------------------------------------------------------
 
-GlesTexture2D::GlesTexture2D(GlUint glHandle, int32_t width, int32_t height, uint32_t mipLevels, TextureFormat format,
+GlesTexture2D::GlesTexture2D(uint32_t glHandle, int32_t width, int32_t height, uint32_t mipLevels, TextureFormat format,
                              TextureUsage usage, std::string label, uint64_t sizeBytes)
     : id_(++s_ids),
       glHandle_(glHandle),
@@ -134,7 +134,7 @@ void GlesTexture2D::disposeDefault(Framework& framework) {
     texture->dispose();
 }
 
-GlesTexture2D GlesTexture2D::adopt(GlUint glHandle, int32_t width, int32_t height, uint32_t mipLevels,
+GlesTexture2D GlesTexture2D::adopt(uint32_t glHandle, int32_t width, int32_t height, uint32_t mipLevels,
                                    TextureFormat format, TextureUsage usage, std::string label, uint64_t sizeBytes) {
     GlesTexture2D texture(glHandle, width, height, mipLevels, format, usage, std::move(label),
                           sizeBytes != 0 ? sizeBytes : rgba8_size(width, height, mipLevels));
@@ -297,7 +297,7 @@ void GlesTexture2D::initialize() {
 void GlesTexture2D::createGlTexture() {
     const bool compressed = TextureUtilities::isCompressedTextureFormat(textureFormat_);
     // Anisotropy 0, like the TypeScript version (anisotropic filtering is a sampler setting).
-    GlUint id = 0;
+    uint32_t id = 0;
     if (compressed) {
         id = GlesUtilities::texture().createCompressedTexture2D(width_, height_, blockWidth_, blockHeight_, data_,
                                                                 textureFormat_, 0.0f, label_);

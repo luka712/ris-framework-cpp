@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv) {
     try {
-        ris::FrameworkConfiguration config;
+        FrameworkConfiguration config = ris_createFrameworkConfiguration();
         config.title = "ris sample: blinn_phong_mesh";
         sample::apply_args(config, argc, argv);
 
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
         constexpr float pi = 3.14159265358979f;
 
         framework.addOnLoadContentListener([&](ris::Framework&) {
-            const ris::Vec2 size = framework.renderer().back_buffer_size();
+            const glm::vec2 size = framework.renderer().back_buffer_size();
             // Passing the scene makes the camera the scene's camera. The eye z is flipped by the look-at
             // (ris-framework-ts convention), so -3 views the cube from world z = +3.
             camera = framework.cameraFactory().create_perspective_camera({.aspect_ratio = size.x / size.y, .eye = {0, 0, -3}}, &scene);
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
             angle += rotation_speed * time.delta_time_sec();
             cube->rotation = {angle * 0.7f, angle, 0};
 
-            const ris::Vec2 size = framework.renderer().back_buffer_size();
+            const glm::vec2 size = framework.renderer().back_buffer_size();
             camera->aspect_ratio = size.x / size.y;
             camera->update(time);
         });
@@ -63,6 +63,7 @@ int main(int argc, char** argv) {
         framework.addOnRenderListener([&](ris::Framework&) { scene.render(); });
 
         framework.renderer().setClearColor(ris::Color::corner_flower_blue());
+        sample::apply_run_args(framework, argc, argv);
         framework.initialize();
         return 0;
     } catch (const std::exception& e) {

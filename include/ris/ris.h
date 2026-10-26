@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "framework_configuration.h"
 #include "ris_export.h"
 
 #ifdef __cplusplus
@@ -459,7 +460,7 @@ RIS_API int32_t RIS_CALL ris_texture_get_height(const ris_texture* texture);
 RIS_API uint32_t RIS_CALL ris_texture_get_mip_levels(const ris_texture* texture);
 /** The OpenGL texture name, for interop with native code. */
 RIS_API uint32_t RIS_CALL ris_texture_get_gl_handle(const ris_texture* texture);
-RIS_API void RIS_CALL ris_texture_destroy(ris_texture* texture);
+RIS_API void RIS_CALL ris_destroyTexture(ris_texture* texture);
 
 /* ---- render targets ---------------------------------------------------------------------- */
 
@@ -497,12 +498,63 @@ RIS_API ris_sprite_batch* RIS_CALL ris_sprite_batch_create(uint32_t max_sprites_
  * Starts a batch. `view_projection` is a column-major mat4, or NULL for a pixel space
  * projection of the current viewport with (0,0) at the top left and y pointing down.
  */
-RIS_API void RIS_CALL ris_sprite_batch_begin(ris_sprite_batch* batch, const float* view_projection, uint32_t blend_mode);
+RIS_API void RIS_CALL ris_spriteBatchBegin(ris_sprite_batch* batch, const float* view_projection, uint32_t blend_mode);
 RIS_API void RIS_CALL ris_sprite_batch_draw(ris_sprite_batch* batch, const ris_sprite* sprite);
 /** Textured, tinted, axis aligned quad covering the whole texture. */
-RIS_API void RIS_CALL ris_sprite_batch_draw_quad(ris_sprite_batch* batch, ris_texture* texture, float x, float y, float width, float height, float r, float g, float b, float a);
-RIS_API void RIS_CALL ris_sprite_batch_end(ris_sprite_batch* batch);
+RIS_API void RIS_CALL ris_spriteBatchDrawQuad(ris_sprite_batch* batch, ris_texture* texture, float x, float y, float width, float height, float r, float g, float b, float a);
+RIS_API void RIS_CALL ris_spriteBatchEnd(ris_sprite_batch* batch);
 RIS_API void RIS_CALL ris_sprite_batch_destroy(ris_sprite_batch* batch);
+
+/* ======================================================================================== */
+/* Framework: window, game loop and listeners (wraps ris::Framework)                         */
+/* ======================================================================================== */
+
+/*
+ * A C wrapper over the C++ `ris::Framework`. It grows with what the C samples need.
+ *
+ * Naming convention: a function that wraps a C++ method is `ris_` + the name of that method
+ * (`Framework::addOnRenderListener` -> `ris_addOnRenderListener`, `Framework::initialize` ->
+ * `ris_initialize`, `Renderer::setClearColor` -> `ris_setClearColor`), and its first argument is the
+ * object. Creating and destroying have their own names: `ris_createFramework`,
+ * `ris_createFrameworkConfiguration`, `ris_destroyFramework`.
+ *
+ * While a callback runs the OpenGL ES context is current, so the `ris_texture_*`, `ris_sprite_batch_*` ...
+ * functions can be used inside it. Use everything from the thread that called `ris_createFramework`.
+ * Callbacks use RIS_CALL (cdecl): in C# mark the delegate with
+ * `[UnmanagedFunctionPointer(CallingConvention.Cdecl)]` and keep it alive until the framework is destroyed.
+ * Exceptions must not leave a callback.
+ */
+
+typedef struct ris_framework ris_framework;
+/** The frame level state of the framework (clear colour), owned by it, see ris_renderer. */
+typedef struct ris_Renderer ris_Renderer;
+
+/** Listener of the load content and render events. `userData` is the pointer given to the add function. */
+typedef void(RIS_CALL* ris_frameworkCallback)(ris_framework* framework, void* userData);
+
+/** The defaults: "Ris Framework", 800x600, trilinear. The only place that sets them, also for the C++ `ris::Framework`. */
+RIS_API FrameworkConfiguration RIS_CALL ris_createFrameworkConfiguration(void);
+/** Opens the window and creates the graphics device and the sprite batch. Returns NULL on failure (see ris_get_last_error). Free it with ris_destroyFramework. */
+RIS_API ris_framework* RIS_CALL ris_createFramework(const FrameworkConfiguration* config);
+/** Closes the window and frees the framework. Destroy what you created while it ran (textures, ...) first. NULL is ignored. */
+RIS_API void RIS_CALL ris_destroyFramework(ris_framework* framework);
+
+/** Runs once at the start of ris_initialize, to load content. Returns the id of the listener (1, 2, ...), 0 for a NULL argument. */
+RIS_API uint32_t RIS_CALL ris_addOnLoadContentListener(ris_framework* framework, ris_frameworkCallback callback, void* userData);
+/** Runs every frame after the screen is cleared, to draw. Returns the id of the listener (1, 2, ...), 0 for a NULL argument. */
+RIS_API uint32_t RIS_CALL ris_addOnRenderListener(ris_framework* framework, ris_frameworkCallback callback, void* userData);
+
+/** Runs the load content listeners, then the loop until the window is closed or ris_quit is called. */
+RIS_API ris_result RIS_CALL ris_initialize(ris_framework* framework);
+/** Asks the loop to stop after the current frame. */
+RIS_API void RIS_CALL ris_quit(ris_framework* framework);
+
+/** The sprite batch of the framework, owned by it: do not destroy it. */
+RIS_API ris_sprite_batch* RIS_CALL ris_getSpriteBatch(ris_framework* framework);
+/** The renderer of the framework, owned by it. */
+RIS_API ris_Renderer* RIS_CALL ris_getRenderer(ris_framework* framework);
+/** The colour the back buffer is cleared with every frame; black by default. */
+RIS_API void RIS_CALL ris_setClearColor(ris_Renderer* renderer, float r, float g, float b, float a);
 
 /* ======================================================================================== */
 /* Math helpers (column-major float[16])                                                     */

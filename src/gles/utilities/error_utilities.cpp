@@ -10,7 +10,7 @@ using namespace ris::detail;
 
 namespace ris::gles::error_utilities {
 
-const char* error_name(GlEnum error) noexcept {
+const char* error_name(uint32_t error) noexcept {
     switch (error) {
         case GL_NO_ERROR: return "GL_NO_ERROR";
         case GL_INVALID_ENUM: return "GL_INVALID_ENUM";

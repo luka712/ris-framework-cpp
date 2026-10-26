@@ -26,9 +26,9 @@ public:
     /// The pressure, from 0 to 1. 0 when the device does not report pressure.
     float pressure = 0;
     /// The position of the touch, in window coordinates, the same space as `MouseState::position`.
-    Vec2 position{0, 0};
+    glm::vec2 position{0, 0};
     /// The delta from the previous sample. Zero when this frame has no previous sample.
-    Vec2 delta{0, 0};
+    glm::vec2 delta{0, 0};
 
     /// The touch location state.
     TouchLocationState state() const noexcept { return state_; }

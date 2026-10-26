@@ -177,7 +177,7 @@ struct MaterialResources {
 
     std::optional<Unlit> unlit;
     std::optional<Blinn> blinn;
-    std::optional<Texture> white;
+    std::optional<gles::GlesTexture2D> white;
 
     Unlit& get_unlit() {
         if (!unlit) unlit.emplace();
@@ -187,10 +187,10 @@ struct MaterialResources {
         if (!blinn) blinn.emplace();
         return *blinn;
     }
-    const Texture& get_white() {
+    const gles::GlesTexture2D& get_white() {
         if (!white) {
             const uint8_t px[4] = {255, 255, 255, 255};
-            white.emplace(Texture::from_rgba8(1, 1, px, false, false));
+            white.emplace(gles::GlesTexture2D::from_rgba8(1, 1, px, false, false));
         }
         return *white;
     }
@@ -211,7 +211,7 @@ UnlitMaterial::UnlitMaterial(std::shared_ptr<MaterialResources> resources, const
       resources_(std::move(resources)) {}
 UnlitMaterial::~UnlitMaterial() = default;
 
-void UnlitMaterial::draw(const VertexArray& va, uint32_t first_index, uint32_t index_count, const Mat4& model,
+void UnlitMaterial::draw(const VertexArray& va, uint32_t first_index, uint32_t index_count, const glm::mat4& model,
                          const RenderContext& context) {
     require_camera(context, "UnlitMaterial");
     auto& r = resources_->get_unlit();
@@ -236,7 +236,7 @@ BlinnPhongMaterial::BlinnPhongMaterial(std::shared_ptr<MaterialResources> resour
       resources_(std::move(resources)) {}
 BlinnPhongMaterial::~BlinnPhongMaterial() = default;
 
-void BlinnPhongMaterial::draw(const VertexArray& va, uint32_t first_index, uint32_t index_count, const Mat4& model,
+void BlinnPhongMaterial::draw(const VertexArray& va, uint32_t first_index, uint32_t index_count, const glm::mat4& model,
                               const RenderContext& context) {
     require_camera(context, "BlinnPhongMaterial");
     auto& r = resources_->get_blinn();
@@ -253,7 +253,7 @@ void BlinnPhongMaterial::draw(const VertexArray& va, uint32_t first_index, uint3
     r.shader.set_float(r.alpha, diffuse_color.a);
     r.shader.set_vec3(r.camera_position, context.camera->world_position());
 
-    Vec3 ambient{0, 0, 0};
+    glm::vec3 ambient{0, 0, 0};
     int32_t dir_count = 0, point_count = 0;
     if (context.scene) {
         const AmbientLight& a = context.scene->active_ambient_light();

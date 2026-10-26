@@ -48,9 +48,9 @@ public:
     Mesh(const Mesh&) = delete;
     Mesh& operator=(const Mesh&) = delete;
 
-    Vec3 position{0, 0, 0};
-    Vec3 rotation{0, 0, 0};   ///< Euler radians (x, y, z), applied Y then X then Z
-    Vec3 scale{1, 1, 1};
+    glm::vec3 position{0, 0, 0};
+    glm::vec3 rotation{0, 0, 0};   ///< Euler radians (x, y, z), applied Y then X then Z
+    glm::vec3 scale{1, 1, 1};
     bool visible = true;
 
     std::vector<SubMesh>& sub_meshes() { return sub_meshes_; }
@@ -58,7 +58,7 @@ public:
     /// Material of the first sub mesh, or null.
     std::shared_ptr<Material> material() const { return sub_meshes_.empty() ? nullptr : sub_meshes_[0].material; }
 
-    Mat4 model_matrix() const;
+    glm::mat4 model_matrix() const;
     void render(const RenderContext& context) const;
 
 private:

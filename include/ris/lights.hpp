@@ -34,7 +34,7 @@ struct DirectionalLightDescriptor {
     std::string name;
     Color color = Color::white();
     float intensity = 1.0f;
-    Vec3 direction{0, -1, 0};   ///< the direction the light travels in
+    glm::vec3 direction{0, -1, 0};   ///< the direction the light travels in
 };
 
 class RIS_API DirectionalLight {
@@ -44,14 +44,14 @@ public:
     std::string name;
     Color color;
     float intensity;
-    Vec3 direction;
+    glm::vec3 direction;
 };
 
 struct PointLightDescriptor {
     std::string name;
     Color color = Color::white();
     float intensity = 1.0f;
-    Vec3 position{0, 0, 0};
+    glm::vec3 position{0, 0, 0};
     float constant = 1.0f;      ///< attenuation = 1 / (constant + linear * d + quadratic * d * d)
     float linear = 0.09f;
     float quadratic = 0.032f;
@@ -64,7 +64,7 @@ public:
     std::string name;
     Color color;
     float intensity;
-    Vec3 position;
+    glm::vec3 position;
     float constant, linear, quadratic;
 };
 

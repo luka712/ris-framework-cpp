@@ -9,7 +9,7 @@
 #include "ris/gles/utilities/blending_utilities.hpp"
 #include "ris/gles/utilities/gles_buffer_utilities.hpp"
 #include "ris/gles/utilities/culling_utilities.hpp"
-#include "ris/gles/utilities/debug_label_utilities.hpp"
+#include "ris/gles/utilities/gles_debug_utilities.hpp"
 #include "ris/gles/utilities/depth_attachment_type.hpp"
 #include "ris/gles/utilities/error_utilities.hpp"
 #include "ris/gles/utilities/framebuffer_utilities.hpp"

@@ -14,10 +14,9 @@
 
 namespace ris_test {
 
-using Pixel = std::array<int, 4>;
 
 /// Reads one RGBA pixel of the bound framebuffer.
-inline Pixel read_pixel(int x, int y) {
+inline std::array<int, 4> read_pixel(int x, int y) {
     const auto px = ris::gfx::read_pixels(x, y, 1, 1);
     return {px[0], px[1], px[2], px[3]};
 }

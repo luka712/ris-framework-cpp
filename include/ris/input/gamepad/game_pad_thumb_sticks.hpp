@@ -8,8 +8,8 @@ namespace ris {
 /// axes in [-1, 1]: x is positive to the right and **y is positive up** (the opposite of the screen / mouse
 /// convention). Values inside the dead zone (`InputManager::thumbstick_dead_zone`) are reported as (0, 0).
 struct GamePadThumbSticks {
-    Vec2 left{0, 0};
-    Vec2 right{0, 0};
+    glm::vec2 left{0, 0};
+    glm::vec2 right{0, 0};
 };
 
 } // namespace ris

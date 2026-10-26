@@ -25,7 +25,7 @@ TEST_CASE("utilities need a window") {
     REQUIRE_THROWS_AS(GlesUtilities::texture().createTexture2D(4, 4, static_cast<const void*>(nullptr)), std::logic_error);
     REQUIRE_THROWS_AS(gles::shader_utilities::create_vertex_shader("x"), std::logic_error);
     // deleting needs no window
-    gles::GlUint none = 7;
+    uint32_t none = 7;
     GlesUtilities::buffer().deleteBuffer(none);
     REQUIRE(none == 0);
 }
@@ -45,7 +45,7 @@ TEST_CASE("error, extension and debug label utilities on a real context") {
         REQUIRE_FALSE(GlesUtilities::context().isExtensionSupported("GL_KHR_debu"));
     }
     SECTION("debug labels never fail") {
-        gles::GlUint buffer = GlesUtilities::buffer().createVertexBuffer(16, ris::BufferUsageFlags::Vertex, "labelled");
+        uint32_t buffer = GlesUtilities::buffer().createVertexBuffer(16, ris::BufferUsageFlags::Vertex, "labelled");
         REQUIRE_NOTHROW(gles::debug_label_utilities::is_supported());
         REQUIRE_NOTHROW(gles::debug_label_utilities::set_label(gles::debug_label_utilities::ObjectKind::Buffer, buffer, "again"));
         REQUIRE_NOTHROW(gles::debug_label_utilities::set_label(gles::debug_label_utilities::ObjectKind::Buffer, buffer, ""));

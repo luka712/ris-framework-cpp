@@ -12,7 +12,7 @@ namespace {
 
 struct LogState {
     std::mutex mutex;
-    ris::LogCallback callback;
+    std::function<void(ris::LogLevel level, const char* message)> callback;
 };
 
 LogState& log_state() {
@@ -91,7 +91,7 @@ namespace ris {
 
 const char* version_string() noexcept { return "0.1.0"; }
 
-void set_log_callback(LogCallback callback) {
+void set_log_callback(std::function<void(LogLevel level, const char* message)> callback) {
     LogState& state = log_state();
     std::lock_guard<std::mutex> lock(state.mutex);
     state.callback = std::move(callback);

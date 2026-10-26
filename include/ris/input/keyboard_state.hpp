@@ -28,12 +28,11 @@ public:
 
 private:
     friend class InputManager;
-    using Flags = std::array<bool, static_cast<std::size_t>(key_count)>;
-    static bool get(const Flags& flags, Key key) noexcept {
+    static bool get(const std::array<bool, static_cast<std::size_t>(key_count)>& flags, Key key) noexcept {
         const auto i = static_cast<int64_t>(static_cast<int32_t>(key));
         return i > 0 && i < key_count && flags[static_cast<std::size_t>(i)];
     }
-    Flags down_{}, pressed_{}, released_{};
+    std::array<bool, static_cast<std::size_t>(key_count)> down_{}, pressed_{}, released_{};
 };
 
 } // namespace ris

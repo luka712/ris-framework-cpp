@@ -292,7 +292,7 @@ TEST_CASE("input manager sdl: gamepad axes: y is flipped, triggers are 0 to 1, t
     REQUIRE(pad.is_connected());
     REQUIRE_THAT(pad.thumb_sticks().left.x, Catch::Matchers::WithinAbs(1.0, 1e-3));
     REQUIRE_THAT(pad.thumb_sticks().left.y, Catch::Matchers::WithinAbs(1.0, 1e-3));
-    REQUIRE(pad.thumb_sticks().right == ris::Vec2(0, 0));
+    REQUIRE(pad.thumb_sticks().right == glm::vec2(0, 0));
     REQUIRE_THAT(pad.left_trigger(), Catch::Matchers::WithinAbs(1.0, 1e-3));
     REQUIRE(pad.right_trigger() == 0.0f);
 }

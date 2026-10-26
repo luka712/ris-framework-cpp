@@ -27,7 +27,7 @@ Geometry GeometryBuilder::create_quad(float width, float height) {
 
 Geometry GeometryBuilder::create_cube(float size) {
     const float h = size * 0.5f;
-    struct Face { Vec3 n, u, v; };
+    struct Face { glm::vec3 n, u, v; };
     const Face faces[6] = {
         {{0, 0, 1}, {1, 0, 0}, {0, 1, 0}},   {{0, 0, -1}, {-1, 0, 0}, {0, 1, 0}},
         {{1, 0, 0}, {0, 0, -1}, {0, 1, 0}},  {{-1, 0, 0}, {0, 0, 1}, {0, 1, 0}},
@@ -39,7 +39,7 @@ Geometry GeometryBuilder::create_cube(float size) {
     for (const Face& f : faces) {
         const uint32_t base = static_cast<uint32_t>(g.vertex_count());
         for (int i = 0; i < 4; ++i) {
-            const Vec3 p = (f.n + f.u * su[i] + f.v * sv[i]) * h;
+            const glm::vec3 p = (f.n + f.u * su[i] + f.v * sv[i]) * h;
             g.positions.insert(g.positions.end(), {p.x, p.y, p.z});
             g.normals.insert(g.normals.end(), {f.n.x, f.n.y, f.n.z});
             g.texture_coords.insert(g.texture_coords.end(), {tu[i], tv[i]});
@@ -116,17 +116,17 @@ Mesh::Mesh(const Geometry& g, std::vector<SubMesh> sub_meshes) : sub_meshes_(std
 
 Mesh::~Mesh() = default;
 
-Mat4 Mesh::model_matrix() const {
-    Mat4 m = glm::translate(Mat4(1.0f), position);
-    m = glm::rotate(m, rotation.y, Vec3(0, 1, 0));
-    m = glm::rotate(m, rotation.x, Vec3(1, 0, 0));
-    m = glm::rotate(m, rotation.z, Vec3(0, 0, 1));
+glm::mat4 Mesh::model_matrix() const {
+    glm::mat4 m = glm::translate(glm::mat4(1.0f), position);
+    m = glm::rotate(m, rotation.y, glm::vec3(0, 1, 0));
+    m = glm::rotate(m, rotation.x, glm::vec3(1, 0, 0));
+    m = glm::rotate(m, rotation.z, glm::vec3(0, 0, 1));
     return glm::scale(m, scale);
 }
 
 void Mesh::render(const RenderContext& context) const {
     if (!visible) return;
-    const Mat4 model = model_matrix();
+    const glm::mat4 model = model_matrix();
     for (const SubMesh& s : sub_meshes_) {
         if (s.material && s.index_count > 0) s.material->draw(*vertex_array_, s.index_start, s.index_count, model, context);
     }

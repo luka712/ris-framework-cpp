@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 
-#include "ris/gles/gles_types.hpp"
 #include "ris/gles/texture/gles_texture_view.hpp"
 #include "ris/rendering/texture/a_texture2D.hpp"
 #include "ris/rendering/texture/texture_descriptor.hpp"
@@ -26,8 +25,7 @@ class GlesTextureFactory;   // see ris/gles/texture/gles_texture_factory.hpp
 
 /// The OpenGL ES implementation of ATexture2D, like `WebGlTexture2D` of ris-framework-ts: owns a GL 2D texture
 /// object. Needs the window's GL context for its whole life (create, bind, destroy). Usually created by
-/// GlesTextureFactory (`Framework::textureFactory()`), which returns it as ATexture2D. `ris::Texture`
-/// (ris/graphics.hpp) is another name for this class.
+/// GlesTextureFactory (`Framework::textureFactory()`), which returns it as ATexture2D.
 ///
 /// Two ways to get one: construct it from a TextureDescriptor (size, pixels, format, ...), which only stores the
 /// description (state Created), then call `initialize()`, which creates the GL texture, the size and mip level
@@ -43,8 +41,7 @@ class GlesTextureFactory;   // see ris/gles/texture/gles_texture_factory.hpp
 /// The destructor deletes the GL texture (if the window's context still exists) and then raises the disposed
 /// event, with the state Disposed.
 ///
-/// The names `from_rgba8`, `from_image_file`, `from_ktx2_memory`, `set_sampler`, `bind`, `width`, `height`,
-/// `mip_levels` and `gl_handle` are the original API of `ris::Texture`, kept so that the existing code (samples, C
+/// The names `from_rgba8`, `from_image_file`, `from_ktx2_memory`, `set_sampler` and `bind` are the original API of the `Texture` class this one replaced, kept so that the existing code (samples, C
 /// API, sprite batch, materials, content manager) does not change.
 class RIS_API GlesTexture2D : public ATexture2D {
 public:
@@ -88,7 +85,7 @@ public:
     /// @param glHandle   the GL texture name.
     /// @param mipLevels  the number of levels the texture has.
     /// @param sizeBytes  the size in RAM, 0 computes it for RGBA8 with all levels.
-    static GlesTexture2D adopt(GlUint glHandle, int32_t width, int32_t height, uint32_t mipLevels,
+    static GlesTexture2D adopt(uint32_t glHandle, int32_t width, int32_t height, uint32_t mipLevels,
                                TextureFormat format = TextureFormat::Rgba8Unorm,
                                TextureUsage usage = TextureUsage::CopyDst | TextureUsage::TextureBinding,
                                std::string label = {}, uint64_t sizeBytes = 0);
@@ -119,9 +116,7 @@ public:
     // ---- OpenGL ES ----
     /// The GL texture name, `glTexture` of `WebGlTexture2D`, for interop with native code. Owned by this object. 0
     /// before initialize() and once disposed.
-    GlUint getGlTexture() const noexcept { return glHandle_; }
-    /// The same as getGlTexture().
-    GlUint getGlHandle() const noexcept { return glHandle_; }
+    uint32_t getGlTexture() const noexcept { return glHandle_; }
 
     /// Binds the texture to a texture unit (`glActiveTexture` + `glBindTexture`).
     /// @throws std::logic_error without a window.
@@ -130,17 +125,11 @@ public:
     /// Sets the sampler state stored in the texture (`glTexParameteri`), see ris::SamplerDesc.
     void set_sampler(const SamplerDesc& sampler);
 
-    int32_t width() const noexcept { return width_; }
-    int32_t height() const noexcept { return height_; }
-    uint32_t mip_levels() const noexcept { return mipLevels_; }
-    /// The OpenGL texture name, for interop with native code.
-    uint32_t gl_handle() const noexcept { return glHandle_; }
-
 private:
     friend class ris::RenderTarget;   // default constructs the colour texture, assigns it later
 
     GlesTexture2D() = default;   // empty, like a moved-from texture
-    GlesTexture2D(GlUint glHandle, int32_t width, int32_t height, uint32_t mipLevels, TextureFormat format,
+    GlesTexture2D(uint32_t glHandle, int32_t width, int32_t height, uint32_t mipLevels, TextureFormat format,
                   TextureUsage usage, std::string label, uint64_t sizeBytes);
 
     /// Creates the GL texture from the description (the part of initialize() for textures made from a descriptor).
@@ -150,7 +139,7 @@ private:
     static uint32_t s_listenerIds;
 
     uint32_t id_ = 0;
-    GlUint glHandle_ = 0;
+    uint32_t glHandle_ = 0;
     int32_t width_ = 0;
     int32_t height_ = 0;
     uint32_t mipLevels_ = 1;

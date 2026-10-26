@@ -125,15 +125,12 @@ public:
     virtual ASwapChain* createSwapChain(Window& window, const SwapChainDescriptor& swapChainDescription) = 0;
 
     /// Pushes a debug group with the specified name onto the graphics device's debug stack. The commands until the
-    /// matching popDebugGroup() appear as a group in graphics debuggers (RenderDoc, ...). Does nothing visible if
-    /// the backend has no debug groups, but the calls must still be balanced.
+    /// matching popDebugGroup() appear as a group in graphics debuggers (RenderDoc, ...). Pushes and pops must be balanced.
     /// @param groupName the name of the debug group.
-    /// @throws std::logic_error if the device was not initialised.
     virtual void pushDebugGroup(const std::string& groupName) = 0;
 
     /// Pops the current debug group from the graphics device's debug stack, ending the current debug group and
     /// returning to the previous one.
-    /// @throws std::invalid_argument if there is no group to pop, std::logic_error if the device was not initialised.
     virtual void popDebugGroup() = 0;
 
     AGraphicsDevice(const AGraphicsDevice&) = delete;

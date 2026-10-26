@@ -176,8 +176,7 @@ TEST_CASE("GlesTexture2D default texture of a framework") {
     int disposedByFramework = 0;
     bool listenerAdded = false;
     {
-        ris::FrameworkConfiguration config;
-        config.hidden = true;
+        FrameworkConfiguration config = ris_createFrameworkConfiguration();
         ris::Framework framework(config);
 
         gles::GlesTexture2D* first = gles::GlesTexture2D::getOrCreateDefault(framework);

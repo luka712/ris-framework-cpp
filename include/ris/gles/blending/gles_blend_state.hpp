@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ris/gles/gles_types.hpp"
+#include <cstdint>
 #include "ris/rendering/blending/a_blend_state.hpp"
 
 namespace ris::gles {
@@ -22,12 +22,12 @@ public:
 
 private:
     BlendStateDescriptor descriptor_;
-    GlEnum colorSrcFactor_ = 0;
-    GlEnum colorDstFactor_ = 0;
-    GlEnum colorOperation_ = 0;
-    GlEnum alphaSrcFactor_ = 0;
-    GlEnum alphaDstFactor_ = 0;
-    GlEnum alphaOperation_ = 0;
+    uint32_t colorSrcFactor_ = 0;
+    uint32_t colorDstFactor_ = 0;
+    uint32_t colorOperation_ = 0;
+    uint32_t alphaSrcFactor_ = 0;
+    uint32_t alphaDstFactor_ = 0;
+    uint32_t alphaOperation_ = 0;
 };
 
 } // namespace ris::gles

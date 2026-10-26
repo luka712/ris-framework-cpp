@@ -5,7 +5,7 @@
 /// Two layers:
 ///  - high level, like ris-framework-ts: framework.hpp (Framework, Scene, cameras, lights, materials, content)
 ///  - low level: window.hpp, graphics.hpp, rendering/buffers/buffers.hpp (graphics API neutral),
-///    rendering/default_buffer_factory.hpp, rendering/default_texture_factory.hpp, sprite_batch.hpp
+///    rendering/default_buffer_factory.hpp, sprite_batch.hpp
 ///    (windows, buffers, shaders, textures), rendering/a_graphics_device.hpp (AGraphicsDevice, the GPU entry point:
 ///    GPU info and features, samplers, blend / primitive states, render passes, swap chains; get it from
 ///    Framework::graphicsDevice() or rendering/default_graphics_device.hpp), rendering/texture/a_texture2D.hpp
@@ -32,12 +32,11 @@
 #include "rendering/a_graphics_device.hpp"
 #include "rendering/default_buffer_factory.hpp"
 #include "rendering/default_graphics_device.hpp"
-#include "rendering/default_texture_factory.hpp"
 #include "rendering/graphics_device_descriptor.hpp"
 #include "rendering/texture/a_texture2D.hpp"
 #include "rendering/texture/a_texture_factory.hpp"
 #include "rendering/texture/a_texture_view.hpp"
 #include "scene.hpp"
-#include "sprite_batch.hpp"
+#include "sprites/sprite_batch.hpp"
 #include "time.hpp"
 #include "window.hpp"

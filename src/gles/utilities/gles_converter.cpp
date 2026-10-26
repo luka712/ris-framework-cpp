@@ -22,7 +22,7 @@ constexpr GLenum kCompressedRgbaAstc4x4 = 0x93B0;    // GL_KHR_texture_compressi
 
 // ---- primitives, culling ----------------------------------------------------------------------
 
-GlEnum convert_primitive_type(Topology topology) {
+uint32_t convert_primitive_type(Topology topology) {
     switch (topology) {
         case Topology::Triangles: return GL_TRIANGLES;
         case Topology::TriangleStrip: return GL_TRIANGLE_STRIP;
@@ -34,7 +34,7 @@ GlEnum convert_primitive_type(Topology topology) {
     unsupported("convert_primitive_type", static_cast<uint32_t>(topology));
 }
 
-GlEnum convert_primitive_topology(PrimitiveTopology topology) {
+uint32_t convert_primitive_topology(PrimitiveTopology topology) {
     switch (topology) {
         case PrimitiveTopology::LineList: return GL_LINES;
         case PrimitiveTopology::LineStrip: return GL_LINE_STRIP;
@@ -45,7 +45,7 @@ GlEnum convert_primitive_topology(PrimitiveTopology topology) {
     unsupported("convert_primitive_topology", static_cast<uint32_t>(topology));
 }
 
-GlEnum convert_cull_face(CullMode cull_mode) {
+uint32_t convert_cull_face(CullMode cull_mode) {
     switch (cull_mode) {
         case CullMode::None: return GL_NONE;
         case CullMode::Back: return GL_BACK;
@@ -54,7 +54,7 @@ GlEnum convert_cull_face(CullMode cull_mode) {
     unsupported("convert_cull_face", static_cast<uint32_t>(cull_mode));
 }
 
-GlEnum convert_front_face(FrontFace front_face) {
+uint32_t convert_front_face(FrontFace front_face) {
     switch (front_face) {
         case FrontFace::Cw: return GL_CW;
         case FrontFace::Ccw: return GL_CCW;
@@ -64,11 +64,11 @@ GlEnum convert_front_face(FrontFace front_face) {
 
 // ---- buffers ----------------------------------------------------------------------------------
 
-GlEnum convert_buffer_usage(BufferUsageFlags usage) {
+uint32_t convert_buffer_usage(BufferUsageFlags usage) {
     return has_flag(usage, BufferUsageFlags::CopyDst) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 }
 
-GlEnum convert_buffer_usage(BufferUsage usage) {
+uint32_t convert_buffer_usage(BufferUsage usage) {
     switch (usage) {
         case BufferUsage::Static: return GL_STATIC_DRAW;
         case BufferUsage::Dynamic: return GL_DYNAMIC_DRAW;
@@ -77,7 +77,7 @@ GlEnum convert_buffer_usage(BufferUsage usage) {
     unsupported("convert_buffer_usage", static_cast<uint32_t>(usage));
 }
 
-GlEnum convert_buffer_target(BufferType type) {
+uint32_t convert_buffer_target(BufferType type) {
     switch (type) {
         case BufferType::Vertex: return GL_ARRAY_BUFFER;
         case BufferType::Index: return GL_ELEMENT_ARRAY_BUFFER;
@@ -86,7 +86,7 @@ GlEnum convert_buffer_target(BufferType type) {
     unsupported("convert_buffer_target", static_cast<uint32_t>(type));
 }
 
-GlEnum convert_index_type(IndexBufferType type) {
+uint32_t convert_index_type(IndexBufferType type) {
     switch (type) {
         case IndexBufferType::UInt16: return GL_UNSIGNED_SHORT;
         case IndexBufferType::UInt32: return GL_UNSIGNED_INT;
@@ -94,7 +94,7 @@ GlEnum convert_index_type(IndexBufferType type) {
     unsupported("convert_index_type", static_cast<uint32_t>(type));
 }
 
-GlEnum convert_index_type(IndexType type) {
+uint32_t convert_index_type(IndexType type) {
     switch (type) {
         case IndexType::UInt16: return GL_UNSIGNED_SHORT;
         case IndexType::UInt32: return GL_UNSIGNED_INT;
@@ -116,9 +116,9 @@ uint32_t convert_vertex_format(VertexFormat format) {
     unsupported("convert_vertex_format", static_cast<uint32_t>(format));
 }
 
-GlEnum convert_vertex_format_type(VertexFormat) noexcept { return GL_FLOAT; }
+uint32_t convert_vertex_format_type(VertexFormat) noexcept { return GL_FLOAT; }
 
-GlEnum convert_attrib_type(AttribType type) {
+uint32_t convert_attrib_type(AttribType type) {
     switch (type) {
         case AttribType::Float: return GL_FLOAT;
         case AttribType::UByte: return GL_UNSIGNED_BYTE;
@@ -133,7 +133,7 @@ GlEnum convert_attrib_type(AttribType type) {
 
 // ---- blending, depth --------------------------------------------------------------------------
 
-GlEnum convert_blend_operation(BlendOperation operation) {
+uint32_t convert_blend_operation(BlendOperation operation) {
     switch (operation) {
         case BlendOperation::Add: return GL_FUNC_ADD;
         case BlendOperation::Subtract: return GL_FUNC_SUBTRACT;
@@ -144,7 +144,7 @@ GlEnum convert_blend_operation(BlendOperation operation) {
     unsupported("convert_blend_operation", static_cast<uint32_t>(operation));
 }
 
-GlEnum convert_blend_factor(BlendFactor factor) {
+uint32_t convert_blend_factor(BlendFactor factor) {
     switch (factor) {
         case BlendFactor::One: return GL_ONE;
         case BlendFactor::SrcAlpha: return GL_SRC_ALPHA;
@@ -160,7 +160,7 @@ GlEnum convert_blend_factor(BlendFactor factor) {
     unsupported("convert_blend_factor", static_cast<uint32_t>(factor));
 }
 
-GlEnum convert_compare_func(CompareFunc func) {
+uint32_t convert_compare_func(CompareFunc func) {
     switch (func) {
         case CompareFunc::Never: return GL_NEVER;
         case CompareFunc::Less: return GL_LESS;
@@ -174,7 +174,7 @@ GlEnum convert_compare_func(CompareFunc func) {
     unsupported("convert_compare_func", static_cast<uint32_t>(func));
 }
 
-GlEnum convert_compare_function(SamplerCompareFunction func) {
+uint32_t convert_compare_function(SamplerCompareFunction func) {
     switch (func) {
         case SamplerCompareFunction::Never: return GL_NEVER;
         case SamplerCompareFunction::LessEqual: return GL_LEQUAL;
@@ -184,7 +184,7 @@ GlEnum convert_compare_function(SamplerCompareFunction func) {
 
 // ---- textures, samplers -----------------------------------------------------------------------
 
-GlEnum convertToInternalFormat(TextureFormat format) {
+uint32_t convertToInternalFormat(TextureFormat format) {
     switch (format) {
         case TextureFormat::Rgba8Unorm: return GL_RGBA8;
         case TextureFormat::Rgba8UnormSrgb: return GL_SRGB8_ALPHA8;
@@ -201,7 +201,7 @@ GlEnum convertToInternalFormat(TextureFormat format) {
     unsupported("convert_internal_format", static_cast<uint32_t>(format));
 }
 
-GlEnum convertToPixelFormat(TextureFormat format) {
+uint32_t convertToPixelFormat(TextureFormat format) {
     switch (format) {
         case TextureFormat::Rgba8Unorm:
         case TextureFormat::Rgba8UnormSrgb: return GL_RGBA;
@@ -212,7 +212,7 @@ GlEnum convertToPixelFormat(TextureFormat format) {
     unsupported("convert_to_pixel_format", static_cast<uint32_t>(format));
 }
 
-GlEnum convertToTextureType(TextureFormat format) {
+uint32_t convertToTextureType(TextureFormat format) {
     switch (format) {
         case TextureFormat::Rgba8Unorm:
         case TextureFormat::Rgba8UnormSrgb: return GL_UNSIGNED_BYTE;
@@ -227,7 +227,7 @@ bool is_compressed_format(TextureFormat format) noexcept {
     return TextureUtilities::isCompressedTextureFormat(format);
 }
 
-GlEnum convert_mag_filter(SamplerFilter filter) {
+uint32_t convert_mag_filter(SamplerFilter filter) {
     switch (filter) {
         case SamplerFilter::Nearest: return GL_NEAREST;
         case SamplerFilter::Linear: return GL_LINEAR;
@@ -235,7 +235,7 @@ GlEnum convert_mag_filter(SamplerFilter filter) {
     unsupported("convert_mag_filter", static_cast<uint32_t>(filter));
 }
 
-GlEnum convert_min_filter(SamplerFilter filter, MipMapSamplerFilter mip_map_filter) {
+uint32_t convert_min_filter(SamplerFilter filter, MipMapSamplerFilter mip_map_filter) {
     if (mip_map_filter == MipMapSamplerFilter::None) return convert_mag_filter(filter);
     switch (filter) {
         case SamplerFilter::Nearest:
@@ -256,7 +256,7 @@ GlEnum convert_min_filter(SamplerFilter filter, MipMapSamplerFilter mip_map_filt
     unsupported("convert_min_filter", static_cast<uint32_t>(mip_map_filter));
 }
 
-GlEnum convert_address_mode(SamplerAddressMode mode) {
+uint32_t convert_address_mode(SamplerAddressMode mode) {
     switch (mode) {
         case SamplerAddressMode::Repeat: return GL_REPEAT;
         case SamplerAddressMode::MirrorRepeat: return GL_MIRRORED_REPEAT;
@@ -266,7 +266,7 @@ GlEnum convert_address_mode(SamplerAddressMode mode) {
     unsupported("convert_address_mode", static_cast<uint32_t>(mode));
 }
 
-GlEnum convert_filter(Filter filter) {
+uint32_t convert_filter(Filter filter) {
     switch (filter) {
         case Filter::Nearest: return GL_NEAREST;
         case Filter::Linear: return GL_LINEAR;
@@ -278,7 +278,7 @@ GlEnum convert_filter(Filter filter) {
     unsupported("convert_filter", static_cast<uint32_t>(filter));
 }
 
-GlEnum convert_wrap(Wrap wrap) {
+uint32_t convert_wrap(Wrap wrap) {
     switch (wrap) {
         case Wrap::Repeat: return GL_REPEAT;
         case Wrap::Clamp: return GL_CLAMP_TO_EDGE;

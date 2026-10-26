@@ -3,7 +3,7 @@
 #include <string>
 
 #include "ris/core.hpp"
-#include "ris/gles/gles_types.hpp"
+#include <cstdint>
 #include "ris/shader/shader_stage.hpp"
 
 /// Compiling shader stages, like `WebGlShaderUtilities` of ris-framework-ts. The returned names are owned by
@@ -18,15 +18,15 @@ namespace ris::gles::shader_utilities {
 /// @throws std::runtime_error with the info log (the message starts with "vertex shader compile error:" or
 ///         "fragment shader compile error:"), std::domain_error for other stages, std::logic_error
 ///         without a window.
-RIS_API GlUint create(const std::string& source, ShaderStage stage);
+RIS_API uint32_t create(const std::string& source, ShaderStage stage);
 
 /// Compiles a vertex shader. `createVertexShader` of ris-framework-ts.
-RIS_API GlUint create_vertex_shader(const std::string& source);
+RIS_API uint32_t create_vertex_shader(const std::string& source);
 
 /// Compiles a fragment shader. `createFragmentShader` of ris-framework-ts.
-RIS_API GlUint create_fragment_shader(const std::string& source);
+RIS_API uint32_t create_fragment_shader(const std::string& source);
 
 /// Deletes a shader and sets the name to 0. Does nothing for 0, or when the window (and context) is gone.
-RIS_API void delete_shader(GlUint& shader) noexcept;
+RIS_API void delete_shader(uint32_t& shader) noexcept;
 
 } // namespace ris::gles::shader_utilities

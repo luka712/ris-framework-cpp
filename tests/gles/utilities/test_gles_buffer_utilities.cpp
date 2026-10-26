@@ -9,7 +9,6 @@
 #include "../gles_test_utils.hpp"
 
 namespace gles = ris::gles;
-using F = ris::BufferUsageFlags;
 
 TEST_CASE("GlesBufferUtilities create, update and delete buffers") {
     if (!ris_test::display_available()) SKIP("no display available");
@@ -17,7 +16,7 @@ TEST_CASE("GlesBufferUtilities create, update and delete buffers") {
 
     SECTION("vertex buffers") {
         const std::vector<float> data(12, 1.0f);
-        gles::GlUint vb = GlesUtilities::buffer().createVertexBuffer(data, F::Vertex | F::CopyDst, "vb");
+        uint32_t vb = GlesUtilities::buffer().createVertexBuffer(data, ris::BufferUsageFlags::Vertex | ris::BufferUsageFlags::CopyDst, "vb");
         REQUIRE(vb != 0);
         REQUIRE_NOTHROW(GlesUtilities::buffer().updateVertexBuffer(vb, std::vector<float>{2, 3}, 40));   // last two floats
         REQUIRE_NOTHROW(GlesUtilities::buffer().updateVertexBuffer(vb, std::vector<float>{2, 3}));
@@ -27,17 +26,17 @@ TEST_CASE("GlesBufferUtilities create, update and delete buffers") {
         REQUIRE(vb == 0);
         REQUIRE_NOTHROW(GlesUtilities::buffer().deleteBuffer(vb));   // deleting 0 does nothing
 
-        gles::GlUint empty = GlesUtilities::buffer().createVertexBuffer(64, F::Vertex);
+        uint32_t empty = GlesUtilities::buffer().createVertexBuffer(64, ris::BufferUsageFlags::Vertex);
         REQUIRE(empty != 0);
         GlesUtilities::buffer().deleteBuffer(empty);
-        REQUIRE_THROWS_AS(GlesUtilities::buffer().createVertexBuffer(std::span<const float>{}, F::Vertex), std::invalid_argument);
-        REQUIRE_THROWS_AS(GlesUtilities::buffer().createVertexBuffer(0, F::Vertex), std::invalid_argument);
+        REQUIRE_THROWS_AS(GlesUtilities::buffer().createVertexBuffer(std::span<const float>{}, ris::BufferUsageFlags::Vertex), std::invalid_argument);
+        REQUIRE_THROWS_AS(GlesUtilities::buffer().createVertexBuffer(0, ris::BufferUsageFlags::Vertex), std::invalid_argument);
     }
     SECTION("index buffers") {
         const std::vector<uint16_t> narrow = {0, 1, 2};
         const std::vector<uint32_t> wide = {0, 1, 2, 3};
-        gles::GlUint a = GlesUtilities::buffer().createIndexBuffer(narrow, F::Index);
-        gles::GlUint b = GlesUtilities::buffer().createIndexBuffer(wide, F::Index | F::CopyDst);
+        uint32_t a = GlesUtilities::buffer().createIndexBuffer(narrow, ris::BufferUsageFlags::Index);
+        uint32_t b = GlesUtilities::buffer().createIndexBuffer(wide, ris::BufferUsageFlags::Index | ris::BufferUsageFlags::CopyDst);
         REQUIRE(a != 0);
         REQUIRE(b != 0);
         REQUIRE(a != b);
@@ -47,11 +46,11 @@ TEST_CASE("GlesBufferUtilities create, update and delete buffers") {
     }
     SECTION("uniform buffers") {
         const std::vector<float> data = {1, 2, 3, 4};
-        gles::GlUint ub = GlesUtilities::buffer().createUniformBuffer(data, F::Uniform | F::CopyDst, "ub");
+        uint32_t ub = GlesUtilities::buffer().createUniformBuffer(data, ris::BufferUsageFlags::Uniform | ris::BufferUsageFlags::CopyDst, "ub");
         REQUIRE(ub != 0);
         REQUIRE_NOTHROW(GlesUtilities::buffer().updateBuffer(ris::BufferType::Uniform, ub, 0, data.data(), 16));
         GlesUtilities::buffer().deleteBuffer(ub);
-        gles::GlUint sized = GlesUtilities::buffer().createUniformBuffer(32, F::Uniform);
+        uint32_t sized = GlesUtilities::buffer().createUniformBuffer(32, ris::BufferUsageFlags::Uniform);
         REQUIRE(sized != 0);
         GlesUtilities::buffer().deleteBuffer(sized);
     }
@@ -76,7 +75,7 @@ TEST_CASE("GlesBufferUtilities create, update and delete buffers") {
             void main() { frag = vec4(1.0, 0.0, 0.0, 1.0); }
         )");
         shader.use();
-        gles::GlUint other = GlesUtilities::buffer().createIndexBuffer(idx, F::Index);   // after the vertex array exists
+        uint32_t other = GlesUtilities::buffer().createIndexBuffer(idx, ris::BufferUsageFlags::Index);   // after the vertex array exists
         ris::RenderTarget target(8, 8, false);
         target.bind();
         ris::gfx::clear(0, 0, 0, 1, ris::ClearFlags::Color);
@@ -88,9 +87,9 @@ TEST_CASE("GlesBufferUtilities create, update and delete buffers") {
 }
 
 TEST_CASE("GlesBufferUtilities without a window throws std::logic_error") {
-    REQUIRE_THROWS_AS(GlesUtilities::buffer().createVertexBuffer(16, F::Vertex), std::logic_error);
-    REQUIRE_THROWS_AS(GlesUtilities::buffer().createIndexBuffer(16, F::Index), std::logic_error);
-    REQUIRE_THROWS_AS(GlesUtilities::buffer().createUniformBuffer(16, F::Uniform), std::logic_error);
+    REQUIRE_THROWS_AS(GlesUtilities::buffer().createVertexBuffer(16, ris::BufferUsageFlags::Vertex), std::logic_error);
+    REQUIRE_THROWS_AS(GlesUtilities::buffer().createIndexBuffer(16, ris::BufferUsageFlags::Index), std::logic_error);
+    REQUIRE_THROWS_AS(GlesUtilities::buffer().createUniformBuffer(16, ris::BufferUsageFlags::Uniform), std::logic_error);
 }
 
 TEST_CASE("GlesBufferUtilities details") {
@@ -99,23 +98,23 @@ TEST_CASE("GlesBufferUtilities details") {
     auto& buffers = GlesUtilities::buffer();
 
     SECTION("byte sized index buffer and raw byte uniform buffer") {
-        gles::GlUint index = buffers.createIndexBuffer(12, F::Index | F::CopyDst, "index");
+        uint32_t index = buffers.createIndexBuffer(12, ris::BufferUsageFlags::Index | ris::BufferUsageFlags::CopyDst, "index");
         REQUIRE(index != 0);
         REQUIRE_NOTHROW(buffers.updateBuffer(ris::BufferType::Index, index, 0, std::vector<uint16_t>{0, 1, 2}.data(), 6));
         buffers.deleteBuffer(index);
-        REQUIRE_THROWS_AS(buffers.createIndexBuffer(0, F::Index), std::invalid_argument);
-        REQUIRE_THROWS_AS(buffers.createIndexBuffer(std::span<const uint16_t>{}, F::Index), std::invalid_argument);
+        REQUIRE_THROWS_AS(buffers.createIndexBuffer(0, ris::BufferUsageFlags::Index), std::invalid_argument);
+        REQUIRE_THROWS_AS(buffers.createIndexBuffer(std::span<const uint16_t>{}, ris::BufferUsageFlags::Index), std::invalid_argument);
 
         const std::vector<uint8_t> bytes(64, 7);
-        gles::GlUint uniform = buffers.createUniformBuffer(bytes, F::Uniform | F::CopyDst, "uniform");
+        uint32_t uniform = buffers.createUniformBuffer(bytes, ris::BufferUsageFlags::Uniform | ris::BufferUsageFlags::CopyDst, "uniform");
         REQUIRE(uniform != 0);
         buffers.deleteBuffer(uniform);
-        REQUIRE_THROWS_AS(buffers.createUniformBuffer(std::span<const uint8_t>{}, F::Uniform), std::invalid_argument);
-        REQUIRE_THROWS_AS(buffers.createUniformBuffer(0, F::Uniform), std::invalid_argument);
+        REQUIRE_THROWS_AS(buffers.createUniformBuffer(std::span<const uint8_t>{}, ris::BufferUsageFlags::Uniform), std::invalid_argument);
+        REQUIRE_THROWS_AS(buffers.createUniformBuffer(0, ris::BufferUsageFlags::Uniform), std::invalid_argument);
     }
     SECTION("updateVertexBuffer with source offset and length") {
         const std::vector<float> data = {1, 2, 3, 4, 5, 6};
-        gles::GlUint vb = buffers.createVertexBuffer(24, F::Vertex | F::CopyDst);
+        uint32_t vb = buffers.createVertexBuffer(24, ris::BufferUsageFlags::Vertex | ris::BufferUsageFlags::CopyDst);
         // dest offset in bytes, source offset and length in floats
         REQUIRE_NOTHROW(buffers.updateVertexBuffer(vb, data, 8, 2, 3));
         REQUIRE_NOTHROW(buffers.updateVertexBuffer(vb, data, 0, 4));        // length 0: the rest of the data

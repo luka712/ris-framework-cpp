@@ -14,11 +14,10 @@
 #include "../gles_test_utils.hpp"
 
 namespace gles = ris::gles;
-using ris_test::Pixel;
 
 namespace {
 
-bool near(const Pixel& px, int r, int g, int b, int tolerance = 2) {
+bool near(const std::array<int, 4>& px, int r, int g, int b, int tolerance = 2) {
     return std::abs(px[0] - r) <= tolerance && std::abs(px[1] - g) <= tolerance && std::abs(px[2] - b) <= tolerance;
 }
 
@@ -148,7 +147,7 @@ TEST_CASE("a bound sampler decides how the texture is sampled") {
     SamplingTriangle triangle;
     // Two texels: red at u = 0.25, blue at u = 0.75.
     const uint8_t pixels[] = {255, 0, 0, 255, 0, 0, 255, 255};
-    ris::Texture texture = ris::Texture::from_rgba8(2, 1, pixels, false);
+    ris::gles::GlesTexture2D texture = ris::gles::GlesTexture2D::from_rgba8(2, 1, pixels, false);
     ris::RenderTarget target(8, 8, false);
     target.bind();
     texture.bind(0);

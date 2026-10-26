@@ -119,7 +119,7 @@ public:
 
     /// The size touch positions are scaled to when SDL reports a finger event without a window. Defaults to
     /// (1, 1), i.e. positions stay normalised. Events that name a window use that window's size instead.
-    void set_touch_surface_size(Vec2 size) noexcept;
+    void set_touch_surface_size(glm::vec2 size) noexcept;
 
     /// Feeds one platform independent window event: key down / up, mouse move / buttons / wheel and focus lost
     /// are tracked, everything else is ignored. For applications that run their own event loop and for unit tests.
@@ -131,11 +131,11 @@ public:
     /// A key went down (`down == true`, a repeat of a held key is not a new press) or up. `Key::None` is ignored.
     void report_key(Key key, bool down);
     /// The cursor moved to `position` by `delta`.
-    void report_mouse_move(Vec2 position, Vec2 delta);
+    void report_mouse_move(glm::vec2 position, glm::vec2 delta);
     /// A mouse button went down or up with the cursor at `position`. `MouseButton::None` is ignored.
-    void report_mouse_button(MouseButton button, bool down, Vec2 position);
+    void report_mouse_button(MouseButton button, bool down, glm::vec2 position);
     /// The wheel moved by `delta` (positive y = away from the user).
-    void report_mouse_wheel(Vec2 delta);
+    void report_mouse_wheel(glm::vec2 delta);
     /// The window lost focus: held keys and mouse buttons are released silently (no "released" flag).
     void report_focus_lost();
 
@@ -146,12 +146,12 @@ public:
     void report_game_pad_button(int32_t index, GamePadButton button, bool down);
     /// The raw stick and trigger positions of a gamepad (sticks -1 to 1 with y up, triggers 0 to 1). The dead zone
     /// is applied when publishing. The gamepad is connected implicitly.
-    void report_game_pad_axes(int32_t index, Vec2 left_stick, Vec2 right_stick, float left_trigger, float right_trigger);
+    void report_game_pad_axes(int32_t index, glm::vec2 left_stick, glm::vec2 right_stick, float left_trigger, float right_trigger);
 
     /// A touch contact event. `id` identifies the contact while it is down; `position` is in window coordinates;
     /// `pressure` is clamped to [0, 1] (0 when unknown). A touch event also marks the touch device connected and
     /// raises the maximum touch count and `has_pressure` of the capabilities when the data shows more.
-    void report_touch(TouchPhase phase, int32_t id, Vec2 position, float pressure);
+    void report_touch(TouchPhase phase, int32_t id, glm::vec2 position, float pressure);
     /// Sets the touch capabilities the platform reports (e.g. at start up). Touch events can only raise them.
     void set_touch_capabilities(bool is_connected, int32_t maximum_touch_count, bool has_pressure);
 
@@ -160,12 +160,12 @@ private:
         int32_t id = 0;
         bool in_use = false;
         TouchLocationState state = TouchLocationState::Invalid;
-        Vec2 position{0, 0};
+        glm::vec2 position{0, 0};
         float pressure = 0;
         bool has_previous = false;
         bool has_frame_previous = false;
         TouchLocationState previous_state = TouchLocationState::Invalid;
-        Vec2 previous_position{0, 0};
+        glm::vec2 previous_position{0, 0};
         float previous_pressure = 0;
         bool same_frame_released = false;
         void release_slot() noexcept;
@@ -184,7 +184,7 @@ private:
 
     KeyboardState keyboard_, pending_keyboard_;
     MouseState mouse_, pending_mouse_;
-    Vec2 pending_delta_{0, 0}, pending_wheel_{0, 0};
+    glm::vec2 pending_delta_{0, 0}, pending_wheel_{0, 0};
 
     std::array<GamePadState, static_cast<std::size_t>(max_game_pad_count)> pads_, pending_pads_;
     GamePadState disconnected_pad_;

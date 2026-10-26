@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "internal.hpp"
-#include "ris/gles/utilities/debug_label_utilities.hpp"
+#include "ris/gles/utilities/gles_debug_utilities.hpp"
 
 using namespace ris::detail;
 
@@ -85,12 +85,12 @@ private:
 
 } // namespace
 
-GlUint create(std::span<const GlUint> color_textures, std::string_view label) {
+uint32_t create(std::span<const uint32_t> color_textures, std::string_view label) {
     require_context();
     if (color_textures.empty()) {
         throw std::invalid_argument("framebuffer_utilities::create: no colour textures");
     }
-    for (const GlUint texture : color_textures) {
+    for (const uint32_t texture : color_textures) {
         if (texture == 0) {
             throw std::invalid_argument("Cannot bind texture to the frame buffer. Texture id not specified");
         }
@@ -108,12 +108,12 @@ GlUint create(std::span<const GlUint> color_textures, std::string_view label) {
     return fb.commit(label);
 }
 
-GlUint create(GlUint color_texture, std::string_view label) {
-    return create(std::span<const GlUint>(&color_texture, 1), label);
+uint32_t create(uint32_t color_texture, std::string_view label) {
+    return create(std::span<const uint32_t>(&color_texture, 1), label);
 }
 
-GlUint create_with_renderbuffer_as_depth_buffer(GlUint color_texture, DepthAttachmentType depth_type,
-                                                GlUint render_buffer, std::string_view label) {
+uint32_t create_with_renderbuffer_as_depth_buffer(uint32_t color_texture, DepthAttachmentType depth_type,
+                                                uint32_t render_buffer, std::string_view label) {
     require_context();
     const GLenum attachment = attachment_point(depth_type);
     FramebufferScope fb;
@@ -123,7 +123,7 @@ GlUint create_with_renderbuffer_as_depth_buffer(GlUint color_texture, DepthAttac
     return fb.commit(label);
 }
 
-GlUint create_with_texture_as_depth_buffer(GlUint color_texture, DepthAttachmentType depth_type, GlUint depth_texture,
+uint32_t create_with_texture_as_depth_buffer(uint32_t color_texture, DepthAttachmentType depth_type, uint32_t depth_texture,
                                            std::string_view label) {
     require_context();
     const GLenum attachment = attachment_point(depth_type);
@@ -143,26 +143,26 @@ DepthAttachmentType depth_attachment_type_for(TextureFormat format) {
     throw std::domain_error("Unsupported depth/stencil texture format");
 }
 
-void attach_depth_stencil_renderbuffer(GlUint framebuffer, GlUint render_buffer, TextureFormat format) {
+void attach_depth_stencil_renderbuffer(uint32_t framebuffer, uint32_t render_buffer, TextureFormat format) {
     require_context();
     const GLenum attachment = attachment_point(depth_attachment_type_for(format));
     BindScope bound(framebuffer);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, render_buffer);
 }
 
-void attach_depth_stencil_texture(GlUint framebuffer, GlUint depth_texture, TextureFormat format) {
+void attach_depth_stencil_texture(uint32_t framebuffer, uint32_t depth_texture, TextureFormat format) {
     require_context();
     const GLenum attachment = attachment_point(depth_attachment_type_for(format));
     BindScope bound(framebuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, depth_texture, 0);
 }
 
-void bind(GlUint framebuffer) {
+void bind(uint32_t framebuffer) {
     require_context();
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 }
 
-void delete_framebuffer(GlUint& framebuffer) noexcept {
+void delete_framebuffer(uint32_t& framebuffer) noexcept {
     if (framebuffer != 0 && has_context()) {
         const GLuint id = framebuffer;
         glDeleteFramebuffers(1, &id);

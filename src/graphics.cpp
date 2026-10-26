@@ -343,7 +343,7 @@ RenderTarget::RenderTarget(int32_t width, int32_t height, bool with_depth_stenci
 
     // The colour texture is owned by `color_` from here on, so it is released if anything below throws.
     GLuint tex = GlesUtilities::texture().createTexture2D(width, height, static_cast<const void*>(nullptr));
-    color_ = Texture::adopt(tex, width, height, 1);
+    color_ = gles::GlesTexture2D::adopt(tex, width, height, 1);
     color_.set_sampler(SamplerDesc{Filter::Linear, Filter::Linear, Wrap::Clamp, Wrap::Clamp});
 
     if (!with_depth_stencil) {
@@ -398,7 +398,7 @@ void RenderTarget::bind() const {
         t_has_saved_viewport = true;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-    glViewport(0, 0, color_.width(), color_.height());
+    glViewport(0, 0, color_.getWidth(), color_.getHeight());
 }
 
 void RenderTarget::unbind() {
